@@ -619,6 +619,33 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:#EEF2F7;color:var(--
   </div>
 </div>
 
+<!-- MODAL RETOMAR TURNO -->
+<div id="modal-retomar" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:998;align-items:center;justify-content:center">
+  <div style="background:#fff;border-radius:var(--rad);padding:24px;width:min(400px,92vw);box-shadow:0 20px 60px rgba(0,0,0,.3)">
+    <div style="text-align:center;margin-bottom:16px">
+      <div style="font-size:40px;margin-bottom:8px">🔄</div>
+      <div style="font-size:16px;font-weight:700;color:var(--az)">Turno activo encontrado</div>
+      <div style="font-size:13px;color:var(--gr3);margin-top:4px">Esta línea tiene un turno abierto</div>
+    </div>
+    <div style="background:var(--az3);border-radius:var(--rad2);padding:14px;margin-bottom:16px">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+        <div class="info-item"><label>Línea</label><span id="modal-retomar-linea">—</span></div>
+        <div class="info-item"><label>Turno</label><span id="modal-retomar-turno">—</span></div>
+        <div class="info-item"><label>Operario</label><span id="modal-retomar-operario">—</span></div>
+        <div class="info-item"><label>Orden</label><span id="modal-retomar-orden">—</span></div>
+        <div class="info-item" style="grid-column:1/-1"><label>Fecha</label><span id="modal-retomar-fecha">—</span></div>
+      </div>
+    </div>
+    <div style="background:var(--nr2);border-radius:var(--rad2);padding:10px 14px;margin-bottom:16px;font-size:12px;color:var(--nr)">
+      ⚠ No se puede crear un turno nuevo hasta que este turno sea cerrado. Puedes retomarlo para continuar el registro o cerrarlo desde la vista de resumen.
+    </div>
+    <div style="display:flex;gap:8px">
+      <button class="btn btn-vd" style="flex:1;justify-content:center" onclick="retomarTurno()">▶ Retomar y continuar</button>
+      <button class="btn btn-gr" onclick="cerrarModalRetomar()">Cancelar</button>
+    </div>
+  </div>
+</div>
+
 <!-- MODAL TICKET SCRAP -->
 <div id="modal-scrap" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:998;align-items:center;justify-content:center">
   <div style="background:#fff;border-radius:var(--rad);padding:20px;width:min(420px,95vw);max-height:90vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,.3)">
@@ -836,6 +863,7 @@ async function cargarLineas(){
     loader(false);
     if(!rl.ok){notify('Error: '+rl.msg,'err');return;}
     const act=(rt.ok?rt.data:[]).reduce((a,t)=>{a[t.Linea]=t;return a;},{});
+    turnosActivosMap = act; // guardar globalmente para selLinea
     document.getElementById('lineas-grid').innerHTML=rl.data.filter(l=>l.Activa!=='No').map(l=>{
       const ta=act[l.ID];
       const esCorr=l.Tipo==='Corrugada'||LINEAS_CORRUGADAS.includes(parseInt(l.ID));
@@ -849,12 +877,106 @@ async function cargarLineas(){
   }catch(e){loader(false);notify('Error cargando líneas','err');}
 }
 
+// Variable global para turnos activos por línea
+let turnosActivosMap = {};
+
 function selLinea(l){
   lineaActual=l;
   esCorrugada=l.Tipo==='Corrugada'||LINEAS_CORRUGADAS.includes(parseInt(l.ID));
-  document.getElementById('cab-linea-nombre').textContent=l.NombreLinea;
-  setVal('cab-linea',l.NombreLinea); setVal('cab-fecha',fmtFecha());
-  irA('cabecera','Nueva Cabecera',l.NombreLinea);
+  const turnoActivo = turnosActivosMap[l.ID];
+  if(turnoActivo){
+    // Línea tiene turno abierto — preguntar si retomar
+    mostrarModalRetomar(turnoActivo);
+  } else {
+    // Libre — ir a crear cabecera
+    document.getElementById('cab-linea-nombre').textContent=l.NombreLinea;
+    setVal('cab-linea',l.NombreLinea); setVal('cab-fecha',fmtFecha());
+    irA('cabecera','Nueva Cabecera',l.NombreLinea);
+  }
+}
+
+function mostrarModalRetomar(ta){
+  document.getElementById('modal-retomar-linea').textContent = lineaActual.NombreLinea;
+  document.getElementById('modal-retomar-turno').textContent = ta.Turno;
+  document.getElementById('modal-retomar-operario').textContent = ta.Operario||'—';
+  document.getElementById('modal-retomar-orden').textContent = ta.OrdenFab||'—';
+  document.getElementById('modal-retomar-fecha').textContent = ta.Fecha||'—';
+  // Guardar el turno activo en variable global para usarlo al retomar
+  window._turnoParaRetomar = ta;
+  document.getElementById('modal-retomar').style.display='flex';
+}
+
+function cerrarModalRetomar(){
+  document.getElementById('modal-retomar').style.display='none';
+}
+
+async function retomarTurno(){
+  const ta = window._turnoParaRetomar;
+  cerrarModalRetomar();
+  loader(true,'Cargando turno activo...');
+  try{
+    // Reconstruir turnoActual desde el turno guardado
+    turnoActual = {
+      id: ta.TurnoID,
+      linea: ta.Linea,
+      lineaNombre: ta.LineaNombre,
+      fecha: ta.Fecha,
+      turno: ta.Turno,
+      operario: ta.Operario||'',
+      coordinador: ta.Coordinador||'',
+      supervisor: ta.Supervisor||'',
+      ordenFab: ta.OrdenFab||'',
+      codigoSAP: ta.CodigoSAP||'',
+      producto: ta.Producto||'',
+      espesorMin: ta.EspesorMin||'',
+      diametro: ta.Diametro||'',
+      pesoEstandar: ta.PesoEstandar||'',
+      cantidadOrden: parseInt(ta.CantidadOrden)||0,
+      rotulado: ta.Rotulado||''
+    };
+
+    // Cargar horas ya guardadas
+    const resH = await api({action:'getHoras', turnoId: ta.TurnoID});
+    horasGuardadas = {};
+    horaActual = 1;
+
+    if(resH.ok && resH.data.length){
+      resH.data.forEach(h => {
+        const hora = parseInt(h.Hora);
+        horasGuardadas[hora] = {
+          hora: hora,
+          horaId: h.HoraID,
+          turnoId: ta.TurnoID,
+          codigoMezcla: h.CodigoMezcla||'',
+          mezcla: h.Mezcla||'',
+          consecutivoOperario: h.ConsecutivoMezcla||'',
+          cantidadKgMezcla: parseFloat(h.CantidadKgMezcla)||0,
+          nroTubos: parseInt(h.NroTubos)||0,
+          pesoTotal: parseFloat(h.PesoTotal_kg)||0,
+          reprocesoKg: parseFloat(h.Reproceso_kg)||0,
+          motivoReproceso: h.MotivoReproceso||'',
+          rotuladoOk: h.RotuladoOk==='Sí',
+          pesoPromedio: parseFloat(h.PesoPromedio)||0,
+          sobrePeso: parseFloat(h.SobrePeso)||0,
+          longitud: parseFloat(h.Longitud)||0,
+          observaciones: h.Observaciones||''
+        };
+      });
+      // Ir a la primera hora no guardada
+      for(let i=1;i<=8;i++){
+        if(!horasGuardadas[i]){ horaActual=i; break; }
+        if(i===8) horaActual=8; // todas guardadas
+      }
+    }
+
+    loader(false);
+    notify(`Turno ${ta.Turno} retomado — ${Object.keys(horasGuardadas).length} horas ya registradas`,'ok',4000);
+    if(esCorrugada) iniciarRegistroCorr();
+    else iniciarRegistro();
+  }catch(e){
+    loader(false);
+    notify('Error al retomar turno: '+e.message,'err');
+  }
 }
 
 function buscarOrden(v){
@@ -890,6 +1012,11 @@ function calcConsecCorr(){} // Consecutivo lo digita el operario
 
 // ── TURNO ─────────────────────────────────────────────────────
 async function crearTurno(){
+  // Verificar si la línea ya tiene turno abierto
+  if(turnosActivosMap[lineaActual.ID]){
+    notify('Esta línea tiene un turno abierto. Ciérralo antes de crear uno nuevo.','err',5000);
+    return;
+  }
   if(!val('cab-operario')){notify('Ingresa el operario','err');return;}
   if(!val('cab-orden')){notify('Ingresa la orden de fabricación','err');return;}
   loader(true,'Creando turno...');
@@ -1184,6 +1311,8 @@ async function cerrarTurnoYPDF(){
   loader(true,'Cerrando turno...');
   try{
     await api({action:'cerrarTurno',turnoId:turnoActual.id});
+    // Quitar de turnos activos
+    delete turnosActivosMap[turnoActual.linea];
     loader(false);generarPDF();
   }catch(e){loader(false);notify('Error: '+e.message,'err');}
 }
