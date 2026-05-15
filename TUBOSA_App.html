@@ -372,18 +372,22 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:#EEF2F7;color:var(--
   <!-- Datos producción -->
   <div class="card"><div class="card-head az">📦 Hora <span id="reg-hora-num">1</span> — Datos de Producción</div><div class="card-body">
     <div class="fila fila-3">
-      <div class="campo req clave"><label>Código Mezcla</label><input type="text" id="reg-codMezcla" placeholder="MZ-001" list="mezclas-list" oninput="buscarMezcla(this.value)"><datalist id="mezclas-list"></datalist></div>
+      <div class="campo clave"><label>Código Mezcla</label><input type="text" id="reg-codMezcla" placeholder="MZ-001" list="mezclas-list" oninput="buscarMezcla(this.value)"><datalist id="mezclas-list"></datalist></div>
       <div class="campo"><label>Mezcla</label><input type="text" id="reg-mezcla" placeholder="Auto al escribir código"></div>
       <div class="campo clave"><label>Consecutivo Mezcla</label><input type="text" id="reg-consecutivo" readonly class="auto" placeholder="Auto"></div>
     </div>
     <div class="fila fila-3">
-      <div class="campo req clave"><label>Cantidad kg Mezcla</label><input type="number" id="reg-kgMezcla" placeholder="0.0" step="0.01"></div>
+      <div class="campo clave"><label>Cantidad kg Mezcla</label><input type="number" id="reg-kgMezcla" placeholder="0.0" step="0.01"></div>
       <div class="campo"><label>Nro. Tubos (Und)</label><input type="number" id="reg-nroTubos" placeholder="0" oninput="actualizarContador()"></div>
       <div class="campo"><label>Peso Total (kg)</label><input type="number" id="reg-pesoTotal" placeholder="0.0" step="0.01"></div>
     </div>
     <div class="fila fila-2">
       <div class="campo"><label>Reproceso (kg)</label><input type="number" id="reg-reproceso" placeholder="0.0" step="0.01"></div>
       <div class="campo"><label>Motivo Reproceso</label><input type="text" id="reg-motivoRep" placeholder="Describir si aplica"></div>
+    </div>
+    <div style="background:var(--rd2);border:1px solid #e8a8a8;border-radius:var(--rad2);padding:10px 14px;margin-bottom:10px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px">
+      <div style="font-size:12px;color:var(--rd);font-weight:600">🔴 Si hay scrap en esta hora, genera el ticket de reporte</div>
+      <button class="btn btn-rd btn-sm" onclick="abrirTicketScrap()">🖨 Generar Ticket de Scrap</button>
     </div>
     <div class="fila fila-3">
       <div class="campo"><label>Peso Promedio (kg)</label><input type="number" id="reg-pesoPromedio" placeholder="0.000" step="0.001"></div>
@@ -469,18 +473,22 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:#EEF2F7;color:var(--
   <!-- Datos hora corrugada -->
   <div class="card"><div class="card-head az">📦 Hora <span id="corr-hora-num">1</span> — Datos de Producción</div><div class="card-body">
     <div class="fila fila-3">
-      <div class="campo req clave"><label>Código Mezcla</label><input type="text" id="corr-codMezcla" placeholder="MZ-001" list="mezclas-list-corr" oninput="buscarMezclaCo(this.value)"><datalist id="mezclas-list-corr"></datalist></div>
+      <div class="campo clave"><label>Código Mezcla</label><input type="text" id="corr-codMezcla" placeholder="MZ-001" list="mezclas-list-corr" oninput="buscarMezclaCo(this.value)"><datalist id="mezclas-list-corr"></datalist></div>
       <div class="campo"><label>Mezcla</label><input type="text" id="corr-mezcla" placeholder="Auto"></div>
       <div class="campo clave"><label>Consecutivo</label><input type="text" id="corr-consecutivo" readonly class="auto"></div>
     </div>
     <div class="fila fila-3">
-      <div class="campo req clave"><label>Cantidad kg Mezcla</label><input type="number" id="corr-kgMezcla" placeholder="0.0" step="0.01"></div>
+      <div class="campo clave"><label>Cantidad kg Mezcla</label><input type="number" id="corr-kgMezcla" placeholder="0.0" step="0.01"></div>
       <div class="campo"><label>Nro. Tubos (Und)</label><input type="number" id="corr-nroTubos" placeholder="0" oninput="actualizarContadorCorr()"></div>
       <div class="campo"><label>Peso Total (kg)</label><input type="number" id="corr-pesoTotal" placeholder="0.0" step="0.01"></div>
     </div>
     <div class="fila fila-2">
       <div class="campo"><label>Reproceso (kg)</label><input type="number" id="corr-reproceso" placeholder="0.0" step="0.01"></div>
       <div class="campo"><label>Motivo Reproceso</label><input type="text" id="corr-motivoRep"></div>
+    </div>
+    <div style="background:var(--rd2);border:1px solid #e8a8a8;border-radius:var(--rad2);padding:10px 14px;margin-bottom:10px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px">
+      <div style="font-size:12px;color:var(--rd);font-weight:600">🔴 Si hay scrap en esta hora, genera el ticket de reporte</div>
+      <button class="btn btn-rd btn-sm" onclick="abrirTicketScrap()">🖨 Generar Ticket de Scrap</button>
     </div>
     <div class="fila fila-2">
       <div class="campo"><label>Peso Promedio (kg)</label><input type="number" id="corr-pesoPromedio" placeholder="0.000" step="0.001"></div>
@@ -608,6 +616,41 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:#EEF2F7;color:var(--
     <div style="font-size:48px;margin-bottom:12px">📭</div>
     <div style="font-size:16px;font-weight:600">Sin datos para esta orden</div>
     <div style="font-size:13px;margin-top:6px">Verifica que la orden tenga turnos registrados</div>
+  </div>
+</div>
+
+<!-- MODAL TICKET SCRAP -->
+<div id="modal-scrap" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:998;align-items:center;justify-content:center">
+  <div style="background:#fff;border-radius:var(--rad);padding:20px;width:min(420px,95vw);max-height:90vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,.3)">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+      <div style="font-size:15px;font-weight:700;color:var(--rd)">🔴 Ticket de Reporte de Scrap</div>
+      <button onclick="cerrarModalScrap()" style="background:none;border:none;font-size:20px;cursor:pointer;color:var(--gr3)">✕</button>
+    </div>
+    <div style="font-size:12px;color:var(--gr3);margin-bottom:14px">Los campos marcados con * son obligatorios para el ticket</div>
+
+    <div class="fila fila-2">
+      <div class="campo"><label>Fecha *</label><input type="text" id="sk-fecha" readonly class="auto"></div>
+      <div class="campo"><label>Hora *</label><input type="text" id="sk-hora" readonly class="auto"></div>
+    </div>
+    <div class="campo" style="margin-bottom:10px"><label>Línea *</label><input type="text" id="sk-linea" readonly class="auto"></div>
+    <div class="campo" style="margin-bottom:10px"><label>Orden de Fabricación *</label><input type="text" id="sk-orden" readonly class="auto"></div>
+    <div class="fila fila-2">
+      <div class="campo"><label>Código Producto *</label><input type="text" id="sk-codProd" readonly class="auto"></div>
+      <div class="campo"><label>Producto *</label><input type="text" id="sk-producto" readonly class="auto"></div>
+    </div>
+    <div class="campo" style="margin-bottom:10px"><label>Nombre Operario *</label><input type="text" id="sk-operario" readonly class="auto"></div>
+    <div class="fila fila-2">
+      <div class="campo req"><label>Cantidad Rechazada (kg) *</label><input type="number" id="sk-cantKg" placeholder="0.0" step="0.01"></div>
+      <div class="campo req"><label>Código Operación *</label><input type="text" id="sk-codOp" placeholder="Ej: EXT-001"></div>
+    </div>
+    <div class="campo" style="margin-bottom:14px">
+      <label>Motivo del Rechazo *</label>
+      <textarea id="sk-motivo" placeholder="Describir detalladamente el motivo del rechazo..." rows="3"></textarea>
+    </div>
+    <div style="display:flex;gap:8px">
+      <button class="btn btn-rd" style="flex:1;justify-content:center" onclick="generarTicketScrap()">🖨 Imprimir Ticket PDF</button>
+      <button class="btn btn-gr" onclick="cerrarModalScrap()">Cancelar</button>
+    </div>
   </div>
 </div>
 
@@ -922,8 +965,6 @@ function limpiarForm(){
 }
 
 async function guardarHora(){
-  if(!val('reg-codMezcla')){notify('Código de mezcla obligatorio ★','err');return;}
-  if(!val('reg-kgMezcla')){notify('Cantidad kg mezcla obligatoria ★','err');return;}
   loader(true,'Guardando hora '+horaActual+'...');
   try{
     const hd={action:'guardarHora',turnoId:turnoActual.id,hora:horaActual,
@@ -1019,8 +1060,6 @@ function limpiarFormCorr(){
 }
 
 async function guardarHoraCorr(){
-  if(!val('corr-codMezcla')){notify('Código de mezcla obligatorio ★','err');return;}
-  if(!val('corr-kgMezcla')){notify('Cantidad kg mezcla obligatoria ★','err');return;}
   loader(true,'Guardando hora '+horaActual+'...');
   try{
     const hd={action:'guardarHora',turnoId:turnoActual.id,hora:horaActual,
@@ -1304,6 +1343,121 @@ function renderInforme(d){
     <tr class="tot"><td colspan="5">TOTALES</td>
       <td>${r.totalKgMezcla}</td><td>${r.totalTubos}</td><td>${r.totalPesoTubos}</td><td>${r.totalReproceso}</td><td></td>
     </tr></tbody>`;
+// ── TICKET SCRAP ──────────────────────────────────────────────
+function abrirTicketScrap(){
+  const t=turnoActual;
+  // Auto-rellenar campos desde el turno activo
+  document.getElementById('sk-fecha').value = t.fecha||fmtFecha();
+  document.getElementById('sk-hora').value = 'Hora '+horaActual;
+  document.getElementById('sk-linea').value = t.lineaNombre||'';
+  document.getElementById('sk-orden').value = t.ordenFab||'';
+  document.getElementById('sk-codProd').value = t.codigoSAP||'';
+  document.getElementById('sk-producto').value = t.producto||'';
+  document.getElementById('sk-operario').value = t.operario||'';
+  // Pre-rellenar kg y motivo desde el formulario activo
+  const kgRep = val('reg-reproceso')||val('corr-reproceso')||'';
+  const motivoRep = val('reg-motivoRep')||val('corr-motivoRep')||'';
+  document.getElementById('sk-cantKg').value = kgRep;
+  document.getElementById('sk-motivo').value = motivoRep;
+  document.getElementById('sk-codOp').value = '';
+  // Mostrar modal
+  document.getElementById('modal-scrap').style.display='flex';
+}
+
+function cerrarModalScrap(){
+  document.getElementById('modal-scrap').style.display='none';
+}
+
+function generarTicketScrap(){
+  const cantKg = val('sk-cantKg');
+  const codOp  = val('sk-codOp');
+  const motivo = val('sk-motivo');
+  if(!cantKg){notify('Ingresa la cantidad rechazada en kg','err');return;}
+  if(!codOp){notify('Ingresa el código de operación','err');return;}
+  if(!motivo){notify('Ingresa el motivo del rechazo','err');return;}
+
+  const {jsPDF}=window.jspdf;
+  // Ticket 9cm x 12cm = 90mm x 120mm
+  const doc=new jsPDF({orientation:'portrait',unit:'mm',format:[90,120]});
+
+  // Fondo rojo
+  doc.setFillColor(192,57,43);
+  doc.rect(0,0,90,120,'F');
+
+  // Marco blanco interior
+  doc.setDrawColor(255,255,255);
+  doc.setLineWidth(1);
+  doc.rect(3,3,84,114,'S');
+
+  // Encabezado
+  doc.setFillColor(140,20,10);
+  doc.rect(3,3,84,14,'F');
+  doc.setTextColor(255,255,255);
+  doc.setFont('helvetica','bold');
+  doc.setFontSize(11);
+  doc.text('REPORTE DE SCRAP',45,12,{align:'center'});
+
+  doc.setFontSize(7);
+  doc.setFont('helvetica','normal');
+  doc.text('TUBOSA S.A.',45,17,{align:'center'});
+
+  // Datos en negro sobre fondo rojo
+  doc.setTextColor(0,0,0);
+  const ml=7;
+  let y=24;
+  const gap=8.5;
+
+  const campos=[
+    ['Fecha:', val('sk-fecha')],
+    ['Hora:', val('sk-hora')],
+    ['Línea:', val('sk-linea')],
+    ['Orden Fab.:', val('sk-orden')],
+    ['Cód. Producto:', val('sk-codProd')],
+    ['Producto:', val('sk-producto')],
+    ['Operario:', val('sk-operario')],
+    ['Cód. Operación:', codOp],
+    ['Cant. Rechazada:', cantKg+' kg'],
+  ];
+
+  campos.forEach(([lbl,valor])=>{
+    // Fondo semitransparente para cada fila alternada
+    doc.setFillColor(160,30,20);
+    doc.rect(ml-1,y-5,76,7,'F');
+    doc.setFont('helvetica','bold');
+    doc.setFontSize(7);
+    doc.setTextColor(255,230,230);
+    doc.text(lbl,ml,y);
+    doc.setFont('helvetica','normal');
+    doc.setTextColor(255,255,255);
+    doc.text(String(valor||'—'),ml+32,y);
+    y+=gap;
+  });
+
+  // Motivo — caja especial
+  y+=1;
+  doc.setFillColor(140,20,10);
+  doc.rect(ml-1,y-5,76,22,'F');
+  doc.setFont('helvetica','bold');
+  doc.setFontSize(7);
+  doc.setTextColor(255,230,230);
+  doc.text('Motivo del Rechazo:',ml,y);
+  doc.setFont('helvetica','normal');
+  doc.setTextColor(255,255,255);
+  doc.setFontSize(6.5);
+  const lines=doc.splitTextToSize(motivo,70);
+  doc.text(lines.slice(0,3),ml,y+5);
+
+  // Pie
+  doc.setFillColor(140,20,10);
+  doc.rect(3,111,84,6,'F');
+  doc.setFont('helvetica','italic');
+  doc.setFontSize(6);
+  doc.setTextColor(255,200,200);
+  doc.text('Documento generado: '+fmtFecha()+' '+new Date().toLocaleTimeString('es-CO',{hour:'2-digit',minute:'2-digit'}),45,115,{align:'center'});
+
+  doc.save('TicketScrap_'+val('sk-linea').replace(/\s/g,'')+'_H'+horaActual+'_'+val('sk-fecha').replace(/\//g,'-')+'.pdf');
+  notify('Ticket de scrap generado ✓','ok');
+  cerrarModalScrap();
 }
 </script>
 </body>
