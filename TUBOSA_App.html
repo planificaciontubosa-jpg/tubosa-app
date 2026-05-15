@@ -345,7 +345,10 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:#EEF2F7;color:var(--
 
 <script>
 // ── CONFIG ───────────────────────────────────────────────────
-let API_URL = localStorage.getItem('tubosa_url') || '';
+// ── PEGA AQUÍ TU URL DE APPS SCRIPT ──────────────────────────
+const API_URL_FIJA = 'https://script.google.com/macros/s/AKfycbykdmPFuhuA94oKM0TmzAb67zxpdHmskQaN-AyH6gM4-4wOui8J4Bs0H4BZtEqtKCmv/exec';
+// ─────────────────────────────────────────────────────────────
+let API_URL = localStorage.getItem('tubosa_url') || API_URL_FIJA;
 let rolActual = '', lineaActual = {}, turnoActual = {};
 let horaActual = 1, horasGuardadas = {};
 let maestroOrdenes = [], maestroMezclas = [];
