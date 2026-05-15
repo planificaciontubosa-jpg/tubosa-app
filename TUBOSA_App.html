@@ -935,7 +935,7 @@ async function retomarTurno(){
       rotulado: ta.Rotulado||''
     };
 
-    // Cargar horas ya guardadas
+    // Cargar horas ya guardadas desde Sheets
     const resH = await api({action:'getHoras', turnoId: ta.TurnoID});
     horasGuardadas = {};
     horaActual = 1;
@@ -944,7 +944,7 @@ async function retomarTurno(){
       resH.data.forEach(h => {
         const hora = parseInt(h.Hora);
         horasGuardadas[hora] = {
-          hora: hora,
+          hora,
           horaId: h.HoraID,
           turnoId: ta.TurnoID,
           codigoMezcla: h.CodigoMezcla||'',
@@ -963,16 +963,48 @@ async function retomarTurno(){
         };
       });
       // Ir a la primera hora no guardada
+      horaActual = 1;
       for(let i=1;i<=8;i++){
         if(!horasGuardadas[i]){ horaActual=i; break; }
-        if(i===8) horaActual=8; // todas guardadas
+        if(i===8) horaActual=8;
       }
     }
 
     loader(false);
-    notify(`Turno ${ta.Turno} retomado — ${Object.keys(horasGuardadas).length} horas ya registradas`,'ok',4000);
-    if(esCorrugada) iniciarRegistroCorr();
-    else iniciarRegistro();
+    const horasYa = Object.keys(horasGuardadas).length;
+    notify(`Turno ${ta.Turno} retomado — ${horasYa} hora${horasYa!==1?'s':''} ya registrada${horasYa!==1?'s':''}`, 'ok', 4000);
+
+    // Iniciar registro SIN llamar selHora (para no limpiar el form)
+    if(esCorrugada){
+      document.getElementById('corr-linea-nombre').textContent = turnoActual.lineaNombre;
+      renderInfo('reg-info-corr');
+      renderTabs('horas-tabs-corr', true);
+      renderPesaje('pesaje-tbody-corr', 3);
+      actualizarContadorCorr();
+      irA('registro-corr','Registro Corrugada — '+turnoActual.lineaNombre,'Turno '+turnoActual.turno+' · '+turnoActual.fecha);
+      // Posicionar en hora correcta sin limpiar
+      document.getElementById('corr-hora-num').textContent = horaActual;
+      document.getElementById('corr-btn-hora').textContent = horaActual;
+      document.getElementById('corr-rotuladoOk').onchange = function(){
+        document.getElementById('corr-rotulado-txt').textContent=this.checked?'✓ Rotulado VERIFICADO':'Rotulado NO verificado';
+        document.getElementById('corr-rotulado-txt').style.color=this.checked?'var(--vd)':'var(--gr3)';
+      };
+    } else {
+      renderInfo('reg-info');
+      renderTabs('horas-tabs', false);
+      renderPesaje('pesaje-tbody', 6);
+      actualizarContador();
+      irA('registro','Registro — '+turnoActual.lineaNombre,'Turno '+turnoActual.turno+' · '+turnoActual.fecha);
+      // Posicionar en hora correcta sin limpiar
+      document.getElementById('reg-hora-num').textContent = horaActual;
+      document.getElementById('tend-hora-num').textContent = horaActual;
+      document.getElementById('btn-hora-num').textContent = horaActual;
+      document.getElementById('reg-rotuladoOk').onchange = function(){
+        document.getElementById('rotulado-txt').textContent=this.checked?'✓ Rotulado VERIFICADO':'Rotulado NO verificado';
+        document.getElementById('rotulado-txt').style.color=this.checked?'var(--vd)':'var(--gr3)';
+      };
+    }
+
   }catch(e){
     loader(false);
     notify('Error al retomar turno: '+e.message,'err');
@@ -1161,12 +1193,11 @@ function actualizarContador(){
   const totalProd=tubosGuardados+tubosEnHoraActual;
   const pendiente=Math.max(0,cantOrden-totalProd);
   const pct=Math.min(100,(totalProd/cantOrden*100)).toFixed(0);
-  setVal('cnt-orden',cantOrden.toLocaleString());
-  setVal('cnt-producido',totalProd.toLocaleString());
-  setVal('cnt-pendiente',pendiente.toLocaleString());
+  document.getElementById('cnt-orden').textContent=cantOrden.toLocaleString();
+  document.getElementById('cnt-producido').textContent=totalProd.toLocaleString();
+  document.getElementById('cnt-pendiente').textContent=pendiente.toLocaleString();
   document.getElementById('cnt-bar').style.width=pct+'%';
   document.getElementById('cnt-pct').textContent=pct+'% completado';
-  // Cambiar color si está al límite
   document.getElementById('cnt-pendiente').style.color=pendiente<=0?'#4ADE80':pendiente<100?'#FCD34D':'#FFD700';
 }
 
