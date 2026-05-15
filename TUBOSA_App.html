@@ -2,12 +2,12 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0">
 <title>TUBOSA — Control de Producción</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
 <style>
-:root{--az:#1F3864;--az2:#2E5BA8;--az3:#D6E4F7;--vd:#1E6B3C;--vd2:#D6F0E0;--nr:#C55A11;--nr2:#FCE4D6;--gr:#F4F4F4;--gr2:#E0E0E0;--gr3:#888;--rd:#C0392B;--wh:#FFFFFF;--tx:#1a1a1a;--rad:10px;--rad2:6px;--shadow:0 2px 12px rgba(0,0,0,0.08)}
+:root{--az:#1F3864;--az2:#2E5BA8;--az3:#D6E4F7;--vd:#1E6B3C;--vd2:#D6F0E0;--nr:#C55A11;--nr2:#FCE4D6;--gr:#F4F4F4;--gr2:#E0E0E0;--gr3:#888;--rd:#C0392B;--rd2:#FDECEA;--wh:#FFFFFF;--tx:#1a1a1a;--rad:10px;--rad2:6px;--shadow:0 2px 12px rgba(0,0,0,0.08)}
 *{box-sizing:border-box;margin:0;padding:0}
 body{font-family:'Segoe UI',system-ui,sans-serif;background:#EEF2F7;color:var(--tx);min-height:100vh}
 .topbar{background:var(--az);color:#fff;padding:0 16px;height:52px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100;box-shadow:0 2px 8px rgba(0,0,0,.2)}
@@ -15,7 +15,7 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:#EEF2F7;color:var(--
 .btn-back{background:rgba(255,255,255,.15);border:none;color:#fff;padding:6px 12px;border-radius:var(--rad2);cursor:pointer;font-size:13px;display:none;align-items:center;gap:5px}
 .btn-back.show{display:flex}
 .btn-logout{background:none;border:1px solid rgba(255,255,255,.3);color:#fff;padding:5px 10px;border-radius:var(--rad2);cursor:pointer;font-size:12px}
-.vista{display:none;padding:16px;max-width:900px;margin:0 auto}
+.vista{display:none;padding:16px;max-width:960px;margin:0 auto}
 .vista.activa{display:block}
 .card{background:var(--wh);border-radius:var(--rad);box-shadow:var(--shadow);margin-bottom:14px;overflow:hidden}
 .card-head{padding:12px 16px;font-size:13px;font-weight:600;display:flex;align-items:center;gap:8px}
@@ -23,6 +23,7 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:#EEF2F7;color:var(--
 .card-head.vd{background:var(--vd);color:#fff}
 .card-head.nr{background:var(--nr);color:#fff}
 .card-head.az2{background:var(--az2);color:#fff}
+.card-head.pu{background:#533AB7;color:#fff}
 .card-body{padding:14px 16px}
 .fila{display:grid;gap:10px;margin-bottom:10px}
 .fila-2{grid-template-columns:1fr 1fr}
@@ -33,6 +34,7 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:#EEF2F7;color:var(--
 .campo input:focus,.campo select:focus,.campo textarea:focus{outline:none;border-color:var(--az2);background:#F8FBFF}
 .campo input[readonly],.campo input.auto{background:var(--gr);color:var(--gr3);font-style:italic}
 .campo textarea{resize:vertical;min-height:60px}
+.campo.req label::after{content:" *";color:var(--rd)}
 .campo.clave label::after{content:" ★";color:var(--vd)}
 .btn{padding:10px 20px;border:none;border-radius:var(--rad2);cursor:pointer;font-size:14px;font-weight:600;font-family:inherit;transition:all .15s;display:inline-flex;align-items:center;gap:7px}
 .btn:active{transform:scale(.97)}
@@ -64,8 +66,11 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:#EEF2F7;color:var(--
 .linea-card{background:var(--wh);border-radius:var(--rad);box-shadow:var(--shadow);padding:14px 12px;text-align:center;cursor:pointer;border:2px solid transparent;transition:all .15s}
 .linea-card:hover{border-color:var(--az2);transform:translateY(-2px)}
 .linea-card.con-turno{border-color:var(--vd);background:var(--vd2)}
+.linea-card.corrugada{border-style:dashed;border-color:var(--nr)}
+.linea-card.corrugada.con-turno{border-style:solid}
 .linea-num{font-size:22px;font-weight:800;color:var(--az)}
 .linea-nombre{font-size:12px;color:var(--gr3);margin-top:2px}
+.linea-tipo{font-size:10px;color:var(--nr);font-weight:600}
 .linea-estado{font-size:10px;margin-top:6px;padding:2px 8px;border-radius:10px;display:inline-block}
 .e-abierto{background:var(--vd2);color:var(--vd)}
 .e-libre{background:var(--gr);color:var(--gr3)}
@@ -74,26 +79,25 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:#EEF2F7;color:var(--
 .hora-tab{padding:8px 14px;border-radius:var(--rad2);border:2px solid var(--gr2);cursor:pointer;font-size:13px;font-weight:600;background:var(--wh);transition:all .15s}
 .hora-tab.hecho{background:var(--vd2);border-color:var(--vd);color:var(--vd)}
 .hora-tab.activo{background:var(--az);border-color:var(--az);color:#fff}
-/* PESAJE */
+/* TABLAS */
 .pt{width:100%;border-collapse:collapse;font-size:13px}
 .pt th{background:var(--nr2);color:var(--nr);padding:7px 10px;text-align:left;font-size:11px;font-weight:700;text-transform:uppercase}
 .pt td{padding:5px 6px;border-bottom:1px solid var(--gr)}
 .pt input{width:100%;border:1px solid var(--gr2);border-radius:4px;padding:5px 7px;font-size:13px}
 .pt input:focus{outline:none;border-color:var(--nr)}
-/* RESUMEN */
 .rt{width:100%;border-collapse:collapse;font-size:13px}
 .rt th{background:var(--az);color:#fff;padding:8px 10px;text-align:left;font-size:11px;font-weight:700}
 .rt td{padding:7px 10px;border-bottom:1px solid var(--gr)}
 .rt tr:nth-child(even) td{background:var(--gr)}
 .rt .tot td{font-weight:700;color:var(--az);background:var(--az3)!important}
-/* BADGES */
+/* BADGE */
 .badge{font-size:11px;padding:2px 8px;border-radius:10px;font-weight:600}
 /* ADMIN TABS */
-.admin-tabs{display:flex;margin-bottom:16px;border-bottom:2px solid var(--gr2)}
-.admin-tab{padding:10px 18px;cursor:pointer;font-size:13px;font-weight:600;color:var(--gr3);border-bottom:3px solid transparent;margin-bottom:-2px;transition:all .15s}
+.admin-tabs{display:flex;margin-bottom:16px;border-bottom:2px solid var(--gr2);overflow-x:auto}
+.admin-tab{padding:10px 16px;cursor:pointer;font-size:13px;font-weight:600;color:var(--gr3);border-bottom:3px solid transparent;margin-bottom:-2px;transition:all .15s;white-space:nowrap}
 .admin-tab.activo{color:var(--az);border-bottom-color:var(--az)}
 /* NOTIF */
-.notif{position:fixed;top:64px;right:16px;z-index:999;padding:12px 18px;border-radius:var(--rad);font-size:14px;font-weight:600;box-shadow:var(--shadow);transform:translateX(220%);transition:transform .3s;max-width:300px}
+.notif{position:fixed;top:64px;right:16px;z-index:999;padding:12px 18px;border-radius:var(--rad);font-size:14px;font-weight:600;box-shadow:var(--shadow);transform:translateX(220%);transition:transform .3s;max-width:320px}
 .notif.show{transform:translateX(0)}
 .notif.ok{background:var(--vd);color:#fff}
 .notif.err{background:var(--rd);color:#fff}
@@ -104,6 +108,7 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:#EEF2F7;color:var(--
 .loader-box{background:var(--wh);border-radius:var(--rad);padding:28px 36px;text-align:center}
 .spinner{width:36px;height:36px;border:4px solid var(--gr2);border-top-color:var(--az);border-radius:50%;animation:spin .8s linear infinite;margin:0 auto 12px}
 @keyframes spin{to{transform:rotate(360deg)}}
+/* UTILS */
 .sec-t{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.6px;color:var(--gr3);margin-bottom:10px;padding-bottom:6px;border-bottom:1px solid var(--gr2)}
 .info-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:8px}
 .info-item{background:var(--gr);border-radius:var(--rad2);padding:8px 10px}
@@ -120,7 +125,36 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:#EEF2F7;color:var(--
 .ts{font-size:12px;color:var(--gr3)}
 .mt{margin-top:12px}
 .mb0{margin-bottom:0!important}
-@media(max-width:600px){.fila-3{grid-template-columns:1fr 1fr}.fila-4{grid-template-columns:1fr 1fr}.login-box{width:92%;padding:28px 18px}}
+/* KPI */
+.kpi{background:var(--wh);border-radius:var(--rad);box-shadow:var(--shadow);padding:14px;text-align:center;border-top:3px solid var(--az)}
+.kpi.vd{border-top-color:var(--vd)}.kpi.rd{border-top-color:var(--rd)}.kpi.nr{border-top-color:var(--nr)}.kpi.az2{border-top-color:var(--az2)}
+.kpi-val{font-size:22px;font-weight:800;color:var(--az);margin-bottom:2px}
+.kpi.vd .kpi-val{color:var(--vd)}.kpi.rd .kpi-val{color:var(--rd)}.kpi.nr .kpi-val{color:var(--nr)}.kpi.az2 .kpi-val{color:var(--az2)}
+.kpi-lbl{font-size:10px;font-weight:600;color:var(--gr3);text-transform:uppercase;letter-spacing:.4px}
+.kpi-sub{font-size:11px;color:var(--gr3);margin-top:2px}
+/* CONTADOR */
+.contador{background:linear-gradient(135deg,var(--az) 0%,var(--az2) 100%);border-radius:var(--rad);padding:14px 16px;color:#fff;margin-bottom:14px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px}
+.contador-item{text-align:center}
+.contador-item .val{font-size:24px;font-weight:800}
+.contador-item .lbl{font-size:10px;opacity:.8;text-transform:uppercase;letter-spacing:.4px}
+.contador-progress{width:100%;height:8px;background:rgba(255,255,255,.2);border-radius:4px;overflow:hidden;margin-top:8px}
+.contador-bar{height:100%;background:#fff;border-radius:4px;transition:width .5s}
+/* CHECK TOGGLE */
+.check-toggle{display:flex;align-items:center;gap:10px;padding:10px 0}
+.check-toggle input[type=checkbox]{width:22px;height:22px;cursor:pointer;accent-color:var(--vd)}
+.check-toggle span{font-size:14px;font-weight:600}
+/* CORRUGADA */
+.corr-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.corr-pos{background:var(--gr);border-radius:var(--rad2);padding:12px}
+.corr-pos h4{font-size:11px;font-weight:700;text-transform:uppercase;color:var(--az);margin-bottom:8px;letter-spacing:.4px}
+.corr-pos .fila-3{margin-bottom:0}
+/* USUARIOS */
+.user-card{background:var(--wh);border:1px solid var(--gr2);border-radius:var(--rad2);padding:12px 14px;margin-bottom:8px;display:flex;justify-content:space-between;align-items:center;gap:8px}
+.user-info{flex:1}
+.user-nombre{font-weight:600;font-size:14px}
+.user-detalle{font-size:12px;color:var(--gr3);margin-top:2px}
+.user-actions{display:flex;gap:6px}
+@media(max-width:600px){.fila-3{grid-template-columns:1fr 1fr}.fila-4{grid-template-columns:1fr 1fr}.login-box{width:92%;padding:28px 18px}.corr-grid{grid-template-columns:1fr}}
 </style>
 </head>
 <body>
@@ -143,7 +177,7 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:#EEF2F7;color:var(--
         <button class="pin-btn" onclick="pp('0')">0</button><button class="pin-btn pin-del" onclick="pd()">⌫</button>
       </div>
       <button class="pin-ok" onclick="loginOk()">INGRESAR →</button>
-      <div style="margin-top:14px;">
+      <div style="margin-top:14px">
         <button onclick="toggleUrl()" style="background:none;border:none;color:var(--az);font-size:11px;cursor:pointer;text-decoration:underline">⚙ Configurar URL del servidor</button>
         <div id="url-box" class="url-box" style="display:none">
           <label>URL de Google Apps Script:</label>
@@ -169,6 +203,7 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:#EEF2F7;color:var(--
     </div>
   </div>
   <div style="display:flex;align-items:center;gap:8px">
+    <span id="user-nombre" style="font-size:12px;opacity:.8"></span>
     <span class="badge" id="rol-badge" style="background:rgba(255,255,255,.2);color:#fff"></span>
     <button class="btn-logout" onclick="logout()">Salir</button>
   </div>
@@ -177,13 +212,34 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:#EEF2F7;color:var(--
 <!-- ADMIN -->
 <div class="vista" id="v-admin">
   <div class="admin-tabs">
-    <div class="admin-tab activo" onclick="adminTab('ordenes',this)">📋 Órdenes SAP</div>
+    <div class="admin-tab activo" onclick="adminTab('usuarios',this)">👥 Usuarios</div>
+    <div class="admin-tab" onclick="adminTab('ordenes',this)">📋 Órdenes SAP</div>
     <div class="admin-tab" onclick="adminTab('mezclas',this)">🧪 Mezclas SAP</div>
     <div class="admin-tab" onclick="adminTab('lineas',this)">🏭 Líneas</div>
   </div>
-  <div id="tab-ordenes">
-    <div class="card"><div class="card-head az">📋 Cargar Órdenes de Producción</div><div class="card-body">
-      <div class="hl">Exporta de SAP a CSV. Columnas requeridas: <strong>OrdenFab, CodigoSAP, Producto, EspesorMin_mm, Diametro_mm, PesoEstandar_kgm</strong></div>
+
+  <!-- USUARIOS -->
+  <div id="tab-usuarios">
+    <div class="card"><div class="card-head az">👥 Gestión de Usuarios</div><div class="card-body">
+      <div id="lista-usuarios" style="margin-bottom:16px"></div>
+      <div style="border-top:1px solid var(--gr2);padding-top:14px">
+        <div class="sec-t">Crear nuevo usuario</div>
+        <div class="fila fila-3">
+          <div class="campo"><label>Nombre</label><input type="text" id="nu-nombre" placeholder="Nombre completo"></div>
+          <div class="campo"><label>Rol</label>
+            <select id="nu-rol"><option value="operario">Operario</option><option value="admin">Administrador</option></select>
+          </div>
+          <div class="campo"><label>PIN (4 dígitos)</label><input type="text" id="nu-pin" placeholder="XXXX" maxlength="4"></div>
+        </div>
+        <button class="btn btn-vd btn-sm" onclick="crearUsuario()">+ Crear Usuario</button>
+      </div>
+    </div></div>
+  </div>
+
+  <!-- ORDENES -->
+  <div id="tab-ordenes" style="display:none">
+    <div class="card"><div class="card-head az">📋 Cargar Órdenes de Producción (SAP)</div><div class="card-body">
+      <div class="hl">Columnas requeridas en el CSV: <strong>OrdenFab, CodigoSAP, Producto, EspesorMin_mm, Diametro_mm, PesoEstandar_kgm, CantidadOrden_und</strong></div>
       <div class="upload-area" id="drop-ordenes" onclick="document.getElementById('file-ordenes').click()" ondragover="dov(event,this)" ondragleave="dlv(this)" ondrop="drf(event,'ordenes')">
         <div style="font-size:36px">📁</div><div class="ts" style="margin-top:8px">Arrastra CSV aquí o haz clic</div>
       </div>
@@ -203,6 +259,8 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:#EEF2F7;color:var(--
       <div class="pw"><table class="preview-table" id="lista-ordenes"></table></div>
     </div></div>
   </div>
+
+  <!-- MEZCLAS -->
   <div id="tab-mezclas" style="display:none">
     <div class="card"><div class="card-head az">🧪 Cargar Mezclas SAP</div><div class="card-body">
       <div class="hl">Columnas requeridas: <strong>CodigoMezcla, NombreMezcla</strong></div>
@@ -225,8 +283,10 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:#EEF2F7;color:var(--
       <div class="pw"><table class="preview-table" id="lista-mezclas"></table></div>
     </div></div>
   </div>
+
+  <!-- LÍNEAS -->
   <div id="tab-lineas" style="display:none">
-    <div class="card"><div class="card-head az">🏭 Líneas</div><div class="card-body">
+    <div class="card"><div class="card-head az">🏭 Líneas de Producción</div><div class="card-body">
       <button class="btn btn-gr btn-sm" onclick="verMaestro('lineas')" style="margin-bottom:10px">🔄 Ver líneas</button>
       <div class="pw"><table class="preview-table" id="lista-lineas"></table></div>
     </div></div>
@@ -236,13 +296,18 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:#EEF2F7;color:var(--
 <!-- LÍNEAS -->
 <div class="vista" id="v-lineas">
   <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;flex-wrap:wrap;gap:8px">
-    <div><div style="font-size:18px;font-weight:700;color:var(--az)">Líneas de Producción</div><div class="ts">Selecciona una línea</div></div>
+    <div><div style="font-size:18px;font-weight:700;color:var(--az)">Líneas de Producción</div><div class="ts">Selecciona una línea para iniciar turno</div></div>
     <div style="display:flex;gap:8px">
       <button class="btn btn-gr btn-sm" onclick="cargarLineas()">🔄</button>
-      <button class="btn btn-az btn-sm" id="btn-admin" onclick="irA('admin','Administración','Maestros SAP')" style="display:none">⚙ Admin</button>
+      <button class="btn btn-az btn-sm" id="btn-admin" onclick="irA('admin','Administración','Maestros y Usuarios')" style="display:none">⚙ Admin</button>
+      <button class="btn btn-az btn-sm" onclick="irA('informes','Informes','Balance por Orden')">📊 Informes</button>
     </div>
   </div>
   <div class="lineas-grid" id="lineas-grid"></div>
+  <div class="mt" style="display:flex;gap:8px;font-size:11px;color:var(--gr3)">
+    <span>Normal: borde sólido</span>
+    <span style="color:var(--nr)">▸ Corrugada (17,19,20): borde punteado naranja</span>
+  </div>
 </div>
 
 <!-- CABECERA -->
@@ -260,74 +325,239 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:#EEF2F7;color:var(--
     </div>
     <div class="sec-t mt">Orden de Fabricación</div>
     <div class="fila fila-2">
-      <div class="campo"><label>Orden de Fabricación</label><input type="text" id="cab-orden" placeholder="Número de orden..." oninput="buscarOrden(this.value)" list="ordenes-list"><datalist id="ordenes-list"></datalist></div>
-      <div class="campo"><label>Código SAP</label><input type="text" id="cab-codigoSAP" readonly class="auto"></div>
+      <div class="campo req"><label>Orden de Fabricación</label>
+        <input type="text" id="cab-orden" placeholder="Escribe el número de orden..." oninput="buscarOrden(this.value)" list="ordenes-list">
+        <datalist id="ordenes-list"></datalist>
+      </div>
+      <div class="campo"><label>Código SAP</label><input type="text" id="cab-codigoSAP" readonly class="auto" placeholder="Auto"></div>
     </div>
-    <div class="campo" style="margin-bottom:10px"><label>Producto</label><input type="text" id="cab-producto" readonly class="auto"></div>
-    <div class="fila fila-3">
+    <div class="campo" style="margin-bottom:10px"><label>Producto</label><input type="text" id="cab-producto" readonly class="auto" placeholder="Auto al seleccionar orden"></div>
+    <div class="fila fila-4">
       <div class="campo"><label>Espesor Mín. (mm)</label><input type="text" id="cab-espesor" readonly class="auto"></div>
       <div class="campo"><label>Diámetro Esp. (mm)</label><input type="text" id="cab-diametro" readonly class="auto"></div>
       <div class="campo"><label>Peso Estándar (kg/m)</label><input type="text" id="cab-peso" readonly class="auto"></div>
+      <div class="campo"><label>Cantidad Orden (und)</label><input type="text" id="cab-cantOrden" readonly class="auto"></div>
+    </div>
+    <div class="campo" style="margin-bottom:10px">
+      <label>Rotulado (descripción o referencia de imagen)</label>
+      <textarea id="cab-rotulado" placeholder="Describe el rotulado requerido o pega la referencia..." rows="2"></textarea>
     </div>
     <div class="btn-group mt">
-      <button class="btn btn-vd" onclick="crearTurno()">✔ Crear Turno</button>
+      <button class="btn btn-vd" onclick="crearTurno()">✔ Crear Turno e Iniciar Registro</button>
       <button class="btn btn-gr" onclick="irA('lineas')">Cancelar</button>
     </div>
   </div></div>
 </div>
 
-<!-- REGISTRO -->
+<!-- REGISTRO (NORMAL) -->
 <div class="vista" id="v-registro">
+  <!-- Contador unidades -->
+  <div class="contador" id="reg-contador">
+    <div class="contador-item"><div class="val" id="cnt-orden">—</div><div class="lbl">Und. Orden</div></div>
+    <div class="contador-item"><div class="val" id="cnt-producido">—</div><div class="lbl">Producidas</div></div>
+    <div class="contador-item"><div class="val" id="cnt-pendiente" style="color:#FFD700">—</div><div class="lbl">Pendientes</div></div>
+    <div style="width:100%"><div class="contador-progress"><div class="contador-bar" id="cnt-bar" style="width:0%"></div></div>
+    <div style="font-size:10px;opacity:.7;margin-top:4px;text-align:right" id="cnt-pct">0% completado</div></div>
+  </div>
+
+  <!-- Cabecera info -->
   <div class="card" style="margin-bottom:10px"><div class="card-body" style="padding:10px 14px"><div class="info-grid" id="reg-info"></div></div></div>
-  <div class="card"><div class="card-head vd">⏱ Horas del turno</div><div class="card-body">
+
+  <!-- Tabs horas -->
+  <div class="card"><div class="card-head vd">⏱ Horas del turno — selecciona la hora</div><div class="card-body">
     <div class="horas-tabs" id="horas-tabs"></div>
     <div class="ts"><span class="badge" style="background:var(--vd2);color:var(--vd)">✓ Guardada</span> &nbsp;<span class="badge" style="background:var(--az3);color:var(--az)">Activa</span> &nbsp;<span class="badge" style="background:var(--gr);color:var(--gr3)">Pendiente</span></div>
   </div></div>
+
+  <!-- Datos producción -->
   <div class="card"><div class="card-head az">📦 Hora <span id="reg-hora-num">1</span> — Datos de Producción</div><div class="card-body">
     <div class="fila fila-3">
-      <div class="campo clave"><label>Código Mezcla</label><input type="text" id="reg-codMezcla" placeholder="MZ-001" list="mezclas-list" oninput="buscarMezcla(this.value)"><datalist id="mezclas-list"></datalist></div>
-      <div class="campo"><label>Mezcla</label><input type="text" id="reg-mezcla" placeholder="Nombre mezcla"></div>
+      <div class="campo req clave"><label>Código Mezcla</label><input type="text" id="reg-codMezcla" placeholder="MZ-001" list="mezclas-list" oninput="buscarMezcla(this.value)"><datalist id="mezclas-list"></datalist></div>
+      <div class="campo"><label>Mezcla</label><input type="text" id="reg-mezcla" placeholder="Auto al escribir código"></div>
       <div class="campo clave"><label>Consecutivo Mezcla</label><input type="text" id="reg-consecutivo" readonly class="auto" placeholder="Auto"></div>
     </div>
     <div class="fila fila-3">
-      <div class="campo clave"><label>Cantidad kg Mezcla</label><input type="number" id="reg-kgMezcla" placeholder="0.0" step="0.01"></div>
-      <div class="campo"><label>Nro. Tubos (Und)</label><input type="number" id="reg-nroTubos" placeholder="0"></div>
+      <div class="campo req clave"><label>Cantidad kg Mezcla</label><input type="number" id="reg-kgMezcla" placeholder="0.0" step="0.01"></div>
+      <div class="campo"><label>Nro. Tubos (Und)</label><input type="number" id="reg-nroTubos" placeholder="0" oninput="actualizarContador()"></div>
       <div class="campo"><label>Peso Total (kg)</label><input type="number" id="reg-pesoTotal" placeholder="0.0" step="0.01"></div>
     </div>
     <div class="fila fila-2">
       <div class="campo"><label>Reproceso (kg)</label><input type="number" id="reg-reproceso" placeholder="0.0" step="0.01"></div>
       <div class="campo"><label>Motivo Reproceso</label><input type="text" id="reg-motivoRep" placeholder="Describir si aplica"></div>
     </div>
-    <div class="fila fila-2">
-      <div class="campo"><label>Rotulado Lado 1</label><input type="text" id="reg-rotL1" placeholder="Ej: TUBOSA Ø110mm"></div>
-      <div class="campo"><label>Rotulado Lado 2</label><input type="text" id="reg-rotL2" placeholder="Ej: NTC 1087"></div>
-    </div>
-    <div class="fila fila-4">
+    <div class="fila fila-3">
       <div class="campo"><label>Peso Promedio (kg)</label><input type="number" id="reg-pesoPromedio" placeholder="0.000" step="0.001"></div>
       <div class="campo"><label>Sobre Peso</label><input type="number" id="reg-sobrePeso" placeholder="0.000" step="0.001"></div>
       <div class="campo"><label>Longitud (m)</label><input type="number" id="reg-longitud" placeholder="0.0" step="0.1"></div>
-      <div class="campo"><label>Metros Producidos</label><input type="number" id="reg-metros" placeholder="0"></div>
+    </div>
+    <!-- ROTULADO CHECK -->
+    <div style="background:var(--az3);border-radius:var(--rad2);padding:10px 14px;margin-top:4px">
+      <div style="font-size:11px;font-weight:700;color:var(--az);text-transform:uppercase;margin-bottom:6px">✔ Verificación de Rotulado</div>
+      <div class="check-toggle">
+        <input type="checkbox" id="reg-rotuladoOk">
+        <span id="rotulado-txt" style="color:var(--gr3)">Rotulado NO verificado</span>
+      </div>
     </div>
   </div></div>
-  <div class="card"><div class="card-head nr">⚖ Pesaje y Rendimiento</div><div class="card-body">
-    <table class="pt"><thead><tr><th>Pos.</th><th>Peso (kg)</th><th>Rendimiento (%)</th><th>Observación</th></tr></thead><tbody id="pesaje-tbody"></tbody></table>
-  </div></div>
-  <div class="card"><div class="card-head az2">📈 Tendencias</div><div class="card-body">
-    <div class="fila fila-4">
-      <div class="campo"><label>Espesor Pared (mm)</label><input type="number" id="reg-espesor" placeholder="0.00" step="0.01"></div>
-      <div class="campo"><label>Descalibre (%)</label><input type="number" id="reg-descalibre" placeholder="0.0" step="0.1"></div>
-      <div class="campo"><label>Diám. Exterior (mm)</label><input type="number" id="reg-diamExt" placeholder="0.0" step="0.01"></div>
-      <div class="campo"><label>Ovalamiento</label><input type="number" id="reg-ovalamiento" placeholder="0.0" step="0.01"></div>
+
+  <!-- Tendencias L1 y L2 -->
+  <div class="card"><div class="card-head az2">📈 Tendencias — Hora <span id="tend-hora-num">1</span></div><div class="card-body">
+    <div class="fila fila-2">
+      <div>
+        <div class="sec-t">Lado 1</div>
+        <div class="fila fila-2">
+          <div class="campo"><label>Espesor Pared (mm)</label><input type="number" id="reg-espL1" placeholder="0.00" step="0.01"></div>
+          <div class="campo"><label>Descalibre (%)</label><input type="number" id="reg-descL1" placeholder="0.0" step="0.1"></div>
+        </div>
+        <div class="fila fila-2">
+          <div class="campo"><label>Diám. Exterior (mm)</label><input type="number" id="reg-diamL1" placeholder="0.0" step="0.01"></div>
+          <div class="campo"><label>Ovalización</label><input type="number" id="reg-ovalL1" placeholder="0.0" step="0.01"></div>
+        </div>
+      </div>
+      <div>
+        <div class="sec-t">Lado 2</div>
+        <div class="fila fila-2">
+          <div class="campo"><label>Espesor Pared (mm)</label><input type="number" id="reg-espL2" placeholder="0.00" step="0.01"></div>
+          <div class="campo"><label>Descalibre (%)</label><input type="number" id="reg-descL2" placeholder="0.0" step="0.1"></div>
+        </div>
+        <div class="fila fila-2">
+          <div class="campo"><label>Diám. Exterior (mm)</label><input type="number" id="reg-diamL2" placeholder="0.0" step="0.01"></div>
+          <div class="campo"><label>Ovalización</label><input type="number" id="reg-ovalL2" placeholder="0.0" step="0.01"></div>
+        </div>
+      </div>
     </div>
   </div></div>
-  <div class="card"><div class="card-head" style="background:#533AB7;color:#fff">📝 Observaciones</div><div class="card-body">
-    <div class="campo mb0"><label>Observaciones generales</label><textarea id="reg-observaciones" placeholder="Novedades, paros, ajustes..."></textarea></div>
+
+  <!-- Observaciones -->
+  <div class="card"><div class="card-head pu">📝 Observaciones de la Hora</div><div class="card-body">
+    <div class="campo mb0"><label>Observaciones generales</label><textarea id="reg-observaciones" placeholder="Novedades, paros, ajustes realizados..."></textarea></div>
   </div></div>
+
   <div class="btn-group">
     <button class="btn btn-vd" onclick="guardarHora()">✔ Guardar Hora <span id="btn-hora-num">1</span></button>
     <button class="btn btn-az" onclick="irResumen()">Ver Resumen</button>
     <button class="btn btn-gr" onclick="limpiarForm()">🗑 Limpiar</button>
   </div>
+
+  <!-- Pesaje (todo el turno) -->
+  <div class="card"><div class="card-head nr">⚖ Pesaje y Rendimiento — Todo el Turno</div><div class="card-body">
+    <p class="ts" style="margin-bottom:10px">Este pesaje aplica para todo el turno. Se puede ir llenando a lo largo de las 8 horas y se guarda al final.</p>
+    <table class="pt"><thead><tr><th>Pos.</th><th>Peso (kg)</th><th>Rendimiento (%)</th><th>Observación</th></tr></thead>
+    <tbody id="pesaje-tbody"></tbody></table>
+    <button class="btn btn-nr btn-sm" onclick="guardarPesaje()" style="margin-top:10px">💾 Guardar Pesaje del Turno</button>
+  </div></div>
+</div>
+
+<!-- REGISTRO CORRUGADA -->
+<div class="vista" id="v-registro-corr">
+  <!-- Contador -->
+  <div class="contador" id="reg-contador-corr">
+    <div class="contador-item"><div class="val" id="cnt-orden-corr">—</div><div class="lbl">Und. Orden</div></div>
+    <div class="contador-item"><div class="val" id="cnt-prod-corr">—</div><div class="lbl">Producidas</div></div>
+    <div class="contador-item"><div class="val" id="cnt-pend-corr" style="color:#FFD700">—</div><div class="lbl">Pendientes</div></div>
+    <div style="width:100%"><div class="contador-progress"><div class="contador-bar" id="cnt-bar-corr" style="width:0%"></div></div>
+    <div style="font-size:10px;opacity:.7;margin-top:4px;text-align:right" id="cnt-pct-corr">0%</div></div>
+  </div>
+
+  <div class="card" style="margin-bottom:10px"><div class="card-body" style="padding:10px 14px"><div class="info-grid" id="reg-info-corr"></div></div></div>
+
+  <div class="card"><div class="card-head nr">⚡ LÍNEA CORRUGADA — <span id="corr-linea-nombre"></span></div><div class="card-body">
+    <div class="horas-tabs" id="horas-tabs-corr"></div>
+    <div class="ts"><span class="badge" style="background:var(--vd2);color:var(--vd)">✓ Guardada</span> &nbsp;<span class="badge" style="background:var(--az3);color:var(--az)">Activa</span></div>
+  </div></div>
+
+  <!-- Datos hora corrugada -->
+  <div class="card"><div class="card-head az">📦 Hora <span id="corr-hora-num">1</span> — Datos de Producción</div><div class="card-body">
+    <div class="fila fila-3">
+      <div class="campo req clave"><label>Código Mezcla</label><input type="text" id="corr-codMezcla" placeholder="MZ-001" list="mezclas-list-corr" oninput="buscarMezclaCo(this.value)"><datalist id="mezclas-list-corr"></datalist></div>
+      <div class="campo"><label>Mezcla</label><input type="text" id="corr-mezcla" placeholder="Auto"></div>
+      <div class="campo clave"><label>Consecutivo</label><input type="text" id="corr-consecutivo" readonly class="auto"></div>
+    </div>
+    <div class="fila fila-3">
+      <div class="campo req clave"><label>Cantidad kg Mezcla</label><input type="number" id="corr-kgMezcla" placeholder="0.0" step="0.01"></div>
+      <div class="campo"><label>Nro. Tubos (Und)</label><input type="number" id="corr-nroTubos" placeholder="0" oninput="actualizarContadorCorr()"></div>
+      <div class="campo"><label>Peso Total (kg)</label><input type="number" id="corr-pesoTotal" placeholder="0.0" step="0.01"></div>
+    </div>
+    <div class="fila fila-2">
+      <div class="campo"><label>Reproceso (kg)</label><input type="number" id="corr-reproceso" placeholder="0.0" step="0.01"></div>
+      <div class="campo"><label>Motivo Reproceso</label><input type="text" id="corr-motivoRep"></div>
+    </div>
+    <div class="fila fila-2">
+      <div class="campo"><label>Peso Promedio (kg)</label><input type="number" id="corr-pesoPromedio" placeholder="0.000" step="0.001"></div>
+      <div class="campo"><label>Longitud (m)</label><input type="number" id="corr-longitud" placeholder="0.0" step="0.1"></div>
+    </div>
+    <div style="background:var(--az3);border-radius:var(--rad2);padding:10px 14px;margin-top:4px">
+      <div style="font-size:11px;font-weight:700;color:var(--az);text-transform:uppercase;margin-bottom:6px">✔ Verificación de Rotulado</div>
+      <div class="check-toggle"><input type="checkbox" id="corr-rotuladoOk"><span id="corr-rotulado-txt" style="color:var(--gr3)">Rotulado NO verificado</span></div>
+    </div>
+  </div></div>
+
+  <!-- Observaciones hora corrugada -->
+  <div class="card"><div class="card-head pu">📝 Observaciones</div><div class="card-body">
+    <div class="campo mb0"><textarea id="corr-observaciones" placeholder="Novedades, paros, ajustes..."></textarea></div>
+  </div></div>
+
+  <div class="btn-group">
+    <button class="btn btn-vd" onclick="guardarHoraCorr()">✔ Guardar Hora <span id="corr-btn-hora">1</span></button>
+    <button class="btn btn-az" onclick="irResumen()">Ver Resumen</button>
+    <button class="btn btn-gr" onclick="limpiarFormCorr()">🗑 Limpiar</button>
+  </div>
+
+  <!-- Pesaje corrugada (3 por turno) -->
+  <div class="card"><div class="card-head nr">⚖ Pesaje y Rendimiento — Todo el Turno (3 posiciones)</div><div class="card-body">
+    <table class="pt"><thead><tr><th>Pos.</th><th>Peso (kg)</th><th>Rendimiento (%)</th><th>Observación</th></tr></thead>
+    <tbody id="pesaje-tbody-corr"></tbody></table>
+    <button class="btn btn-nr btn-sm" onclick="guardarPesajeCorr()" style="margin-top:10px">💾 Guardar Pesaje</button>
+  </div></div>
+
+  <!-- Tendencias corrugada (por turno, 4 posiciones) -->
+  <div class="card"><div class="card-head az2">📐 Medición de Espesores — Todo el Turno</div><div class="card-body">
+    <p class="ts" style="margin-bottom:12px">Medición de 4 posiciones del tubo: Arriba, Abajo, Izquierda (Vacío), Derecha (Operario)</p>
+    <div class="corr-grid">
+      <div class="corr-pos">
+        <h4>↑ Arriba</h4>
+        <div class="fila fila-3">
+          <div class="campo"><label>Externo</label><input type="number" id="tc-arr-ext" placeholder="0.0" step="0.01" oninput="calcPromediosCorr()"></div>
+          <div class="campo"><label>Interno</label><input type="number" id="tc-arr-int" placeholder="0.0" step="0.01" oninput="calcPromediosCorr()"></div>
+          <div class="campo"><label>Valle</label><input type="number" id="tc-arr-val" placeholder="0.0" step="0.01" oninput="calcPromediosCorr()"></div>
+        </div>
+      </div>
+      <div class="corr-pos">
+        <h4>↓ Abajo</h4>
+        <div class="fila fila-3">
+          <div class="campo"><label>Externo</label><input type="number" id="tc-aba-ext" placeholder="0.0" step="0.01" oninput="calcPromediosCorr()"></div>
+          <div class="campo"><label>Interno</label><input type="number" id="tc-aba-int" placeholder="0.0" step="0.01" oninput="calcPromediosCorr()"></div>
+          <div class="campo"><label>Valle</label><input type="number" id="tc-aba-val" placeholder="0.0" step="0.01" oninput="calcPromediosCorr()"></div>
+        </div>
+      </div>
+      <div class="corr-pos">
+        <h4>← Izquierda (Vacío)</h4>
+        <div class="fila fila-3">
+          <div class="campo"><label>Externo</label><input type="number" id="tc-izq-ext" placeholder="0.0" step="0.01" oninput="calcPromediosCorr()"></div>
+          <div class="campo"><label>Interno</label><input type="number" id="tc-izq-int" placeholder="0.0" step="0.01" oninput="calcPromediosCorr()"></div>
+          <div class="campo"><label>Valle</label><input type="number" id="tc-izq-val" placeholder="0.0" step="0.01" oninput="calcPromediosCorr()"></div>
+        </div>
+      </div>
+      <div class="corr-pos">
+        <h4>→ Derecha (Operario)</h4>
+        <div class="fila fila-3">
+          <div class="campo"><label>Externo</label><input type="number" id="tc-der-ext" placeholder="0.0" step="0.01" oninput="calcPromediosCorr()"></div>
+          <div class="campo"><label>Interno</label><input type="number" id="tc-der-int" placeholder="0.0" step="0.01" oninput="calcPromediosCorr()"></div>
+          <div class="campo"><label>Valle</label><input type="number" id="tc-der-val" placeholder="0.0" step="0.01" oninput="calcPromediosCorr()"></div>
+        </div>
+      </div>
+    </div>
+    <!-- Promedios -->
+    <div style="background:var(--az3);border-radius:var(--rad2);padding:12px;margin-top:12px">
+      <div class="sec-t" style="border-bottom-color:var(--az2)">Promedios calculados</div>
+      <div class="fila fila-3">
+        <div class="info-item"><label>Espesor Ext. Promedio</label><span id="prom-ext">—</span></div>
+        <div class="info-item"><label>Espesor Int. Promedio</label><span id="prom-int">—</span></div>
+        <div class="info-item"><label>Espesor Valle Promedio</label><span id="prom-val">—</span></div>
+      </div>
+    </div>
+    <button class="btn btn-az btn-sm" onclick="guardarTendCorr()" style="margin-top:10px">💾 Guardar Medición</button>
+  </div></div>
 </div>
 
 <!-- RESUMEN -->
@@ -339,310 +569,541 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:#EEF2F7;color:var(--
   </div></div>
   <div class="btn-group">
     <button class="btn btn-rd" onclick="cerrarTurnoYPDF()">🔒 Cerrar Turno y Generar PDF</button>
-    <button class="btn btn-az" onclick="irA('registro')">← Volver al Registro</button>
+    <button class="btn btn-az" onclick="volverRegistro()">← Volver al Registro</button>
+  </div>
+</div>
+
+<!-- INFORMES -->
+<div class="vista" id="v-informes">
+  <div class="card"><div class="card-head az">📊 Balance por Orden de Fabricación</div><div class="card-body">
+    <div class="fila fila-2">
+      <div class="campo"><label>Orden de Fabricación</label>
+        <input type="text" id="inf-orden" placeholder="Escribe el número de orden..." list="ordenes-list-inf">
+        <datalist id="ordenes-list-inf"></datalist>
+      </div>
+      <div style="display:flex;align-items:flex-end;padding-bottom:2px">
+        <button class="btn btn-az" onclick="cargarInforme()" style="width:100%;justify-content:center">🔍 Consultar</button>
+      </div>
+    </div>
+  </div></div>
+  <div id="inf-resultado" style="display:none">
+    <div class="card"><div class="card-head vd">📋 Datos de la Orden</div><div class="card-body"><div class="info-grid" id="inf-datos-orden"></div></div></div>
+    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px;margin-bottom:14px" id="inf-kpis"></div>
+    <div class="card"><div class="card-head az">⚖ Balance de Masa</div><div class="card-body">
+      <div style="overflow-x:auto"><table class="rt" id="inf-tabla-balance"></table></div>
+      <div style="margin-top:14px">
+        <div class="sec-t">Distribución visual</div>
+        <div id="inf-barra" style="display:flex;height:32px;border-radius:var(--rad2);overflow:hidden"></div>
+        <div id="inf-barra-leyenda" style="display:flex;gap:12px;flex-wrap:wrap;margin-top:8px;font-size:11px"></div>
+      </div>
+    </div></div>
+    <div class="card"><div class="card-head nr">🧪 Consumo por Mezcla</div><div class="card-body">
+      <div style="overflow-x:auto"><table class="rt" id="inf-tabla-mezclas"></table></div>
+    </div></div>
+    <div class="card"><div class="card-head az2">⏱ Detalle por Turno</div><div class="card-body">
+      <div style="overflow-x:auto"><table class="rt" id="inf-tabla-turnos"></table></div>
+    </div></div>
+  </div>
+  <div id="inf-vacio" style="text-align:center;padding:40px;color:var(--gr3);display:none">
+    <div style="font-size:48px;margin-bottom:12px">📭</div>
+    <div style="font-size:16px;font-weight:600">Sin datos para esta orden</div>
+    <div style="font-size:13px;margin-top:6px">Verifica que la orden tenga turnos registrados</div>
   </div>
 </div>
 
 <script>
-// ── CONFIG ───────────────────────────────────────────────────
-// ── PEGA AQUÍ TU URL DE APPS SCRIPT ──────────────────────────
+// ── CONFIG ────────────────────────────────────────────────────
 const API_URL_FIJA = 'https://script.google.com/macros/s/AKfycbykdmPFuhuA94oKM0TmzAb67zxpdHmskQaN-AyH6gM4-4wOui8J4Bs0H4BZtEqtKCmv/exec';
-// ─────────────────────────────────────────────────────────────
 let API_URL = localStorage.getItem('tubosa_url') || API_URL_FIJA;
-let rolActual = '', lineaActual = {}, turnoActual = {};
-let horaActual = 1, horasGuardadas = {};
-let maestroOrdenes = [], maestroMezclas = [];
-let datosArchivo = {ordenes:null, mezclas:null};
-let cbCounter = 0;
+let rolActual='', nombreActual='', lineaActual={}, turnoActual={};
+let esCorrugada = false;
+let horaActual=1, horasGuardadas={};
+let maestroOrdenes=[], maestroMezclas=[];
+let datosArchivo={ordenes:null,mezclas:null};
+let cbCounter=0;
+const LINEAS_CORRUGADAS = [17,19,20];
 
-// ── JSONP API (resuelve CORS definitivamente) ─────────────────
+// ── JSONP ─────────────────────────────────────────────────────
 function api(data) {
   return new Promise((resolve, reject) => {
-    if (!API_URL) { reject(new Error('Sin URL configurada')); return; }
-    const cbName = 'tubosa_cb_' + (++cbCounter);
+    if (!API_URL) { reject(new Error('Sin URL')); return; }
+    const cbName = 'tb_cb_' + (++cbCounter);
     const timeout = setTimeout(() => {
       delete window[cbName];
-      const s = document.getElementById('jsonp_' + cbName);
-      if (s) s.remove();
-      reject(new Error('Timeout — verifica que el Apps Script esté publicado'));
+      document.getElementById('jsonp_'+cbName)?.remove();
+      reject(new Error('Timeout'));
     }, 15000);
-    window[cbName] = (result) => {
+    window[cbName] = (r) => {
       clearTimeout(timeout);
       delete window[cbName];
-      const s = document.getElementById('jsonp_' + cbName);
-      if (s) s.remove();
-      resolve(result);
+      document.getElementById('jsonp_'+cbName)?.remove();
+      resolve(r);
     };
-    const payload = encodeURIComponent(JSON.stringify(data));
-    const url = API_URL + '?callback=' + cbName + '&payload=' + payload;
-    const script = document.createElement('script');
-    script.id = 'jsonp_' + cbName;
-    script.src = url;
-    script.onerror = () => {
-      clearTimeout(timeout);
-      delete window[cbName];
-      script.remove();
-      reject(new Error('Error de red — verifica la URL'));
-    };
-    document.head.appendChild(script);
+    const s = document.createElement('script');
+    s.id = 'jsonp_'+cbName;
+    s.src = API_URL + '?callback='+cbName+'&payload='+encodeURIComponent(JSON.stringify(data));
+    s.onerror = () => { clearTimeout(timeout); delete window[cbName]; s.remove(); reject(new Error('Error de red')); };
+    document.head.appendChild(s);
   });
 }
 
 // ── UTILS ─────────────────────────────────────────────────────
-function notify(msg, tipo='ok', dur=3500) {
-  const n = document.getElementById('notif');
-  n.textContent = msg; n.className = 'notif show ' + tipo;
-  setTimeout(() => n.classList.remove('show'), dur);
-}
-function loader(show, msg='Procesando...') {
-  document.getElementById('loader').classList.toggle('show', show);
-  document.getElementById('loader-msg').textContent = msg;
-}
-function fmtFecha(d=new Date()) {
-  return d.getDate().toString().padStart(2,'0')+'/'+(d.getMonth()+1).toString().padStart(2,'0')+'/'+d.getFullYear();
-}
-function val(id) { return document.getElementById(id)?.value?.trim()||''; }
-function setVal(id,v) { const el=document.getElementById(id); if(el) el.value=v??''; }
-function irA(vista, titulo='', sub='') {
+function notify(msg,tipo='ok',dur=3500){const n=document.getElementById('notif');n.textContent=msg;n.className='notif show '+tipo;setTimeout(()=>n.classList.remove('show'),dur);}
+function loader(show,msg='Procesando...'){document.getElementById('loader').classList.toggle('show',show);document.getElementById('loader-msg').textContent=msg;}
+function fmtFecha(d=new Date()){return d.getDate().toString().padStart(2,'0')+'/'+(d.getMonth()+1).toString().padStart(2,'0')+'/'+d.getFullYear();}
+function val(id){return document.getElementById(id)?.value?.trim()||'';}
+function setVal(id,v){const el=document.getElementById(id);if(el)el.value=v??'';}
+function flt(id){return parseFloat(val(id))||0;}
+function avg(...vals){const v=vals.filter(x=>x>0);return v.length?v.reduce((a,b)=>a+b,0)/v.length:0;}
+
+function irA(vista,titulo='',sub='') {
   document.querySelectorAll('.vista').forEach(v=>v.classList.remove('activa'));
   document.getElementById('v-'+vista)?.classList.add('activa');
-  document.getElementById('topbar-titulo').textContent = titulo||'TUBOSA';
-  document.getElementById('topbar-sub').textContent = sub||'Control de Producción';
-  document.getElementById('btn-back').classList.toggle('show', !['lineas','admin'].includes(vista));
+  document.getElementById('topbar-titulo').textContent=titulo||'TUBOSA';
+  document.getElementById('topbar-sub').textContent=sub||'Control de Producción';
+  const noBack=['lineas','admin','informes'];
+  document.getElementById('btn-back').classList.toggle('show',!noBack.includes(vista));
 }
-function volverAtras() {
-  const v = document.querySelector('.vista.activa')?.id?.replace('v-','');
-  const m = {admin:'lineas',cabecera:'lineas',registro:'lineas',resumen:'registro'};
+function volverAtras(){
+  const v=document.querySelector('.vista.activa')?.id?.replace('v-','');
+  const m={admin:'lineas',cabecera:'lineas','registro':'lineas','registro-corr':'lineas',resumen:esCorrugada?'registro-corr':'registro',informes:'lineas'};
   irA(m[v]||'lineas');
 }
+function volverRegistro(){irA(esCorrugada?'registro-corr':'registro');}
 
 // ── URL CONFIG ────────────────────────────────────────────────
-function toggleUrl() {
-  const b = document.getElementById('url-box');
-  b.style.display = b.style.display==='none'?'block':'none';
-  if (b.style.display==='block') document.getElementById('url-input').value = API_URL;
-}
-function guardarURL() {
-  const url = document.getElementById('url-input').value.trim();
-  if (!url) return;
-  API_URL = url; localStorage.setItem('tubosa_url', url);
-  document.getElementById('url-result').innerHTML = '<span style="color:var(--vd)">✓ URL guardada</span>';
-}
-async function probarURL() {
-  const url = document.getElementById('url-input').value.trim();
-  if (!url) { alert('Pega la URL primero'); return; }
-  API_URL = url;
-  const el = document.getElementById('url-result');
-  el.textContent = 'Probando...';
-  try {
-    const r = await api({action:'ping'});
-    if (r.ok) {
-      localStorage.setItem('tubosa_url', url);
-      el.innerHTML = '<span style="color:var(--vd)">✅ Conexión exitosa</span>';
-    } else {
-      el.innerHTML = '<span style="color:var(--nr)">⚠ ' + (r.msg||'Respuesta inesperada') + '</span>';
-    }
-  } catch(e) {
-    el.innerHTML = '<span style="color:var(--rd)">❌ ' + e.message + '</span>';
-  }
+function toggleUrl(){const b=document.getElementById('url-box');b.style.display=b.style.display==='none'?'block':'none';if(b.style.display==='block')document.getElementById('url-input').value=API_URL;}
+function guardarURL(){const u=document.getElementById('url-input').value.trim();if(!u)return;API_URL=u;localStorage.setItem('tubosa_url',u);document.getElementById('url-result').innerHTML='<span style="color:var(--vd)">✓ Guardada</span>';}
+async function probarURL(){
+  const u=document.getElementById('url-input').value.trim();
+  if(!u){alert('Pega la URL');return;}
+  API_URL=u;
+  const el=document.getElementById('url-result');
+  el.textContent='Probando...';
+  try{
+    const r=await api({action:'ping'});
+    if(r.ok){localStorage.setItem('tubosa_url',u);el.innerHTML='<span style="color:var(--vd)">✅ Conexión exitosa</span>';}
+    else el.innerHTML='<span style="color:var(--nr)">⚠ '+r.msg+'</span>';
+  }catch(e){el.innerHTML='<span style="color:var(--rd)">❌ '+e.message+'</span>';}
 }
 
 // ── LOGIN ─────────────────────────────────────────────────────
-let pinActual = '';
-function pp(d) { if(pinActual.length>=4) return; pinActual+=d; upPin(); }
-function pd() { pinActual=pinActual.slice(0,-1); upPin(); }
-function upPin() {
-  document.getElementById('pin-display').textContent = pinActual.replace(/./g,'●').padEnd(4,'_').split('').join(' ');
-  document.getElementById('pin-err').textContent='';
-}
-async function loginOk() {
-  if (pinActual.length<4) { document.getElementById('pin-err').textContent='Ingresa 4 dígitos'; return; }
-  if (!API_URL) { document.getElementById('pin-err').textContent='⚠ Configura la URL primero'; document.getElementById('url-box').style.display='block'; return; }
+let pinActual='';
+function pp(d){if(pinActual.length>=4)return;pinActual+=d;upPin();}
+function pd(){pinActual=pinActual.slice(0,-1);upPin();}
+function upPin(){document.getElementById('pin-display').textContent=pinActual.replace(/./g,'●').padEnd(4,'_').split('').join(' ');document.getElementById('pin-err').textContent='';}
+async function loginOk(){
+  if(pinActual.length<4){document.getElementById('pin-err').textContent='Ingresa 4 dígitos';return;}
+  if(!API_URL){document.getElementById('pin-err').textContent='⚠ Configura la URL';document.getElementById('url-box').style.display='block';return;}
   loader(true,'Verificando...');
-  try {
-    const res = await api({action:'login', pin:pinActual});
+  try{
+    const res=await api({action:'login',pin:pinActual});
     loader(false);
-    if (res.ok) {
-      rolActual = res.rol;
+    if(res.ok){
+      rolActual=res.rol; nombreActual=res.nombre||'';
       document.getElementById('v-login').style.display='none';
       document.getElementById('topbar').style.display='flex';
-      document.getElementById('rol-badge').textContent = rolActual==='admin'?'⚙ Admin':'👷 Operario';
-      document.getElementById('btn-admin').style.display = rolActual==='admin'?'inline-flex':'none';
+      document.getElementById('rol-badge').textContent=rolActual==='admin'?'⚙ Admin':'👷 Operario';
+      document.getElementById('user-nombre').textContent=nombreActual;
+      document.getElementById('btn-admin').style.display=rolActual==='admin'?'inline-flex':'none';
       await cargarMaestros();
       await cargarLineas();
       irA('lineas','Líneas de Producción','Selecciona una línea');
-    } else {
-      document.getElementById('pin-err').textContent='❌ PIN incorrecto';
-      pinActual=''; upPin();
-    }
-  } catch(e) {
+      if(rolActual==='admin') cargarUsuarios();
+    }else{document.getElementById('pin-err').textContent='❌ PIN incorrecto';pinActual='';upPin();}
+  }catch(e){loader(false);document.getElementById('pin-err').textContent='❌ '+e.message;document.getElementById('url-box').style.display='block';}
+}
+function logout(){pinActual='';rolActual='';document.getElementById('v-login').style.display='block';document.getElementById('topbar').style.display='none';document.querySelectorAll('.vista').forEach(v=>v.classList.remove('activa'));upPin();}
+
+// ── USUARIOS ─────────────────────────────────────────────────
+async function cargarUsuarios(){
+  try{
+    const res=await api({action:'getUsuarios'});
+    if(!res.ok) return;
+    const cont=document.getElementById('lista-usuarios');
+    const activos=res.data.filter(u=>u.Estado==='Activo');
+    if(!activos.length){cont.innerHTML='<p class="ts">Sin usuarios registrados</p>';return;}
+    cont.innerHTML=activos.map(u=>`
+      <div class="user-card">
+        <div class="user-info">
+          <div class="user-nombre">${u.Nombre}</div>
+          <div class="user-detalle">${u.Rol==='admin'?'⚙ Administrador':'👷 Operario'} · PIN: ${'●'.repeat(u.PIN?.length||4)}</div>
+        </div>
+        <div class="user-actions">
+          <button class="btn btn-rd btn-sm" onclick="desactivarUsuario('${u.ID}','${u.Nombre}')">Desactivar</button>
+        </div>
+      </div>`).join('');
+  }catch(e){}
+}
+async function crearUsuario(){
+  const nombre=val('nu-nombre'),rol=val('nu-rol'),pin=val('nu-pin');
+  if(!nombre||!pin){notify('Completa nombre y PIN','err');return;}
+  if(pin.length!==4||isNaN(pin)){notify('El PIN debe ser de 4 dígitos numéricos','err');return;}
+  loader(true,'Creando usuario...');
+  try{
+    const res=await api({action:'crearUsuario',nombre,rol,pin});
     loader(false);
-    document.getElementById('pin-err').textContent='❌ '+e.message;
-    document.getElementById('url-box').style.display='block';
-  }
+    if(res.ok){notify(res.msg,'ok');setVal('nu-nombre','');setVal('nu-pin','');cargarUsuarios();}
+    else notify(res.msg||'Error','err');
+  }catch(e){loader(false);notify('Error: '+e.message,'err');}
 }
-function logout() {
-  pinActual=''; rolActual='';
-  document.getElementById('v-login').style.display='block';
-  document.getElementById('topbar').style.display='none';
-  document.querySelectorAll('.vista').forEach(v=>v.classList.remove('activa'));
-  upPin();
-}
-
-// ── MAESTROS ──────────────────────────────────────────────────
-async function cargarMaestros() {
-  try {
-    const [ro,rm] = await Promise.all([api({action:'getOrdenes'}),api({action:'getMezclas'})]);
-    if (ro.ok) {
-      maestroOrdenes = ro.data.filter(o=>o.Estado!=='Cerrada');
-      document.getElementById('ordenes-list').innerHTML = maestroOrdenes.map(o=>`<option value="${o.OrdenFab}">${o.OrdenFab} — ${o.Producto||''}</option>`).join('');
-    }
-    if (rm.ok) {
-      maestroMezclas = rm.data.filter(m=>m.Activa!=='No');
-      document.getElementById('mezclas-list').innerHTML = maestroMezclas.map(m=>`<option value="${m.CodigoMezcla}">${m.CodigoMezcla} — ${m.NombreMezcla||''}</option>`).join('');
-    }
-  } catch(e) {}
+async function desactivarUsuario(id,nombre){
+  if(!confirm('¿Desactivar usuario '+nombre+'?'))return;
+  loader(true);
+  try{
+    const res=await api({action:'eliminarUsuario',id});
+    loader(false);
+    if(res.ok){notify('Usuario desactivado','ok');cargarUsuarios();}
+    else notify(res.msg,'err');
+  }catch(e){loader(false);notify('Error','err');}
 }
 
-async function cargarLineas() {
+// ── MAESTROS ─────────────────────────────────────────────────
+async function cargarMaestros(){
+  try{
+    const [ro,rm]=await Promise.all([api({action:'getOrdenes'}),api({action:'getMezclas'})]);
+    if(ro.ok){
+      maestroOrdenes=ro.data.filter(o=>o.Estado!=='Cerrada');
+      const opts=maestroOrdenes.map(o=>`<option value="${o.OrdenFab}">${o.OrdenFab} — ${o.Producto||''}</option>`).join('');
+      document.getElementById('ordenes-list').innerHTML=opts;
+      document.getElementById('ordenes-list-inf').innerHTML=opts;
+    }
+    if(rm.ok){
+      maestroMezclas=rm.data.filter(m=>m.Activa!=='No');
+      const opts=maestroMezclas.map(m=>`<option value="${m.CodigoMezcla}">${m.CodigoMezcla} — ${m.NombreMezcla||''}</option>`).join('');
+      document.getElementById('mezclas-list').innerHTML=opts;
+      document.getElementById('mezclas-list-corr').innerHTML=opts;
+    }
+  }catch(e){}
+}
+
+async function cargarLineas(){
   loader(true,'Cargando líneas...');
-  try {
-    const [rl,rt] = await Promise.all([api({action:'getLineas'}),api({action:'getTurnosActivos'})]);
+  try{
+    const [rl,rt]=await Promise.all([api({action:'getLineas'}),api({action:'getTurnosActivos'})]);
     loader(false);
-    if (!rl.ok) { notify('Error: '+rl.msg,'err'); return; }
-    const act = (rt.ok?rt.data:[]).reduce((a,t)=>{a[t.Linea]=t;return a;},{});
-    document.getElementById('lineas-grid').innerHTML = rl.data.filter(l=>l.Activa!=='No').map(l=>{
+    if(!rl.ok){notify('Error: '+rl.msg,'err');return;}
+    const act=(rt.ok?rt.data:[]).reduce((a,t)=>{a[t.Linea]=t;return a;},{});
+    document.getElementById('lineas-grid').innerHTML=rl.data.filter(l=>l.Activa!=='No').map(l=>{
       const ta=act[l.ID];
-      return `<div class="linea-card ${ta?'con-turno':''}" onclick='selLinea(${JSON.stringify(l)})'>
+      const esCorr=l.Tipo==='Corrugada'||LINEAS_CORRUGADAS.includes(parseInt(l.ID));
+      return `<div class="linea-card ${ta?'con-turno':''} ${esCorr?'corrugada':''}" onclick='selLinea(${JSON.stringify(l)})'>
         <div class="linea-num">${String(l.ID).padStart(2,'0')}</div>
         <div class="linea-nombre">${l.NombreLinea}</div>
+        ${esCorr?'<div class="linea-tipo">CORRUGADA</div>':''}
         <div class="linea-estado ${ta?'e-abierto':'e-libre'}">${ta?'● Turno '+ta.Turno:'Libre'}</div>
       </div>`;
     }).join('');
-  } catch(e) { loader(false); notify('Error cargando líneas','err'); }
+  }catch(e){loader(false);notify('Error cargando líneas','err');}
 }
 
-function selLinea(l) {
+function selLinea(l){
   lineaActual=l;
+  esCorrugada=l.Tipo==='Corrugada'||LINEAS_CORRUGADAS.includes(parseInt(l.ID));
   document.getElementById('cab-linea-nombre').textContent=l.NombreLinea;
   setVal('cab-linea',l.NombreLinea); setVal('cab-fecha',fmtFecha());
   irA('cabecera','Nueva Cabecera',l.NombreLinea);
 }
 
-function buscarOrden(v) {
+function buscarOrden(v){
   const o=maestroOrdenes.find(o=>o.OrdenFab===v);
-  if(o){setVal('cab-codigoSAP',o.CodigoSAP||'');setVal('cab-producto',o.Producto||'');setVal('cab-espesor',o.EspesorMin_mm||'');setVal('cab-diametro',o.Diametro_mm||'');setVal('cab-peso',o.PesoEstandar_kgm||'');}
-}
-function buscarMezcla(v) {
-  const m=maestroMezclas.find(m=>m.CodigoMezcla===v);
-  if(m) setVal('reg-mezcla',m.NombreMezcla||'');
-  calcConsec();
-}
-function calcConsec() {
-  const cod=val('reg-codMezcla');
-  if(!cod) return;
-  setVal('reg-consecutivo', Object.values(horasGuardadas).filter(h=>h.codigoMezcla===cod).length+1);
+  if(o){
+    setVal('cab-codigoSAP',o.CodigoSAP||'');
+    setVal('cab-producto',o.Producto||'');
+    setVal('cab-espesor',o.EspesorMin_mm||'');
+    setVal('cab-diametro',o.Diametro_mm||'');
+    setVal('cab-peso',o.PesoEstandar_kgm||'');
+    setVal('cab-cantOrden',o.CantidadOrden_und||'');
+  }
 }
 
+function buscarMezcla(v){
+  const m=maestroMezclas.find(m=>m.CodigoMezcla===v);
+  if(m)setVal('reg-mezcla',m.NombreMezcla||'');
+  calcConsec();
+}
+function buscarMezclaCo(v){
+  const m=maestroMezclas.find(m=>m.CodigoMezcla===v);
+  if(m)setVal('corr-mezcla',m.NombreMezcla||'');
+  calcConsecCorr();
+}
+function calcConsec(){const cod=val('reg-codMezcla');if(!cod)return;setVal('reg-consecutivo',Object.values(horasGuardadas).filter(h=>h.codigoMezcla===cod).length+1);}
+function calcConsecCorr(){const cod=val('corr-codMezcla');if(!cod)return;setVal('corr-consecutivo',Object.values(horasGuardadas).filter(h=>h.codigoMezcla===cod).length+1);}
+
 // ── TURNO ─────────────────────────────────────────────────────
-async function crearTurno() {
+async function crearTurno(){
   if(!val('cab-operario')){notify('Ingresa el operario','err');return;}
   if(!val('cab-orden')){notify('Ingresa la orden de fabricación','err');return;}
   loader(true,'Creando turno...');
-  try {
-    const res = await api({action:'crearTurno',linea:lineaActual.ID,lineaNombre:lineaActual.NombreLinea,
-      fecha:val('cab-fecha'),turno:val('cab-turno'),operario:val('cab-operario'),
-      coordinador:val('cab-coordinador'),supervisor:val('cab-supervisor'),
+  try{
+    const res=await api({action:'crearTurno',
+      linea:lineaActual.ID,lineaNombre:lineaActual.NombreLinea,
+      fecha:val('cab-fecha'),turno:val('cab-turno'),
+      operario:val('cab-operario'),coordinador:val('cab-coordinador'),supervisor:val('cab-supervisor'),
       ordenFab:val('cab-orden'),codigoSAP:val('cab-codigoSAP'),producto:val('cab-producto'),
-      espesorMin:val('cab-espesor'),diametro:val('cab-diametro'),pesoEstandar:val('cab-peso')});
+      espesorMin:val('cab-espesor'),diametro:val('cab-diametro'),pesoEstandar:val('cab-peso'),
+      cantidadOrden:parseInt(val('cab-cantOrden'))||0,
+      rotulado:val('cab-rotulado')
+    });
     loader(false);
     if(res.ok){
       turnoActual={id:res.turnoId,linea:lineaActual.ID,lineaNombre:lineaActual.NombreLinea,
         fecha:val('cab-fecha'),turno:val('cab-turno'),operario:val('cab-operario'),
         coordinador:val('cab-coordinador'),supervisor:val('cab-supervisor'),
         ordenFab:val('cab-orden'),codigoSAP:val('cab-codigoSAP'),producto:val('cab-producto'),
-        espesorMin:val('cab-espesor'),diametro:val('cab-diametro'),pesoEstandar:val('cab-peso')};
+        espesorMin:val('cab-espesor'),diametro:val('cab-diametro'),pesoEstandar:val('cab-peso'),
+        cantidadOrden:parseInt(val('cab-cantOrden'))||0,rotulado:val('cab-rotulado')};
       horasGuardadas={}; horaActual=1;
-      renderInfo(); renderTabs(); renderPesaje();
-      irA('registro','Registro — '+turnoActual.lineaNombre,'Turno '+turnoActual.turno+' · '+turnoActual.fecha);
-      selHora(1); notify('Turno creado ✓','ok');
-    } else notify(res.msg||'Error','err');
-  } catch(e){loader(false);notify('Error: '+e.message,'err');}
+      if(esCorrugada) iniciarRegistroCorr();
+      else iniciarRegistro();
+      notify('Turno creado ✓','ok');
+    }else notify(res.msg||'Error','err');
+  }catch(e){loader(false);notify('Error: '+e.message,'err');}
 }
 
-function renderInfo() {
+// ── REGISTRO NORMAL ───────────────────────────────────────────
+function iniciarRegistro(){
+  renderInfo('reg-info');
+  renderTabs('horas-tabs',false);
+  renderPesaje('pesaje-tbody',6);
+  actualizarContador();
+  irA('registro','Registro — '+turnoActual.lineaNombre,'Turno '+turnoActual.turno+' · '+turnoActual.fecha);
+  selHora(1);
+  // Check rotulado
+  document.getElementById('reg-rotuladoOk').addEventListener('change',function(){
+    document.getElementById('rotulado-txt').textContent=this.checked?'✓ Rotulado VERIFICADO':'Rotulado NO verificado';
+    document.getElementById('rotulado-txt').style.color=this.checked?'var(--vd)':'var(--gr3)';
+  });
+}
+
+function renderInfo(elId){
   const t=turnoActual;
-  document.getElementById('reg-info').innerHTML=[
+  document.getElementById(elId).innerHTML=[
     ['Línea',t.lineaNombre],['Turno',t.turno],['Fecha',t.fecha],
     ['Operario',t.operario],['Orden',t.ordenFab],['Producto',t.producto],
-    ['Espesor mín.',(t.espesorMin||'')+' mm'],['Diámetro',(t.diametro||'')+' mm'],['Peso std.',(t.pesoEstandar||'')+' kg/m']
-  ].map(([l,v])=>`<div class="info-item"><label>${l}</label><span>${v||'-'}</span></div>`).join('');
+    ['Espesor mín.',(t.espesorMin||'')+' mm'],['Diámetro',(t.diametro||'')+' mm'],
+    ['Peso std.',(t.pesoEstandar||'')+' kg/m'],['Rotulado',t.rotulado||'—']
+  ].map(([l,v])=>`<div class="info-item"><label>${l}</label><span style="font-size:12px">${v||'-'}</span></div>`).join('');
 }
-function renderTabs() {
-  document.getElementById('horas-tabs').innerHTML=Array.from({length:8},(_,i)=>{
+
+function renderTabs(elId,corrugada){
+  document.getElementById(elId).innerHTML=Array.from({length:8},(_,i)=>{
     const h=i+1,g=horasGuardadas[h],a=h===horaActual;
-    return `<div class="hora-tab ${g?'hecho':a?'activo':''}" onclick="selHora(${h})">H${h}${g?' ✓':''}</div>`;
+    const fn=corrugada?`selHoraCorr(${h})`:`selHora(${h})`;
+    return `<div class="hora-tab ${g?'hecho':a?'activo':''}" onclick="${fn}">H${h}${g?' ✓':''}</div>`;
   }).join('');
 }
-function renderPesaje() {
-  document.getElementById('pesaje-tbody').innerHTML=Array.from({length:6},(_,i)=>`
+
+function renderPesaje(tbodyId,nPos){
+  document.getElementById(tbodyId).innerHTML=Array.from({length:nPos},(_,i)=>`
     <tr><td style="text-align:center;font-weight:700;color:var(--nr)">${i+1}</td>
     <td><input type="number" id="p-peso-${i+1}" placeholder="0.000" step="0.001"></td>
     <td><input type="number" id="p-rend-${i+1}" placeholder="0.0" step="0.1"></td>
     <td><input type="text" id="p-obs-${i+1}" placeholder="Obs."></td></tr>`).join('');
 }
-function selHora(h) {
+
+function selHora(h){
   horaActual=h;
   document.getElementById('reg-hora-num').textContent=h;
+  document.getElementById('tend-hora-num').textContent=h;
   document.getElementById('btn-hora-num').textContent=h;
-  document.querySelectorAll('.hora-tab').forEach((el,i)=>{
-    const n=i+1;
-    el.className='hora-tab '+(horasGuardadas[n]?'hecho':n===h?'activo':'');
-    el.textContent=`H${n}${horasGuardadas[n]?' ✓':''}`;
-  });
-  limpiarForm(); calcConsec();
-}
-function limpiarForm() {
-  ['codMezcla','mezcla','consecutivo','kgMezcla','nroTubos','pesoTotal','reproceso',
-   'motivoRep','rotL1','rotL2','pesoPromedio','sobrePeso','longitud','metros',
-   'espesor','descalibre','diamExt','ovalamiento','observaciones'].forEach(id=>setVal('reg-'+id,''));
-  for(let i=1;i<=6;i++){setVal(`p-peso-${i}`,'');setVal(`p-rend-${i}`,'');setVal(`p-obs-${i}`,'');}
+  renderTabs('horas-tabs',false);
+  limpiarForm();calcConsec();
 }
 
-async function guardarHora() {
-  if(!val('reg-codMezcla')){notify('Ingresa el código de mezcla','err');return;}
-  if(!val('reg-kgMezcla')){notify('Ingresa kg de mezcla ★','err');return;}
+function limpiarForm(){
+  ['codMezcla','mezcla','consecutivo','kgMezcla','nroTubos','pesoTotal','reproceso',
+   'motivoRep','pesoPromedio','sobrePeso','longitud','observaciones',
+   'espL1','descL1','diamL1','ovalL1','espL2','descL2','diamL2','ovalL2']
+  .forEach(id=>setVal('reg-'+id,''));
+  document.getElementById('reg-rotuladoOk').checked=false;
+  document.getElementById('rotulado-txt').textContent='Rotulado NO verificado';
+  document.getElementById('rotulado-txt').style.color='var(--gr3)';
+}
+
+async function guardarHora(){
+  if(!val('reg-codMezcla')){notify('Código de mezcla obligatorio ★','err');return;}
+  if(!val('reg-kgMezcla')){notify('Cantidad kg mezcla obligatoria ★','err');return;}
   loader(true,'Guardando hora '+horaActual+'...');
-  try {
+  try{
     const hd={action:'guardarHora',turnoId:turnoActual.id,hora:horaActual,
       codigoMezcla:val('reg-codMezcla'),mezcla:val('reg-mezcla'),
-      cantidadKgMezcla:parseFloat(val('reg-kgMezcla'))||0,
-      nroTubos:parseInt(val('reg-nroTubos'))||0,
-      pesoTotal:parseFloat(val('reg-pesoTotal'))||0,
-      reprocesoKg:parseFloat(val('reg-reproceso'))||0,
+      cantidadKgMezcla:flt('reg-kgMezcla'),nroTubos:parseInt(val('reg-nroTubos'))||0,
+      pesoTotal:flt('reg-pesoTotal'),reprocesoKg:flt('reg-reproceso'),
       motivoReproceso:val('reg-motivoRep'),
-      rotuladoL1:val('reg-rotL1'),rotuladoL2:val('reg-rotL2'),
-      pesoPromedio:parseFloat(val('reg-pesoPromedio'))||0,
-      sobrePeso:parseFloat(val('reg-sobrePeso'))||0,
-      longitud:parseFloat(val('reg-longitud'))||0,
-      metros:parseFloat(val('reg-metros'))||0,
-      observaciones:val('reg-observaciones')};
+      rotuladoOk:document.getElementById('reg-rotuladoOk').checked,
+      pesoPromedio:flt('reg-pesoPromedio'),sobrePeso:flt('reg-sobrePeso'),
+      longitud:flt('reg-longitud'),observaciones:val('reg-observaciones')};
     const r=await api(hd);
     if(!r.ok){loader(false);notify(r.msg||'Error','err');return;}
     setVal('reg-consecutivo',r.consecutivo);
     horasGuardadas[horaActual]={...hd,horaId:r.horaId,consecutivo:r.consecutivo};
-    const pesajes=Array.from({length:6},(_,i)=>({posicion:i+1,pesoKg:parseFloat(val(`p-peso-${i+1}`))||0,rendimiento:parseFloat(val(`p-rend-${i+1}`))||0,obs:val(`p-obs-${i+1}`)})).filter(p=>p.pesoKg>0||p.rendimiento>0);
-    if(pesajes.length) await api({action:'guardarPesaje',horaId:r.horaId,pesajes});
-    if(val('reg-espesor')||val('reg-descalibre')||val('reg-diamExt')||val('reg-ovalamiento'))
-      await api({action:'guardarTendencia',horaId:r.horaId,espesorPared:parseFloat(val('reg-espesor'))||0,descalibre:parseFloat(val('reg-descalibre'))||0,diamExterior:parseFloat(val('reg-diamExt'))||0,ovalamiento:parseFloat(val('reg-ovalamiento'))||0,metros:parseFloat(val('reg-metros'))||0});
-    loader(false); renderTabs();
+
+    // Guardar tendencias si hay datos
+    if(val('reg-espL1')||val('reg-espL2')){
+      await api({action:'guardarTendencia',horaId:r.horaId,turnoId:turnoActual.id,hora:horaActual,
+        espesorL1:flt('reg-espL1'),descalibreL1:flt('reg-descL1'),diamExtL1:flt('reg-diamL1'),ovalizacionL1:flt('reg-ovalL1'),
+        espesorL2:flt('reg-espL2'),descalibreL2:flt('reg-descL2'),diamExtL2:flt('reg-diamL2'),ovalizacionL2:flt('reg-ovalL2')});
+    }
+    loader(false);
+    renderTabs('horas-tabs',false);
+    actualizarContador();
     notify(`Hora ${horaActual} guardada ✓`,'ok');
-    if(horaActual<8) selHora(horaActual+1);
-  } catch(e){loader(false);notify('Error: '+e.message,'err');}
+    if(horaActual<8)selHora(horaActual+1);
+  }catch(e){loader(false);notify('Error: '+e.message,'err');}
+}
+
+async function guardarPesaje(){
+  const pesajes=Array.from({length:6},(_,i)=>({
+    posicion:i+1,pesoKg:flt(`p-peso-${i+1}`),
+    rendimiento:flt(`p-rend-${i+1}`),obs:val(`p-obs-${i+1}`)
+  })).filter(p=>p.pesoKg>0||p.rendimiento>0);
+  if(!pesajes.length){notify('Ingresa al menos un pesaje','err');return;}
+  loader(true,'Guardando pesaje...');
+  try{
+    const r=await api({action:'guardarPesaje',turnoId:turnoActual.id,pesajes});
+    loader(false);
+    if(r.ok)notify('Pesaje guardado ✓','ok');
+    else notify(r.msg||'Error','err');
+  }catch(e){loader(false);notify('Error','err');}
+}
+
+// Contador unidades
+function actualizarContador(){
+  const cantOrden=turnoActual.cantidadOrden||0;
+  if(!cantOrden){document.getElementById('reg-contador').style.display='none';return;}
+  document.getElementById('reg-contador').style.display='flex';
+  const tubosEnHoraActual=parseInt(val('reg-nroTubos'))||0;
+  const tubosGuardados=Object.values(horasGuardadas).reduce((s,h)=>s+(h.nroTubos||0),0);
+  const totalProd=tubosGuardados+tubosEnHoraActual;
+  const pendiente=Math.max(0,cantOrden-totalProd);
+  const pct=Math.min(100,(totalProd/cantOrden*100)).toFixed(0);
+  setVal('cnt-orden',cantOrden.toLocaleString());
+  setVal('cnt-producido',totalProd.toLocaleString());
+  setVal('cnt-pendiente',pendiente.toLocaleString());
+  document.getElementById('cnt-bar').style.width=pct+'%';
+  document.getElementById('cnt-pct').textContent=pct+'% completado';
+  // Cambiar color si está al límite
+  document.getElementById('cnt-pendiente').style.color=pendiente<=0?'#4ADE80':pendiente<100?'#FCD34D':'#FFD700';
+}
+
+// ── REGISTRO CORRUGADA ────────────────────────────────────────
+function iniciarRegistroCorr(){
+  document.getElementById('corr-linea-nombre').textContent=turnoActual.lineaNombre;
+  renderInfo('reg-info-corr');
+  renderTabs('horas-tabs-corr',true);
+  renderPesaje('pesaje-tbody-corr',3);
+  actualizarContadorCorr();
+  irA('registro-corr','Registro Corrugada — '+turnoActual.lineaNombre,'Turno '+turnoActual.turno);
+  selHoraCorr(1);
+  document.getElementById('corr-rotuladoOk').addEventListener('change',function(){
+    document.getElementById('corr-rotulado-txt').textContent=this.checked?'✓ Rotulado VERIFICADO':'Rotulado NO verificado';
+    document.getElementById('corr-rotulado-txt').style.color=this.checked?'var(--vd)':'var(--gr3)';
+  });
+}
+
+function selHoraCorr(h){
+  horaActual=h;
+  document.getElementById('corr-hora-num').textContent=h;
+  document.getElementById('corr-btn-hora').textContent=h;
+  renderTabs('horas-tabs-corr',true);
+  limpiarFormCorr();calcConsecCorr();
+}
+
+function limpiarFormCorr(){
+  ['codMezcla','mezcla','consecutivo','kgMezcla','nroTubos','pesoTotal','reproceso','motivoRep','pesoPromedio','longitud','observaciones']
+  .forEach(id=>setVal('corr-'+id,''));
+  document.getElementById('corr-rotuladoOk').checked=false;
+  document.getElementById('corr-rotulado-txt').textContent='Rotulado NO verificado';
+  document.getElementById('corr-rotulado-txt').style.color='var(--gr3)';
+}
+
+async function guardarHoraCorr(){
+  if(!val('corr-codMezcla')){notify('Código de mezcla obligatorio ★','err');return;}
+  if(!val('corr-kgMezcla')){notify('Cantidad kg mezcla obligatoria ★','err');return;}
+  loader(true,'Guardando hora '+horaActual+'...');
+  try{
+    const hd={action:'guardarHora',turnoId:turnoActual.id,hora:horaActual,
+      codigoMezcla:val('corr-codMezcla'),mezcla:val('corr-mezcla'),
+      cantidadKgMezcla:flt('corr-kgMezcla'),nroTubos:parseInt(val('corr-nroTubos'))||0,
+      pesoTotal:flt('corr-pesoTotal'),reprocesoKg:flt('corr-reproceso'),
+      motivoReproceso:val('corr-motivoRep'),
+      rotuladoOk:document.getElementById('corr-rotuladoOk').checked,
+      pesoPromedio:flt('corr-pesoPromedio'),sobrePeso:0,longitud:flt('corr-longitud'),
+      observaciones:val('corr-observaciones')};
+    const r=await api(hd);
+    if(!r.ok){loader(false);notify(r.msg||'Error','err');return;}
+    setVal('corr-consecutivo',r.consecutivo);
+    horasGuardadas[horaActual]={...hd,horaId:r.horaId,consecutivo:r.consecutivo};
+    loader(false);
+    renderTabs('horas-tabs-corr',true);
+    actualizarContadorCorr();
+    notify(`Hora ${horaActual} guardada ✓`,'ok');
+    if(horaActual<8)selHoraCorr(horaActual+1);
+  }catch(e){loader(false);notify('Error: '+e.message,'err');}
+}
+
+async function guardarPesajeCorr(){
+  const pesajes=Array.from({length:3},(_,i)=>({
+    posicion:i+1,pesoKg:flt(`p-peso-${i+1}`),
+    rendimiento:flt(`p-rend-${i+1}`),obs:val(`p-obs-${i+1}`)
+  })).filter(p=>p.pesoKg>0||p.rendimiento>0);
+  if(!pesajes.length){notify('Ingresa al menos un pesaje','err');return;}
+  loader(true);
+  try{
+    const r=await api({action:'guardarPesaje',turnoId:turnoActual.id,pesajes});
+    loader(false);
+    if(r.ok)notify('Pesaje guardado ✓','ok');
+    else notify(r.msg,'err');
+  }catch(e){loader(false);notify('Error','err');}
+}
+
+function calcPromediosCorr(){
+  const ext=avg(flt('tc-arr-ext'),flt('tc-aba-ext'),flt('tc-izq-ext'),flt('tc-der-ext'));
+  const int=avg(flt('tc-arr-int'),flt('tc-aba-int'),flt('tc-izq-int'),flt('tc-der-int'));
+  const valle=avg(flt('tc-arr-val'),flt('tc-aba-val'),flt('tc-izq-val'),flt('tc-der-val'));
+  document.getElementById('prom-ext').textContent=ext>0?ext.toFixed(2)+'mm':'—';
+  document.getElementById('prom-int').textContent=int>0?int.toFixed(2)+'mm':'—';
+  document.getElementById('prom-val').textContent=valle>0?valle.toFixed(2)+'mm':'—';
+}
+
+async function guardarTendCorr(){
+  loader(true,'Guardando medición...');
+  try{
+    const ext=avg(flt('tc-arr-ext'),flt('tc-aba-ext'),flt('tc-izq-ext'),flt('tc-der-ext'));
+    const int=avg(flt('tc-arr-int'),flt('tc-aba-int'),flt('tc-izq-int'),flt('tc-der-int'));
+    const valle=avg(flt('tc-arr-val'),flt('tc-aba-val'),flt('tc-izq-val'),flt('tc-der-val'));
+    const r=await api({action:'guardarTendCorrugada',turnoId:turnoActual.id,
+      arribaExterno:flt('tc-arr-ext'),arribaInterno:flt('tc-arr-int'),arribaValle:flt('tc-arr-val'),
+      abajoExterno:flt('tc-aba-ext'),abajoInterno:flt('tc-aba-int'),abajoValle:flt('tc-aba-val'),
+      izqExterno:flt('tc-izq-ext'),izqInterno:flt('tc-izq-int'),izqValle:flt('tc-izq-val'),
+      derExterno:flt('tc-der-ext'),derInterno:flt('tc-der-int'),derValle:flt('tc-der-val'),
+      promExterno:ext,promInterno:int,promValle:valle});
+    loader(false);
+    if(r.ok)notify('Medición guardada ✓','ok');
+    else notify(r.msg,'err');
+  }catch(e){loader(false);notify('Error','err');}
+}
+
+function actualizarContadorCorr(){
+  const cantOrden=turnoActual.cantidadOrden||0;
+  const idSuf='-corr';
+  if(!cantOrden){document.getElementById('reg-contador-corr').style.display='none';return;}
+  document.getElementById('reg-contador-corr').style.display='flex';
+  const tubosEn=parseInt(val('corr-nroTubos'))||0;
+  const tubosGuard=Object.values(horasGuardadas).reduce((s,h)=>s+(h.nroTubos||0),0);
+  const total=tubosGuard+tubosEn;
+  const pend=Math.max(0,cantOrden-total);
+  const pct=Math.min(100,(total/cantOrden*100)).toFixed(0);
+  document.getElementById('cnt-orden-corr').textContent=cantOrden.toLocaleString();
+  document.getElementById('cnt-prod-corr').textContent=total.toLocaleString();
+  document.getElementById('cnt-pend-corr').textContent=pend.toLocaleString();
+  document.getElementById('cnt-bar-corr').style.width=pct+'%';
+  document.getElementById('cnt-pct-corr').textContent=pct+'%';
 }
 
 // ── RESUMEN Y PDF ─────────────────────────────────────────────
-function irResumen() {
+function irResumen(){
   const t=turnoActual;
   document.getElementById('res-cabecera').innerHTML=[
     ['Línea',t.lineaNombre],['Turno',t.turno],['Fecha',t.fecha],
@@ -650,79 +1111,71 @@ function irResumen() {
   ].map(([l,v])=>`<div class="info-item"><label>${l}</label><span>${v||'-'}</span></div>`).join('');
   const h=Object.values(horasGuardadas);
   document.getElementById('res-tabla').innerHTML=`
-    <thead><tr><th>Hora</th><th>Cód.Mezcla</th><th>Kg Mezcla★</th><th>Consec.</th><th>Tubos</th><th>Peso Total</th><th>Reproceso</th><th>Metros</th></tr></thead>
-    <tbody>${h.map(r=>`<tr><td>H${r.hora}</td><td>${r.codigoMezcla}</td><td><strong>${r.cantidadKgMezcla}</strong></td><td>${r.consecutivo||''}</td><td>${r.nroTubos}</td><td>${r.pesoTotal}</td><td>${r.reprocesoKg||0}</td><td>${r.metros||0}</td></tr>`).join('')}
+    <thead><tr><th>Hora</th><th>Cód.Mezcla</th><th>Kg Mezcla★</th><th>Consec.</th><th>Tubos</th><th>Peso Total</th><th>Reproceso</th><th>Rotulado</th></tr></thead>
+    <tbody>${h.map(r=>`<tr><td>H${r.hora}</td><td>${r.codigoMezcla}</td><td><strong>${r.cantidadKgMezcla}</strong></td>
+      <td>${r.consecutivo||''}</td><td>${r.nroTubos}</td><td>${r.pesoTotal}</td>
+      <td>${r.reprocesoKg||0}</td><td>${r.rotuladoOk?'✓ Sí':'—'}</td></tr>`).join('')}
     <tr class="tot"><td colspan="2">TOTALES</td>
       <td>${h.reduce((s,r)=>s+(r.cantidadKgMezcla||0),0).toFixed(1)}</td><td>—</td>
       <td>${h.reduce((s,r)=>s+(r.nroTubos||0),0)}</td>
       <td>${h.reduce((s,r)=>s+(r.pesoTotal||0),0).toFixed(1)}</td>
-      <td>${h.reduce((s,r)=>s+(r.reprocesoKg||0),0).toFixed(1)}</td>
-      <td>${h.reduce((s,r)=>s+(r.metros||0),0)}</td>
+      <td>${h.reduce((s,r)=>s+(r.reprocesoKg||0),0).toFixed(1)}</td><td>—</td>
     </tr></tbody>`;
-  irA('resumen','Resumen de Turno',turnoActual.lineaNombre+' · Turno '+turnoActual.turno);
+  irA('resumen','Resumen de Turno',t.lineaNombre+' · Turno '+t.turno);
 }
 
-async function cerrarTurnoYPDF() {
+async function cerrarTurnoYPDF(){
   if(!Object.keys(horasGuardadas).length){notify('Registra al menos una hora','err');return;}
-  if(!confirm('¿Cerrar turno y generar PDF?')) return;
+  if(!confirm('¿Cerrar turno y generar PDF?'))return;
   loader(true,'Cerrando turno...');
-  try {
+  try{
     await api({action:'cerrarTurno',turnoId:turnoActual.id});
-    loader(false); generarPDF();
-  } catch(e){loader(false);notify('Error: '+e.message,'err');}
+    loader(false);generarPDF();
+  }catch(e){loader(false);notify('Error: '+e.message,'err');}
 }
 
-function generarPDF() {
+function generarPDF(){
   const {jsPDF}=window.jspdf;
   const doc=new jsPDF({orientation:'portrait',unit:'mm',format:'a4'});
   const AZ=[31,56,100],VD=[30,107,60],NR=[197,90,17];
-  const ml=10; const t=turnoActual;
-  doc.setFillColor(...AZ); doc.rect(0,0,210,28,'F');
-  doc.setTextColor(255,255,255); doc.setFontSize(16); doc.setFont('helvetica','bold');
+  const ml=10,t=turnoActual;
+  doc.setFillColor(...AZ);doc.rect(0,0,210,28,'F');
+  doc.setTextColor(255,255,255);doc.setFontSize(16);doc.setFont('helvetica','bold');
   doc.text('TUBOSA S.A.',ml,11);
-  doc.setFontSize(10); doc.setFont('helvetica','normal');
+  doc.setFontSize(10);doc.setFont('helvetica','normal');
   doc.text('Control de Líneas de Producción — Informe de Turno',ml,18);
-  doc.setFontSize(9);
-  doc.text('Generado: '+fmtFecha()+' '+new Date().toLocaleTimeString('es-CO',{hour:'2-digit',minute:'2-digit'}),200,24,{align:'right'});
+  doc.setFontSize(9);doc.text('Generado: '+fmtFecha()+' '+new Date().toLocaleTimeString('es-CO',{hour:'2-digit',minute:'2-digit'}),200,24,{align:'right'});
   let y=34;
-  doc.setTextColor(...AZ); doc.setFontSize(11); doc.setFont('helvetica','bold');
-  doc.text('DATOS DEL TURNO',ml,y); y+=4;
+  doc.setTextColor(...AZ);doc.setFontSize(11);doc.setFont('helvetica','bold');
+  doc.text('DATOS DEL TURNO',ml,y);y+=4;
   doc.autoTable({startY:y,margin:{left:ml,right:ml},
     body:[['Línea',t.lineaNombre,'Turno',t.turno],['Fecha',t.fecha,'Orden Fabricación',t.ordenFab],
-      ['Operario',t.operario,'Código SAP',t.codigoSAP||'-'],
+      ['Operario',t.operario||'-','Código SAP',t.codigoSAP||'-'],
       ['Coordinador',t.coordinador||'-','Producto',t.producto||'-'],
       ['Supervisor',t.supervisor||'-','Espesor Mín.',(t.espesorMin||'-')+' mm'],
-      ['','','Diámetro Esp.',(t.diametro||'-')+' mm'],['','','Peso Estándar',(t.pesoEstandar||'-')+' kg/m']],
+      ['Rotulado',t.rotulado||'-','Diámetro',(t.diametro||'-')+' mm'],
+      ['Cant. Orden',(t.cantidadOrden||'-')+' und','Peso Estándar',(t.pesoEstandar||'-')+' kg/m']],
     theme:'grid',styles:{fontSize:9,cellPadding:2.5},
     columnStyles:{0:{fontStyle:'bold',fillColor:[214,228,247],cellWidth:32},1:{cellWidth:58},2:{fontStyle:'bold',fillColor:[214,228,247],cellWidth:38},3:{cellWidth:62}}});
   y=doc.lastAutoTable.finalY+8;
-  doc.setTextColor(...AZ); doc.setFontSize(11); doc.setFont('helvetica','bold');
-  doc.text('REGISTRO HORA A HORA',ml,y); y+=4;
+  doc.setTextColor(...AZ);doc.setFontSize(11);doc.setFont('helvetica','bold');
+  doc.text('REGISTRO HORA A HORA',ml,y);y+=4;
   const horas=Object.values(horasGuardadas);
   doc.autoTable({startY:y,margin:{left:ml,right:ml},
-    head:[['Hora','Cód.Mezcla','Mezcla','Consec.','Kg Mezcla','Tubos','Peso Total','Reproceso','Metros']],
+    head:[['Hora','Cód.Mezcla','Mezcla','Consec.','Kg Mezcla','Tubos','Peso Total','Reproceso','Rotulado']],
     body:[...horas.map(h=>['H'+h.hora,h.codigoMezcla,h.mezcla||'-',h.consecutivo||'-',
-      (h.cantidadKgMezcla||0).toFixed(1),h.nroTubos||0,(h.pesoTotal||0).toFixed(1),(h.reprocesoKg||0).toFixed(1),h.metros||0]),
+      (h.cantidadKgMezcla||0).toFixed(1),h.nroTubos||0,(h.pesoTotal||0).toFixed(1),
+      (h.reprocesoKg||0).toFixed(1),h.rotuladoOk?'✓':'—']),
       ['TOTAL','','','',horas.reduce((s,h)=>s+(h.cantidadKgMezcla||0),0).toFixed(1),
-        horas.reduce((s,h)=>s+(h.nroTubos||0),0),horas.reduce((s,h)=>s+(h.pesoTotal||0),0).toFixed(1),
-        horas.reduce((s,h)=>s+(h.reprocesoKg||0),0).toFixed(1),horas.reduce((s,h)=>s+(h.metros||0),0)]],
+       horas.reduce((s,h)=>s+(h.nroTubos||0),0),
+       horas.reduce((s,h)=>s+(h.pesoTotal||0),0).toFixed(1),
+       horas.reduce((s,h)=>s+(h.reprocesoKg||0),0).toFixed(1),'']],
     theme:'striped',styles:{fontSize:8,cellPadding:2},headStyles:{fillColor:VD,textColor:255,fontStyle:'bold'},
     didParseCell:(d)=>{if(d.row.index===horas.length){d.cell.styles.fontStyle='bold';d.cell.styles.fillColor=[214,228,247];}}});
-  y=doc.lastAutoTable.finalY+8;
-  const obs=horas.filter(h=>h.observaciones);
-  if(obs.length){
-    if(y>250){doc.addPage();y=15;}
-    doc.setTextColor(83,58,183); doc.setFontSize(11); doc.setFont('helvetica','bold');
-    doc.text('OBSERVACIONES',ml,y); y+=4;
-    doc.autoTable({startY:y,margin:{left:ml,right:ml},head:[['Hora','Observación']],
-      body:obs.map(h=>['H'+h.hora,h.observaciones]),theme:'grid',styles:{fontSize:8,cellPadding:2},
-      headStyles:{fillColor:[83,58,183],textColor:255},columnStyles:{0:{cellWidth:20}}});
-  }
   const pages=doc.getNumberOfPages();
   for(let i=1;i<=pages;i++){
-    doc.setPage(i);
-    doc.setDrawColor(...AZ); doc.setLineWidth(0.5); doc.line(ml,287,200,287);
-    doc.setTextColor(150,150,150); doc.setFontSize(8); doc.setFont('helvetica','normal');
+    doc.setPage(i);doc.setDrawColor(...AZ);doc.setLineWidth(0.5);doc.line(ml,287,200,287);
+    doc.setTextColor(150,150,150);doc.setFontSize(8);doc.setFont('helvetica','normal');
     doc.text(`TUBOSA S.A. · Turno ${t.turno} · ${t.lineaNombre} · ${t.fecha}`,ml,292);
     doc.text(`Página ${i} de ${pages}`,200,292,{align:'right'});
   }
@@ -732,70 +1185,125 @@ function generarPDF() {
 }
 
 // ── ADMIN ─────────────────────────────────────────────────────
-function adminTab(tab,el) {
-  ['ordenes','mezclas','lineas'].forEach(t=>document.getElementById('tab-'+t).style.display=t===tab?'block':'none');
+function adminTab(tab,el){
+  ['usuarios','ordenes','mezclas','lineas'].forEach(t=>document.getElementById('tab-'+t).style.display=t===tab?'block':'none');
   document.querySelectorAll('.admin-tab').forEach(e=>e.classList.remove('activo'));
   el.classList.add('activo');
+  if(tab==='usuarios')cargarUsuarios();
 }
 function dov(e,el){e.preventDefault();el.classList.add('drag');}
 function dlv(el){el.classList.remove('drag');}
 function drf(e,t){e.preventDefault();e.currentTarget.classList.remove('drag');if(e.dataTransfer.files[0])procArch(e.dataTransfer.files[0],t);}
 function lf(e,t){if(e.target.files[0])procArch(e.target.files[0],t);}
-function procArch(file,tipo) {
-  const r=new FileReader();
-  r.onload=e=>{
-    const f=parseCSV(e.target.result);
-    if(!f?.length){notify('Sin datos en el archivo','err');return;}
-    datosArchivo[tipo]=f; mostrarPreview(tipo,f);
-  };
-  r.readAsText(file,'UTF-8');
-}
-function parseCSV(text) {
-  const lines=text.split(/\r?\n/).filter(l=>l.trim());
-  if(lines.length<2) return [];
-  const sep=lines[0].includes(';')?';':',';
-  const headers=lines[0].split(sep).map(h=>h.trim().replace(/^"|"$/g,''));
-  return lines.slice(1).map(l=>{
-    const v=l.split(sep).map(v=>v.trim().replace(/^"|"$/g,''));
-    const o={};headers.forEach((h,i)=>o[h]=v[i]||'');return o;
-  }).filter(r=>Object.values(r).some(v=>v));
-}
-function mostrarPreview(tipo,filas) {
-  document.getElementById('preview-'+tipo).style.display='block';
-  const keys=Object.keys(filas[0]);
-  document.getElementById('ptable-'+tipo).innerHTML=
-    `<thead><tr>${keys.map(k=>`<th>${k}</th>`).join('')}</tr></thead>
-     <tbody>${filas.slice(0,5).map(r=>`<tr>${keys.map(k=>`<td>${r[k]||''}</td>`).join('')}</tr>`).join('')}</tbody>`;
-  document.getElementById('count-'+tipo).textContent=filas.length+' registros';
-}
+function procArch(file,tipo){const r=new FileReader();r.onload=e=>{const f=parseCSV(e.target.result);if(!f?.length){notify('Sin datos','err');return;}datosArchivo[tipo]=f;mostrarPreview(tipo,f);};r.readAsText(file,'UTF-8');}
+function parseCSV(text){const lines=text.split(/\r?\n/).filter(l=>l.trim());if(lines.length<2)return[];const sep=lines[0].includes(';')?';':',';const headers=lines[0].split(sep).map(h=>h.trim().replace(/^"|"$/g,''));return lines.slice(1).map(l=>{const v=l.split(sep).map(v=>v.trim().replace(/^"|"$/g,''));const o={};headers.forEach((h,i)=>o[h]=v[i]||'');return o;}).filter(r=>Object.values(r).some(v=>v));}
+function mostrarPreview(tipo,filas){document.getElementById('preview-'+tipo).style.display='block';const keys=Object.keys(filas[0]);document.getElementById('ptable-'+tipo).innerHTML=`<thead><tr>${keys.map(k=>`<th>${k}</th>`).join('')}</tr></thead><tbody>${filas.slice(0,5).map(r=>`<tr>${keys.map(k=>`<td>${r[k]||''}</td>`).join('')}</tr>`).join('')}</tbody>`;document.getElementById('count-'+tipo).textContent=filas.length+' registros';}
 function cancelarPreview(tipo){document.getElementById('preview-'+tipo).style.display='none';datosArchivo[tipo]=null;}
-async function subirMaestro(hoja,tipo) {
+async function subirMaestro(hoja,tipo){
   if(!datosArchivo[tipo]?.length){notify('Sin datos','err');return;}
   loader(true,'Subiendo...');
-  try {
+  try{
     let f=datosArchivo[tipo];
-    if(tipo==='ordenes') f=f.map(r=>({...r,Estado:r.Estado||'Activa'}));
-    if(tipo==='mezclas') f=f.map(r=>({...r,Activa:r.Activa||'Sí'}));
+    if(tipo==='ordenes')f=f.map(r=>({...r,Estado:r.Estado||'Activa'}));
+    if(tipo==='mezclas')f=f.map(r=>({...r,Activa:r.Activa||'Sí'}));
     const res=await api({action:'cargarMaestro',hoja,filas:f,limpiar:true});
     loader(false);
-    if(res.ok){notify(res.msg,'ok',4000);cancelarPreview(tipo);verMaestro(tipo);}
+    if(res.ok){notify(res.msg,'ok',4000);cancelarPreview(tipo);verMaestro(tipo);await cargarMaestros();}
     else notify(res.msg||'Error','err');
-  } catch(e){loader(false);notify('Error: '+e.message,'err');}
+  }catch(e){loader(false);notify('Error: '+e.message,'err');}
 }
-async function verMaestro(tipo) {
+async function verMaestro(tipo){
   const m={ordenes:'getOrdenes',mezclas:'getMezclas',lineas:'getLineas'};
   const t={ordenes:'lista-ordenes',mezclas:'lista-mezclas',lineas:'lista-lineas'};
   loader(true,'Cargando...');
-  try {
-    const res=await api({action:m[tipo]});
-    loader(false);
+  try{
+    const res=await api({action:m[tipo]});loader(false);
     if(!res.ok){notify(res.msg||'Error','err');return;}
     const tabla=document.getElementById(t[tipo]);
     if(!res.data.length){tabla.innerHTML='<tr><td style="padding:16px;text-align:center;color:var(--gr3)">Sin registros</td></tr>';return;}
     const keys=Object.keys(res.data[0]);
-    tabla.innerHTML=`<thead><tr>${keys.map(k=>`<th>${k}</th>`).join('')}</tr></thead>
-      <tbody>${res.data.slice(0,50).map(r=>`<tr>${keys.map(k=>`<td>${r[k]||''}</td>`).join('')}</tr>`).join('')}</tbody>`;
-  } catch(e){loader(false);notify('Error','err');}
+    tabla.innerHTML=`<thead><tr>${keys.map(k=>`<th>${k}</th>`).join('')}</tr></thead><tbody>${res.data.slice(0,50).map(r=>`<tr>${keys.map(k=>`<td>${r[k]||''}</td>`).join('')}</tr>`).join('')}</tbody>`;
+  }catch(e){loader(false);notify('Error','err');}
+}
+
+// ── INFORMES ──────────────────────────────────────────────────
+async function cargarInforme(){
+  const orden=document.getElementById('inf-orden').value.trim();
+  if(!orden){notify('Ingresa el número de orden','err');return;}
+  loader(true,'Consultando orden '+orden+'...');
+  document.getElementById('inf-resultado').style.display='none';
+  document.getElementById('inf-vacio').style.display='none';
+  try{
+    const res=await api({action:'getInformeOrden',ordenFab:orden});
+    loader(false);
+    if(!res.ok){notify(res.msg||'Error','err');return;}
+    if(!res.turnos||!res.turnos.length){document.getElementById('inf-vacio').style.display='block';return;}
+    renderInforme(res);
+    document.getElementById('inf-resultado').style.display='block';
+  }catch(e){loader(false);notify('Error: '+e.message,'err');}
+}
+
+function renderInforme(d){
+  const r=d.resumen;
+  document.getElementById('inf-datos-orden').innerHTML=[
+    ['Orden',d.ordenFab],['Código SAP',d.codigoSAP],['Producto',d.producto],
+    ['Espesor Mín.',(d.espesorMin||'-')+' mm'],['Diámetro',(d.diametro||'-')+' mm'],
+    ['Peso Estándar',(d.pesoEstandar||'-')+' kg/m'],
+    ['Cantidad Orden',d.cantidadOrden?d.cantidadOrden+' und':'No definida'],
+    ['Avance',d.cantidadOrden?r.pctAvance+'%':'N/A'],
+    ['Total Turnos',r.totalTurnos],['Total Horas Reg.',r.totalHoras]
+  ].map(([l,v])=>`<div class="info-item"><label>${l}</label><span style="font-size:13px">${v||'-'}</span></div>`).join('');
+
+  const pctR=parseFloat(r.rendimiento),pctS=parseFloat(r.pctScrap),dT=r.difTubos;
+  document.getElementById('inf-kpis').innerHTML=[
+    {cls:'az',val:r.totalKgMezcla+' kg',lbl:'Kg Mezcla Entrada',sub:'Total consumido'},
+    {cls:'vd',val:r.totalPesoTubos+' kg',lbl:'Kg Tubos Producidos',sub:r.totalTubos+' tubos'},
+    {cls:pctS>5?'rd':'nr',val:r.totalReproceso+' kg',lbl:'Reproceso / Scrap',sub:pctS+'% entrada'},
+    {cls:pctR>=95?'vd':pctR>=85?'nr':'rd',val:pctR+'%',lbl:'Rendimiento',sub:'kg tubos/kg mezcla'},
+    {cls:'az2',val:r.tubosEsperados,lbl:'Tubos Esperados',sub:'Según peso std.'},
+    {cls:dT>=0?'vd':'rd',val:(dT>=0?'+':'')+dT,lbl:'Diferencia Tubos',sub:'Real vs esperado'},
+    ...(d.cantidadOrden?[{cls:parseFloat(r.pctAvance)>=100?'vd':parseFloat(r.pctAvance)>=70?'az2':'nr',val:r.pctAvance+'%',lbl:'Avance Orden',sub:r.totalTubos+' de '+d.cantidadOrden+' und'},{cls:parseInt(r.pendientes)<=0?'vd':'rd',val:parseInt(r.pendientes)<=0?'✓ Completa':r.pendientes+' und',lbl:'Pendientes',sub:parseInt(r.pendientes)<=0?'Orden completada':'Por producir'}]:[])
+  ].map(k=>`<div class="kpi ${k.cls}"><div class="kpi-val">${k.val}</div><div class="kpi-lbl">${k.lbl}</div><div class="kpi-sub">${k.sub}</div></div>`).join('');
+
+  document.getElementById('inf-tabla-balance').innerHTML=`
+    <thead><tr><th>Concepto</th><th>Kg</th><th>%</th><th>Detalle</th></tr></thead>
+    <tbody>
+      <tr><td><strong>📥 Entrada — Mezcla</strong></td><td><strong>${r.kgEntrada}</strong></td><td>100%</td><td>Total mezcla consumida</td></tr>
+      <tr style="background:var(--vd2)"><td><strong>📦 Salida — Tubos</strong></td><td><strong>${r.totalPesoTubos}</strong></td><td>${r.rendimiento}%</td><td>${r.totalTubos} tubos</td></tr>
+      <tr style="background:var(--nr2)"><td><strong>♻ Reproceso / Scrap</strong></td><td><strong>${r.totalReproceso}</strong></td><td>${r.pctScrap}%</td><td>Material no conforme</td></tr>
+      <tr style="background:var(--az3)"><td><strong>⚡ Diferencia</strong></td><td><strong>${r.diferencia}</strong></td><td>${(100-pctR-pctS).toFixed(1)}%</td><td>Entrada − (Tubos + Reproceso)</td></tr>
+    </tbody>`;
+
+  const kgE=parseFloat(r.kgEntrada)||1;
+  const pT=(parseFloat(r.totalPesoTubos)/kgE*100).toFixed(1);
+  const pR=(parseFloat(r.totalReproceso)/kgE*100).toFixed(1);
+  const pD=(100-parseFloat(pT)-parseFloat(pR)).toFixed(1);
+  document.getElementById('inf-barra').innerHTML=`
+    <div style="width:${pT}%;background:var(--vd);display:flex;align-items:center;justify-content:center;color:#fff;font-size:11px;font-weight:700">${pT}%</div>
+    <div style="width:${pR}%;background:var(--nr);display:flex;align-items:center;justify-content:center;color:#fff;font-size:11px;font-weight:700">${pR}%</div>
+    <div style="width:${Math.max(0,parseFloat(pD))}%;background:var(--gr2);display:flex;align-items:center;justify-content:center;color:var(--gr3);font-size:11px">${parseFloat(pD)>2?pD+'%':''}</div>`;
+  document.getElementById('inf-barra-leyenda').innerHTML=`
+    <span style="display:flex;align-items:center;gap:4px"><span style="width:12px;height:12px;background:var(--vd);border-radius:2px;display:inline-block"></span>Tubos (${pT}%)</span>
+    <span style="display:flex;align-items:center;gap:4px"><span style="width:12px;height:12px;background:var(--nr);border-radius:2px;display:inline-block"></span>Reproceso (${pR}%)</span>
+    <span style="display:flex;align-items:center;gap:4px"><span style="width:12px;height:12px;background:var(--gr2);border-radius:2px;display:inline-block"></span>Diferencia (${pD}%)</span>`;
+
+  document.getElementById('inf-tabla-mezclas').innerHTML=`
+    <thead><tr><th>Código Mezcla</th><th>Nombre</th><th>Kg Consumidos</th><th>% del Total</th><th>Veces Usada</th></tr></thead>
+    <tbody>${d.mezclas.map(m=>{const pct=(m.kg/kgE*100).toFixed(1);return`<tr><td><strong>${m.codigo}</strong></td><td>${m.nombre||'-'}</td><td><strong>${m.kg.toFixed(1)}</strong></td>
+      <td><div style="display:flex;align-items:center;gap:6px"><div style="width:60px;height:8px;background:var(--gr2);border-radius:4px;overflow:hidden"><div style="width:${pct}%;height:100%;background:var(--az2)"></div></div>${pct}%</div></td>
+      <td>${m.usos}</td></tr>`;}).join('')}</tbody>`;
+
+  document.getElementById('inf-tabla-turnos').innerHTML=`
+    <thead><tr><th>Fecha</th><th>Turno</th><th>Línea</th><th>Operario</th><th>Hrs</th><th>Kg Mezcla</th><th>Tubos</th><th>Kg Tubos</th><th>Reproceso</th><th>Estado</th></tr></thead>
+    <tbody>${d.turnos.map(t=>`<tr>
+      <td>${t.fecha}</td><td><strong>${t.turno}</strong></td><td>${t.linea}</td><td>${t.operario||'-'}</td>
+      <td>${t.horas}/8</td><td>${t.kgMezcla.toFixed(1)}</td><td>${t.tubos}</td>
+      <td>${t.pesoTubos.toFixed(1)}</td><td>${t.reproceso.toFixed(1)}</td>
+      <td><span class="badge" style="background:${t.estado==='Cerrado'?'var(--vd2)':'var(--nr2)'};color:${t.estado==='Cerrado'?'var(--vd)':'var(--nr)'}">${t.estado}</span></td>
+    </tr>`).join('')}
+    <tr class="tot"><td colspan="5">TOTALES</td>
+      <td>${r.totalKgMezcla}</td><td>${r.totalTubos}</td><td>${r.totalPesoTubos}</td><td>${r.totalReproceso}</td><td></td>
+    </tr></tbody>`;
 }
 </script>
 </body>
