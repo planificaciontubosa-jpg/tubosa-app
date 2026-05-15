@@ -372,12 +372,12 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:#EEF2F7;color:var(--
   <!-- Datos producción -->
   <div class="card"><div class="card-head az">📦 Hora <span id="reg-hora-num">1</span> — Datos de Producción</div><div class="card-body">
     <div class="fila fila-3">
-      <div class="campo clave"><label>Código Mezcla</label><input type="text" id="reg-codMezcla" placeholder="MZ-001" list="mezclas-list" oninput="buscarMezcla(this.value)"><datalist id="mezclas-list"></datalist></div>
+      <div class="campo"><label>Código Mezcla</label><input type="text" id="reg-codMezcla" placeholder="MZ-001" list="mezclas-list" oninput="buscarMezcla(this.value)"><datalist id="mezclas-list"></datalist></div>
       <div class="campo"><label>Mezcla</label><input type="text" id="reg-mezcla" placeholder="Auto al escribir código"></div>
-      <div class="campo clave"><label>Consecutivo Mezcla</label><input type="text" id="reg-consecutivo" readonly class="auto" placeholder="Auto"></div>
+      <div class="campo"><label>Consecutivo Mezcla</label><input type="text" id="reg-consecutivo" placeholder="Ej: 001"></div>
     </div>
     <div class="fila fila-3">
-      <div class="campo clave"><label>Cantidad kg Mezcla</label><input type="number" id="reg-kgMezcla" placeholder="0.0" step="0.01"></div>
+      <div class="campo"><label>Cantidad kg Mezcla</label><input type="number" id="reg-kgMezcla" placeholder="0.0" step="0.01"></div>
       <div class="campo"><label>Nro. Tubos (Und)</label><input type="number" id="reg-nroTubos" placeholder="0" oninput="actualizarContador()"></div>
       <div class="campo"><label>Peso Total (kg)</label><input type="number" id="reg-pesoTotal" placeholder="0.0" step="0.01"></div>
     </div>
@@ -473,12 +473,12 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:#EEF2F7;color:var(--
   <!-- Datos hora corrugada -->
   <div class="card"><div class="card-head az">📦 Hora <span id="corr-hora-num">1</span> — Datos de Producción</div><div class="card-body">
     <div class="fila fila-3">
-      <div class="campo clave"><label>Código Mezcla</label><input type="text" id="corr-codMezcla" placeholder="MZ-001" list="mezclas-list-corr" oninput="buscarMezclaCo(this.value)"><datalist id="mezclas-list-corr"></datalist></div>
+      <div class="campo"><label>Código Mezcla</label><input type="text" id="corr-codMezcla" placeholder="MZ-001" list="mezclas-list-corr" oninput="buscarMezclaCo(this.value)"><datalist id="mezclas-list-corr"></datalist></div>
       <div class="campo"><label>Mezcla</label><input type="text" id="corr-mezcla" placeholder="Auto"></div>
-      <div class="campo clave"><label>Consecutivo</label><input type="text" id="corr-consecutivo" readonly class="auto"></div>
+      <div class="campo"><label>Consecutivo</label><input type="text" id="corr-consecutivo" placeholder="Ej: 001"></div>
     </div>
     <div class="fila fila-3">
-      <div class="campo clave"><label>Cantidad kg Mezcla</label><input type="number" id="corr-kgMezcla" placeholder="0.0" step="0.01"></div>
+      <div class="campo"><label>Cantidad kg Mezcla</label><input type="number" id="corr-kgMezcla" placeholder="0.0" step="0.01"></div>
       <div class="campo"><label>Nro. Tubos (Und)</label><input type="number" id="corr-nroTubos" placeholder="0" oninput="actualizarContadorCorr()"></div>
       <div class="campo"><label>Peso Total (kg)</label><input type="number" id="corr-pesoTotal" placeholder="0.0" step="0.01"></div>
     </div>
@@ -812,19 +812,21 @@ async function desactivarUsuario(id,nombre){
 async function cargarMaestros(){
   try{
     const [ro,rm]=await Promise.all([api({action:'getOrdenes'}),api({action:'getMezclas'})]);
-    if(ro.ok){
-      maestroOrdenes=ro.data.filter(o=>o.Estado!=='Cerrada');
-      const opts=maestroOrdenes.map(o=>`<option value="${o.OrdenFab}">${o.OrdenFab} — ${o.Producto||''}</option>`).join('');
+    if(ro.ok && ro.data.length){
+      // Si no tiene columna Estado, mostrar todas
+      maestroOrdenes=ro.data.filter(o=>!o.Estado || o.Estado!=='Cerrada');
+      const opts=maestroOrdenes.map(o=>`<option value="${String(o.OrdenFab).trim()}">${o.OrdenFab} — ${o.Producto||''}</option>`).join('');
       document.getElementById('ordenes-list').innerHTML=opts;
       document.getElementById('ordenes-list-inf').innerHTML=opts;
     }
-    if(rm.ok){
-      maestroMezclas=rm.data.filter(m=>m.Activa!=='No');
-      const opts=maestroMezclas.map(m=>`<option value="${m.CodigoMezcla}">${m.CodigoMezcla} — ${m.NombreMezcla||''}</option>`).join('');
+    if(rm.ok && rm.data.length){
+      // Si no tiene columna Activa, mostrar todas
+      maestroMezclas=rm.data.filter(m=>!m.Activa || m.Activa!=='No');
+      const opts=maestroMezclas.map(m=>`<option value="${String(m.CodigoMezcla).trim()}">${m.CodigoMezcla} — ${m.NombreMezcla||''}</option>`).join('');
       document.getElementById('mezclas-list').innerHTML=opts;
       document.getElementById('mezclas-list-corr').innerHTML=opts;
     }
-  }catch(e){}
+  }catch(e){console.error('Error cargando maestros:',e);}
 }
 
 async function cargarLineas(){
@@ -856,7 +858,9 @@ function selLinea(l){
 }
 
 function buscarOrden(v){
-  const o=maestroOrdenes.find(o=>o.OrdenFab===v);
+  if(!v) return;
+  const vClean=v.trim().toLowerCase();
+  const o=maestroOrdenes.find(o=>String(o.OrdenFab).trim().toLowerCase()===vClean);
   if(o){
     setVal('cab-codigoSAP',o.CodigoSAP||'');
     setVal('cab-producto',o.Producto||'');
@@ -868,17 +872,21 @@ function buscarOrden(v){
 }
 
 function buscarMezcla(v){
-  const m=maestroMezclas.find(m=>m.CodigoMezcla===v);
-  if(m)setVal('reg-mezcla',m.NombreMezcla||'');
+  if(!v) return;
+  const vClean=v.trim().toLowerCase();
+  const m=maestroMezclas.find(m=>String(m.CodigoMezcla).trim().toLowerCase()===vClean);
+  if(m) setVal('reg-mezcla',m.NombreMezcla||'');
   calcConsec();
 }
 function buscarMezclaCo(v){
-  const m=maestroMezclas.find(m=>m.CodigoMezcla===v);
-  if(m)setVal('corr-mezcla',m.NombreMezcla||'');
+  if(!v) return;
+  const vClean=v.trim().toLowerCase();
+  const m=maestroMezclas.find(m=>String(m.CodigoMezcla).trim().toLowerCase()===vClean);
+  if(m) setVal('corr-mezcla',m.NombreMezcla||'');
   calcConsecCorr();
 }
-function calcConsec(){const cod=val('reg-codMezcla');if(!cod)return;setVal('reg-consecutivo',Object.values(horasGuardadas).filter(h=>h.codigoMezcla===cod).length+1);}
-function calcConsecCorr(){const cod=val('corr-codMezcla');if(!cod)return;setVal('corr-consecutivo',Object.values(horasGuardadas).filter(h=>h.codigoMezcla===cod).length+1);}
+function calcConsec(){} // Consecutivo lo digita el operario
+function calcConsecCorr(){} // Consecutivo lo digita el operario
 
 // ── TURNO ─────────────────────────────────────────────────────
 async function crearTurno(){
@@ -981,11 +989,11 @@ async function guardarHora(){
       motivoReproceso:val('reg-motivoRep'),
       rotuladoOk:document.getElementById('reg-rotuladoOk').checked,
       pesoPromedio:flt('reg-pesoPromedio'),sobrePeso:flt('reg-sobrePeso'),
-      longitud:flt('reg-longitud'),observaciones:val('reg-observaciones')};
+      longitud:flt('reg-longitud'),observaciones:val('reg-observaciones'),
+      consecutivoOperario:val('reg-consecutivo')};
     const r=await api(hd);
     if(!r.ok){loader(false);notify(r.msg||'Error','err');return;}
-    setVal('reg-consecutivo',r.consecutivo);
-    horasGuardadas[horaActual]={...hd,horaId:r.horaId,consecutivo:r.consecutivo};
+    horasGuardadas[horaActual]={...hd,horaId:r.horaId};
 
     // Guardar tendencias si hay datos
     if(val('reg-espL1')||val('reg-espL2')){
@@ -1076,11 +1084,11 @@ async function guardarHoraCorr(){
       motivoReproceso:val('corr-motivoRep'),
       rotuladoOk:document.getElementById('corr-rotuladoOk').checked,
       pesoPromedio:flt('corr-pesoPromedio'),sobrePeso:0,longitud:flt('corr-longitud'),
-      observaciones:val('corr-observaciones')};
+      observaciones:val('corr-observaciones'),
+      consecutivoOperario:val('corr-consecutivo')};
     const r=await api(hd);
     if(!r.ok){loader(false);notify(r.msg||'Error','err');return;}
-    setVal('corr-consecutivo',r.consecutivo);
-    horasGuardadas[horaActual]={...hd,horaId:r.horaId,consecutivo:r.consecutivo};
+    horasGuardadas[horaActual]={...hd,horaId:r.horaId};
     loader(false);
     renderTabs('horas-tabs-corr',true);
     actualizarContadorCorr();
