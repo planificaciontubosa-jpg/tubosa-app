@@ -3,6 +3,9 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="format-detection" content="telephone=no">
 <title>TUBOSA — Control de Producción</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
@@ -156,6 +159,7 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:#EEF2F7;color:var(--
 .user-actions{display:flex;gap:6px}
 @media(max-width:600px){.fila-3{grid-template-columns:1fr 1fr}.fila-4{grid-template-columns:1fr 1fr}.login-box{width:92%;padding:28px 18px}.corr-grid{grid-template-columns:1fr}}
 </style>
+
 </head>
 <body>
 
@@ -693,28 +697,51 @@ let datosArchivo={ordenes:null,mezclas:null};
 let cbCounter=0;
 const LINEAS_CORRUGADAS = [17,19,20];
 
-// ── JSONP ─────────────────────────────────────────────────────
-function api(data) {
-  return new Promise((resolve, reject) => {
-    if (!API_URL) { reject(new Error('Sin URL')); return; }
-    const cbName = 'tb_cb_' + (++cbCounter);
-    const timeout = setTimeout(() => {
-      delete window[cbName];
-      document.getElementById('jsonp_'+cbName)?.remove();
-      reject(new Error('Timeout'));
-    }, 15000);
-    window[cbName] = (r) => {
-      clearTimeout(timeout);
-      delete window[cbName];
-      document.getElementById('jsonp_'+cbName)?.remove();
-      resolve(r);
-    };
-    const s = document.createElement('script');
-    s.id = 'jsonp_'+cbName;
-    s.src = API_URL + '?callback='+cbName+'&payload='+encodeURIComponent(JSON.stringify(data));
-    s.onerror = () => { clearTimeout(timeout); delete window[cbName]; s.remove(); reject(new Error('Error de red')); };
-    document.head.appendChild(s);
-  });
+// ── API — compatible Safari iOS, Chrome, Android ─────────────
+// Usa fetch con no-cors para el envío y JSONP como fallback
+let cbCounter = 0;
+
+async function api(data) {
+  if (!API_URL) throw new Error('Sin URL configurada');
+
+  // Intentar primero con fetch (funciona en Chrome, Android)
+  // Safari iOS bloquea fetch cross-origin → caer a JSONP
+  try {
+    const payload = encodeURIComponent(JSON.stringify(data));
+    const url = API_URL + '?payload=' + payload;
+    const r = await Promise.race([
+      fetch(url, { method: 'GET', mode: 'cors' }),
+      new Promise((_, rej) => setTimeout(() => rej(new Error('timeout')), 12000))
+    ]);
+    const txt = await r.text();
+    try { return JSON.parse(txt); } catch(e) { throw new Error('Respuesta inválida'); }
+  } catch(fetchErr) {
+    // Fallback JSONP — funciona en Safari iOS
+    return new Promise((resolve, reject) => {
+      const cbName = 'tb_cb_' + (++cbCounter);
+      const timeout = setTimeout(() => {
+        delete window[cbName];
+        document.getElementById('jsonp_'+cbName)?.remove();
+        reject(new Error('Error de conexión. Verifica tu internet.'));
+      }, 15000);
+      window[cbName] = (r) => {
+        clearTimeout(timeout);
+        delete window[cbName];
+        document.getElementById('jsonp_'+cbName)?.remove();
+        resolve(r);
+      };
+      const s = document.createElement('script');
+      s.id = 'jsonp_'+cbName;
+      s.src = API_URL + '?callback=' + cbName + '&payload=' + encodeURIComponent(JSON.stringify(data));
+      s.onerror = () => {
+        clearTimeout(timeout);
+        delete window[cbName];
+        s.remove();
+        reject(new Error('Error de red. Verifica la URL del servidor.'));
+      };
+      document.head.appendChild(s);
+    });
+  }
 }
 
 // ── UTILS ─────────────────────────────────────────────────────
