@@ -706,54 +706,38 @@ let esCorrugada = false;
 let horaActual=1, horasGuardadas={};
 let maestroOrdenes=[], maestroMezclas=[];
 let datosArchivo={ordenes:null,mezclas:null};
-let cbCounter=0;
+let cbCounter = 0;
 const LINEAS_CORRUGADAS = [17,19,20];
 
-// ── API — compatible Safari iOS, Chrome, Android ─────────────
-// Usa fetch con no-cors para el envío y JSONP como fallback
-let cbCounter = 0;
-
-async function api(data) {
-  if (!API_URL) throw new Error('Sin URL configurada');
-
-  // Intentar primero con fetch (funciona en Chrome, Android)
-  // Safari iOS bloquea fetch cross-origin → caer a JSONP
-  try {
-    const payload = encodeURIComponent(JSON.stringify(data));
-    const url = API_URL + '?payload=' + payload;
-    const r = await Promise.race([
-      fetch(url, { method: 'GET', mode: 'cors' }),
-      new Promise((_, rej) => setTimeout(() => rej(new Error('timeout')), 12000))
-    ]);
-    const txt = await r.text();
-    try { return JSON.parse(txt); } catch(e) { throw new Error('Respuesta inválida'); }
-  } catch(fetchErr) {
-    // Fallback JSONP — funciona en Safari iOS
-    return new Promise((resolve, reject) => {
-      const cbName = 'tb_cb_' + (++cbCounter);
-      const timeout = setTimeout(() => {
-        delete window[cbName];
-        document.getElementById('jsonp_'+cbName)?.remove();
-        reject(new Error('Error de conexión. Verifica tu internet.'));
-      }, 15000);
-      window[cbName] = (r) => {
-        clearTimeout(timeout);
-        delete window[cbName];
-        document.getElementById('jsonp_'+cbName)?.remove();
-        resolve(r);
-      };
-      const s = document.createElement('script');
-      s.id = 'jsonp_'+cbName;
-      s.src = API_URL + '?callback=' + cbName + '&payload=' + encodeURIComponent(JSON.stringify(data));
-      s.onerror = () => {
-        clearTimeout(timeout);
-        delete window[cbName];
-        s.remove();
-        reject(new Error('Error de red. Verifica la URL del servidor.'));
-      };
-      document.head.appendChild(s);
-    });
-  }
+// ── API — JSONP compatible con todos los navegadores ──────────
+function api(data) {
+  return new Promise(function(resolve, reject) {
+    if (!API_URL) { reject(new Error('Sin URL configurada')); return; }
+    var cbName = 'tb_cb_' + (++cbCounter);
+    var timeout = setTimeout(function() {
+      delete window[cbName];
+      var s = document.getElementById('jsonp_'+cbName);
+      if (s && s.parentNode) s.parentNode.removeChild(s);
+      reject(new Error('Error de conexión'));
+    }, 15000);
+    window[cbName] = function(r) {
+      clearTimeout(timeout);
+      delete window[cbName];
+      var s = document.getElementById('jsonp_'+cbName);
+      if (s && s.parentNode) s.parentNode.removeChild(s);
+      resolve(r);
+    };
+    var s = document.createElement('script');
+    s.id = 'jsonp_'+cbName;
+    s.src = API_URL + '?callback=' + cbName + '&payload=' + encodeURIComponent(JSON.stringify(data));
+    s.onerror = function() {
+      clearTimeout(timeout);
+      delete window[cbName];
+      if (s.parentNode) s.parentNode.removeChild(s);
+      reject(new Error('Error de red. Verifica la URL.'));
+    };
+    document.head.appendChild(s);
+  });
 }
 
 // ── UTILS ─────────────────────────────────────────────────────
