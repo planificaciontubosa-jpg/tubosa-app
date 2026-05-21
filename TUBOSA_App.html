@@ -757,32 +757,55 @@ let datosArchivo={ordenes:null,mezclas:null};
 let cbCounter = 0;
 const LINEAS_CORRUGADAS = [17,19,20];
 
-// ── API — JSONP compatible con todos los navegadores ──────────
+// ── API ───────────────────────────────────────────────────────
 function api(data) {
   return new Promise(function(resolve, reject) {
     if (!API_URL) { reject(new Error('Sin URL configurada')); return; }
+
     var cbName = 'tb_cb_' + (++cbCounter);
+    var done = false;
+
     var timeout = setTimeout(function() {
+      if (done) return;
+      done = true;
       delete window[cbName];
       var s = document.getElementById('jsonp_'+cbName);
       if (s && s.parentNode) s.parentNode.removeChild(s);
-      reject(new Error('Error de conexión'));
-    }, 15000);
+      reject(new Error('Error de conexión. Revisa tu internet.'));
+    }, 20000);
+
     window[cbName] = function(r) {
+      if (done) return;
+      done = true;
       clearTimeout(timeout);
       delete window[cbName];
       var s = document.getElementById('jsonp_'+cbName);
       if (s && s.parentNode) s.parentNode.removeChild(s);
       resolve(r);
     };
+
+    // Separar action del resto para URL más corta
+    var action = data.action;
+    var pin = data.pin || '';
+    var url;
+
+    // Para login solo mandar action y pin directamente
+    if (action === 'login') {
+      url = API_URL + '?callback=' + cbName + '&action=login&pin=' + encodeURIComponent(pin);
+    } else {
+      url = API_URL + '?callback=' + cbName + '&payload=' + encodeURIComponent(JSON.stringify(data));
+    }
+
     var s = document.createElement('script');
     s.id = 'jsonp_'+cbName;
-    s.src = API_URL + '?callback=' + cbName + '&payload=' + encodeURIComponent(JSON.stringify(data));
+    s.src = url;
     s.onerror = function() {
+      if (done) return;
+      done = true;
       clearTimeout(timeout);
       delete window[cbName];
       if (s.parentNode) s.parentNode.removeChild(s);
-      reject(new Error('Error de red. Verifica la URL.'));
+      reject(new Error('Error de red. Verifica la URL del servidor.'));
     };
     document.head.appendChild(s);
   });
