@@ -180,17 +180,17 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:#EEF2F7;color:var(--
       </div>
       <div class="pin-err" id="pin-err"></div>
       <div class="pin-grid" id="pin-grid">
-        <button class="pin-btn" ontouchstart="evt(event,'1')" onclick="pp('1')">1</button>
-        <button class="pin-btn" ontouchstart="evt(event,'2')" onclick="pp('2')">2</button>
-        <button class="pin-btn" ontouchstart="evt(event,'3')" onclick="pp('3')">3</button>
-        <button class="pin-btn" ontouchstart="evt(event,'4')" onclick="pp('4')">4</button>
-        <button class="pin-btn" ontouchstart="evt(event,'5')" onclick="pp('5')">5</button>
-        <button class="pin-btn" ontouchstart="evt(event,'6')" onclick="pp('6')">6</button>
-        <button class="pin-btn" ontouchstart="evt(event,'7')" onclick="pp('7')">7</button>
-        <button class="pin-btn" ontouchstart="evt(event,'8')" onclick="pp('8')">8</button>
-        <button class="pin-btn" ontouchstart="evt(event,'9')" onclick="pp('9')">9</button>
-        <button class="pin-btn" ontouchstart="evt(event,'0')" onclick="pp('0')">0</button>
-        <button class="pin-btn pin-del" ontouchstart="evtd(event)" onclick="pd()">⌫</button>
+        <button class="pin-btn" onclick="pp('1')">1</button>
+        <button class="pin-btn" onclick="pp('2')">2</button>
+        <button class="pin-btn" onclick="pp('3')">3</button>
+        <button class="pin-btn" onclick="pp('4')">4</button>
+        <button class="pin-btn" onclick="pp('5')">5</button>
+        <button class="pin-btn" onclick="pp('6')">6</button>
+        <button class="pin-btn" onclick="pp('7')">7</button>
+        <button class="pin-btn" onclick="pp('8')">8</button>
+        <button class="pin-btn" onclick="pp('9')">9</button>
+        <button class="pin-btn" onclick="pp('0')">0</button>
+        <button class="pin-btn pin-del" onclick="pd()">⌫</button>
       </div>
       <button class="pin-ok" onclick="loginOk()">INGRESAR →</button>
       <div style="margin-top:14px">
@@ -797,30 +797,24 @@ async function probarURL(){
 }
 
 // ── LOGIN ─────────────────────────────────────────────────────
-let pinActual='';
-// Touch handlers para iOS 16
-function evt(e,d){e.preventDefault();pp(d);}
-function evtd(e){e.preventDefault();pd();}
+var pinActual='';
 function pp(d){if(pinActual.length>=4)return;pinActual+=d;upPin();}
 function pd(){pinActual=pinActual.slice(0,-1);upPin();}
 function upPin(){
+  var digits=['pd0','pd1','pd2','pd3'];
   for(var i=0;i<4;i++){
-    var el=document.getElementById('pd'+i);
-    if(!el) continue;
+    var el=document.getElementById(digits[i]);
+    if(!el)continue;
     if(i<pinActual.length){
       el.innerHTML='&#9679;';
-      el.style.background='#1F3864';
-      el.style.color='#ffffff';
-      el.style.borderColor='#1F3864';
+      el.setAttribute('style','width:36px;height:36px;border-radius:50%;border:2px solid #1F3864;display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:700;background:#1F3864;color:#fff;transition:all .15s');
     }else{
       el.innerHTML='_';
-      el.style.background='transparent';
-      el.style.color='#1F3864';
-      el.style.borderColor='#1F3864';
+      el.setAttribute('style','width:36px;height:36px;border-radius:50%;border:2px solid #1F3864;display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:700;background:transparent;color:#1F3864;transition:all .15s');
     }
   }
   var err=document.getElementById('pin-err');
-  if(err) err.innerHTML='';
+  if(err)err.innerHTML='';
 }
 async function loginOk(){
   if(pinActual.length<4){document.getElementById('pin-err').textContent='Ingresa 4 dígitos';return;}
