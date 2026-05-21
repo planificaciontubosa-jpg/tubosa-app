@@ -172,7 +172,12 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:#EEF2F7;color:var(--
     <div class="login-box">
       <div class="login-logo">TUBOSA</div>
       <div class="login-sub">Control de Líneas de Producción</div>
-      <input type="text" id="pin-display" readonly value="_ _ _ _" style="font-size:28px;letter-spacing:10px;color:var(--az);min-height:50px;text-align:center;font-family:monospace;border:none;background:transparent;width:100%;outline:none;pointer-events:none;font-weight:700">
+      <div style="display:flex;justify-content:center;gap:14px;margin:20px 0;min-height:50px;align-items:center">
+        <div id="pd0" style="width:36px;height:36px;border-radius:50%;border:2px solid var(--az);display:flex;align-items:center;justify-content:center;font-size:22px;color:var(--az);font-weight:700;transition:all .15s">_</div>
+        <div id="pd1" style="width:36px;height:36px;border-radius:50%;border:2px solid var(--az);display:flex;align-items:center;justify-content:center;font-size:22px;color:var(--az);font-weight:700;transition:all .15s">_</div>
+        <div id="pd2" style="width:36px;height:36px;border-radius:50%;border:2px solid var(--az);display:flex;align-items:center;justify-content:center;font-size:22px;color:var(--az);font-weight:700;transition:all .15s">_</div>
+        <div id="pd3" style="width:36px;height:36px;border-radius:50%;border:2px solid var(--az);display:flex;align-items:center;justify-content:center;font-size:22px;color:var(--az);font-weight:700;transition:all .15s">_</div>
+      </div>
       <div class="pin-err" id="pin-err"></div>
       <div class="pin-grid">
         <button class="pin-btn" onclick="pp('1')">1</button><button class="pin-btn" onclick="pp('2')">2</button><button class="pin-btn" onclick="pp('3')">3</button>
@@ -789,12 +794,23 @@ let pinActual='';
 function pp(d){if(pinActual.length>=4)return;pinActual+=d;upPin();}
 function pd(){pinActual=pinActual.slice(0,-1);upPin();}
 function upPin(){
-  const el=document.getElementById('pin-display');
-  if(!el)return;
-  const dots=pinActual.length;
-  el.value=('●'.repeat(dots)+'_'.repeat(4-dots)).split('').join(' ');
+  for(let i=0;i<4;i++){
+    const el=document.getElementById('pd'+i);
+    if(!el) continue;
+    if(i < pinActual.length){
+      el.textContent='●';
+      el.style.background='var(--az)';
+      el.style.color='#fff';
+      el.style.borderColor='var(--az)';
+    } else {
+      el.textContent='_';
+      el.style.background='transparent';
+      el.style.color='var(--az)';
+      el.style.borderColor='var(--az)';
+    }
+  }
   const err=document.getElementById('pin-err');
-  if(err)err.textContent='';
+  if(err) err.textContent='';
 }
 async function loginOk(){
   if(pinActual.length<4){document.getElementById('pin-err').textContent='Ingresa 4 dígitos';return;}
