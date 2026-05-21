@@ -405,6 +405,15 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:#EEF2F7;color:var(--
       <div style="font-size:12px;color:var(--rd);font-weight:600">🔴 Si hay scrap en esta hora, genera el ticket de reporte</div>
       <button class="btn btn-rd btn-sm" onclick="abrirTicketScrap()">🖨 Generar Ticket de Scrap</button>
     </div>
+    <!-- DEVOLUCIÓN MEZCLA -->
+    <div class="fila fila-2">
+      <div class="campo"><label>Devolución Mezcla (kg)</label><input type="number" id="reg-devolucion" placeholder="0.0" step="0.01"></div>
+      <div class="campo"><label>Motivo Devolución</label><input type="text" id="reg-motivoDev" placeholder="Describir motivo de devolución"></div>
+    </div>
+    <div style="background:#EDE7F6;border:1px solid #9C7FC3;border-radius:var(--rad2);padding:10px 14px;margin-bottom:10px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px">
+      <div style="font-size:12px;color:#533AB7;font-weight:600">🔵 Si hay devolución de mezcla, genera el PDF de devolución</div>
+      <button class="btn btn-sm" style="background:#533AB7;color:#fff" onclick="abrirModalDev()">📄 Generar PDF Devolución</button>
+    </div>
     <div class="fila fila-3">
       <div class="campo"><label>Peso Promedio (kg)</label><input type="number" id="reg-pesoPromedio" placeholder="0.000" step="0.001"></div>
       <div class="campo"><label>Sobre Peso</label><input type="number" id="reg-sobrePeso" placeholder="0.000" step="0.001"></div>
@@ -505,6 +514,15 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:#EEF2F7;color:var(--
     <div style="background:var(--rd2);border:1px solid #e8a8a8;border-radius:var(--rad2);padding:10px 14px;margin-bottom:10px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px">
       <div style="font-size:12px;color:var(--rd);font-weight:600">🔴 Si hay scrap en esta hora, genera el ticket de reporte</div>
       <button class="btn btn-rd btn-sm" onclick="abrirTicketScrap()">🖨 Generar Ticket de Scrap</button>
+    </div>
+    <!-- DEVOLUCIÓN MEZCLA CORRUGADA -->
+    <div class="fila fila-2">
+      <div class="campo"><label>Devolución Mezcla (kg)</label><input type="number" id="corr-devolucion" placeholder="0.0" step="0.01"></div>
+      <div class="campo"><label>Motivo Devolución</label><input type="text" id="corr-motivoDev" placeholder="Describir motivo"></div>
+    </div>
+    <div style="background:#EDE7F6;border:1px solid #9C7FC3;border-radius:var(--rad2);padding:10px 14px;margin-bottom:10px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px">
+      <div style="font-size:12px;color:#533AB7;font-weight:600">🔵 Si hay devolución de mezcla, genera el PDF de devolución</div>
+      <button class="btn btn-sm" style="background:#533AB7;color:#fff" onclick="abrirModalDev()">📄 Generar PDF Devolución</button>
     </div>
     <div class="fila fila-2">
       <div class="campo"><label>Peso Promedio (kg)</label><input type="number" id="corr-pesoPromedio" placeholder="0.000" step="0.001"></div>
@@ -658,6 +676,36 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:#EEF2F7;color:var(--
     <div style="display:flex;gap:8px">
       <button class="btn btn-vd" style="flex:1;justify-content:center" onclick="retomarTurno()">▶ Retomar y continuar</button>
       <button class="btn btn-gr" onclick="cerrarModalRetomar()">Cancelar</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL DEVOLUCIÓN MEZCLA -->
+<div id="modal-dev" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:998;align-items:center;justify-content:center">
+  <div style="background:#fff;border-radius:var(--rad);padding:20px;width:min(420px,95vw);max-height:90vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,.3)">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+      <div style="font-size:15px;font-weight:700;color:#533AB7">🔵 PDF de Devolución de Mezcla</div>
+      <button onclick="cerrarModalDev()" style="background:none;border:none;font-size:20px;cursor:pointer;color:var(--gr3)">✕</button>
+    </div>
+    <div class="fila fila-2">
+      <div class="campo"><label>Fecha</label><input type="text" id="dv-fecha" readonly class="auto"></div>
+      <div class="campo"><label>Hora</label><input type="text" id="dv-hora" readonly class="auto"></div>
+    </div>
+    <div class="campo" style="margin-bottom:10px"><label>Línea</label><input type="text" id="dv-linea" readonly class="auto"></div>
+    <div class="campo" style="margin-bottom:10px"><label>Código Mezcla</label><input type="text" id="dv-codMezcla" readonly class="auto"></div>
+    <div class="campo" style="margin-bottom:10px"><label>Mezcla</label><input type="text" id="dv-mezcla" readonly class="auto"></div>
+    <div class="campo" style="margin-bottom:10px"><label>Consecutivo</label><input type="text" id="dv-consecutivo" readonly class="auto"></div>
+    <div class="campo" style="margin-bottom:10px">
+      <label>Devolución Mezcla (kg) *</label>
+      <input type="number" id="dv-kg" placeholder="0.0" step="0.01">
+    </div>
+    <div class="campo" style="margin-bottom:14px">
+      <label>Motivo de la Devolución *</label>
+      <textarea id="dv-motivo" placeholder="Describir el motivo de la devolución..." rows="3"></textarea>
+    </div>
+    <div style="display:flex;gap:8px">
+      <button class="btn btn-sm" style="background:#533AB7;color:#fff;flex:1;justify-content:center" onclick="generarPDFDevolucion()">📄 Generar PDF</button>
+      <button class="btn btn-gr btn-sm" onclick="cerrarModalDev()">Cancelar</button>
     </div>
   </div>
 </div>
@@ -1161,7 +1209,7 @@ function selHora(h){
 
 function limpiarForm(){
   ['codMezcla','mezcla','consecutivo','kgMezcla','nroTubos','pesoTotal','reproceso',
-   'motivoRep','pesoPromedio','sobrePeso','longitud','observaciones',
+   'motivoRep','devolucion','motivoDev','pesoPromedio','sobrePeso','longitud','observaciones',
    'espL1','descL1','diamL1','ovalL1','espL2','descL2','diamL2','ovalL2']
   .forEach(id=>setVal('reg-'+id,''));
   document.getElementById('reg-rotuladoOk').checked=false;
@@ -1177,6 +1225,7 @@ async function guardarHora(){
       cantidadKgMezcla:flt('reg-kgMezcla'),nroTubos:parseInt(val('reg-nroTubos'))||0,
       pesoTotal:flt('reg-pesoTotal'),reprocesoKg:flt('reg-reproceso'),
       motivoReproceso:val('reg-motivoRep'),
+      devolucionKg:flt('reg-devolucion'),motivoDevolucion:val('reg-motivoDev'),
       rotuladoOk:document.getElementById('reg-rotuladoOk').checked,
       pesoPromedio:flt('reg-pesoPromedio'),sobrePeso:flt('reg-sobrePeso'),
       longitud:flt('reg-longitud'),observaciones:val('reg-observaciones'),
@@ -1256,7 +1305,7 @@ function selHoraCorr(h){
 }
 
 function limpiarFormCorr(){
-  ['codMezcla','mezcla','consecutivo','kgMezcla','nroTubos','pesoTotal','reproceso','motivoRep','pesoPromedio','longitud','observaciones']
+  ['codMezcla','mezcla','consecutivo','kgMezcla','nroTubos','pesoTotal','reproceso','motivoRep','devolucion','motivoDev','pesoPromedio','longitud','observaciones']
   .forEach(id=>setVal('corr-'+id,''));
   document.getElementById('corr-rotuladoOk').checked=false;
   document.getElementById('corr-rotulado-txt').textContent='Rotulado NO verificado';
@@ -1271,6 +1320,7 @@ async function guardarHoraCorr(){
       cantidadKgMezcla:flt('corr-kgMezcla'),nroTubos:parseInt(val('corr-nroTubos'))||0,
       pesoTotal:flt('corr-pesoTotal'),reprocesoKg:flt('corr-reproceso'),
       motivoReproceso:val('corr-motivoRep'),
+      devolucionKg:flt('corr-devolucion'),motivoDevolucion:val('corr-motivoDev'),
       rotuladoOk:document.getElementById('corr-rotuladoOk').checked,
       pesoPromedio:flt('corr-pesoPromedio'),sobrePeso:0,longitud:flt('corr-longitud'),
       observaciones:val('corr-observaciones'),
@@ -1665,6 +1715,140 @@ function generarTicketScrap(){
   doc.save('TicketScrap_'+val('sk-linea').replace(/\s/g,'')+'_H'+horaActual+'_'+val('sk-fecha').replace(/\//g,'-')+'.pdf');
   notify('Ticket de scrap generado ✓','ok');
   cerrarModalScrap();
+}
+
+// ── DEVOLUCIÓN MEZCLA ─────────────────────────────────────────
+function abrirModalDev(){
+  var t = turnoActual;
+  var esCo = esCorrugada;
+  document.getElementById('dv-fecha').value    = t.fecha || fmtFecha();
+  document.getElementById('dv-hora').value     = 'Hora ' + horaActual;
+  document.getElementById('dv-linea').value    = t.lineaNombre || '';
+  document.getElementById('dv-codMezcla').value= val(esCo?'corr-codMezcla':'reg-codMezcla');
+  document.getElementById('dv-mezcla').value   = val(esCo?'corr-mezcla':'reg-mezcla');
+  document.getElementById('dv-consecutivo').value = val(esCo?'corr-consecutivo':'reg-consecutivo');
+  document.getElementById('dv-kg').value       = val(esCo?'corr-devolucion':'reg-devolucion');
+  document.getElementById('dv-motivo').value   = val(esCo?'corr-motivoDev':'reg-motivoDev');
+  document.getElementById('modal-dev').style.display = 'flex';
+}
+
+function cerrarModalDev(){
+  document.getElementById('modal-dev').style.display = 'none';
+}
+
+function generarPDFDevolucion(){
+  var kg     = document.getElementById('dv-kg').value;
+  var motivo = document.getElementById('dv-motivo').value.trim();
+  if(!kg || parseFloat(kg) <= 0){ notify('Ingresa la cantidad de kg a devolver','err'); return; }
+  if(!motivo){ notify('Ingresa el motivo de la devolución','err'); return; }
+
+  var jsPDFLib = window.jspdf;
+  var doc = new jsPDFLib.jsPDF({
+    orientation: 'landscape',
+    unit: 'mm',
+    format: [216, 140]  // media carta landscape
+  });
+
+  var PU = [83, 58, 183];   // morado
+  var PU2= [237, 231, 246]; // morado claro
+  var W  = 216, H = 140, ml = 10;
+
+  // Fondo header morado
+  doc.setFillColor(PU[0], PU[1], PU[2]);
+  doc.rect(0, 0, W, 28, 'F');
+
+  // Título
+  doc.setTextColor(255,255,255);
+  doc.setFont('helvetica','bold');
+  doc.setFontSize(16);
+  doc.text('TUBOSA S.A.', ml, 12);
+  doc.setFontSize(11);
+  doc.setFont('helvetica','normal');
+  doc.text('Devolución de Mezcla a Bodega', ml, 20);
+  doc.setFontSize(9);
+  doc.text('Generado: ' + fmtFecha() + ' ' + new Date().toLocaleTimeString('es-CO',{hour:'2-digit',minute:'2-digit'}), W-ml, 24, {align:'right'});
+
+  // Datos en tabla
+  var y = 36;
+  var campos = [
+    ['Fecha',       document.getElementById('dv-fecha').value],
+    ['Hora',        document.getElementById('dv-hora').value],
+    ['Línea',       document.getElementById('dv-linea').value],
+    ['Cód. Mezcla', document.getElementById('dv-codMezcla').value || '—'],
+    ['Mezcla',      document.getElementById('dv-mezcla').value || '—'],
+    ['Consecutivo', document.getElementById('dv-consecutivo').value || '—'],
+    ['Kg Devueltos',parseFloat(kg).toFixed(2) + ' kg'],
+  ];
+
+  // Dos columnas
+  var col1 = campos.slice(0, 4);
+  var col2 = campos.slice(4);
+  var rowH = 10;
+  var colW = (W - ml*2 - 8) / 2;
+
+  [col1, col2].forEach(function(col, ci) {
+    var cx = ml + ci * (colW + 8);
+    col.forEach(function(c, ri) {
+      var cy = y + ri * rowH;
+      var bg = ri % 2 === 0 ? PU2 : [255,255,255];
+      doc.setFillColor(bg[0], bg[1], bg[2]);
+      doc.rect(cx, cy-6, colW, rowH, 'F');
+      doc.setDrawColor(200, 190, 220);
+      doc.setLineWidth(0.3);
+      doc.rect(cx, cy-6, colW, rowH, 'S');
+      doc.setFont('helvetica','bold');
+      doc.setFontSize(8);
+      doc.setTextColor(PU[0], PU[1], PU[2]);
+      doc.text(c[0] + ':', cx + 2, cy);
+      doc.setFont('helvetica','normal');
+      doc.setTextColor(30,30,30);
+      doc.text(String(c[1] || '—'), cx + 38, cy);
+    });
+  });
+
+  // Motivo
+  y = y + 4 * rowH + 6;
+  doc.setFillColor(PU[0], PU[1], PU[2]);
+  doc.rect(ml, y-6, W - ml*2, 8, 'F');
+  doc.setFont('helvetica','bold');
+  doc.setFontSize(9);
+  doc.setTextColor(255,255,255);
+  doc.text('Motivo de la Devolución:', ml+2, y);
+
+  y += 6;
+  doc.setFillColor(PU2[0], PU2[1], PU2[2]);
+  doc.rect(ml, y-2, W - ml*2, 22, 'F');
+  doc.setDrawColor(200,190,220);
+  doc.rect(ml, y-2, W - ml*2, 22, 'S');
+  doc.setFont('helvetica','normal');
+  doc.setFontSize(9);
+  doc.setTextColor(30,30,30);
+  var lines = doc.splitTextToSize(motivo, W - ml*2 - 4);
+  doc.text(lines.slice(0,3), ml+2, y+5);
+
+  // Pie firma
+  y += 28;
+  doc.setDrawColor(150,150,150);
+  doc.setLineWidth(0.3);
+  doc.line(ml, y, ml+60, y);
+  doc.line(W/2, y, W/2+60, y);
+  doc.setFontSize(8);
+  doc.setTextColor(120,120,120);
+  doc.text('Firma Operario', ml, y+5);
+  doc.text('Firma Recibe Bodega', W/2, y+5);
+
+  // Pie documento
+  doc.setFillColor(PU[0], PU[1], PU[2]);
+  doc.rect(0, H-10, W, 10, 'F');
+  doc.setFont('helvetica','italic');
+  doc.setFontSize(7);
+  doc.setTextColor(255,255,255);
+  doc.text('TUBOSA S.A. · Documento de devolución de mezcla · ' + document.getElementById('dv-linea').value + ' · ' + document.getElementById('dv-fecha').value, W/2, H-4, {align:'center'});
+
+  var fname = 'Dev_Mezcla_' + (document.getElementById('dv-codMezcla').value||'').replace(/\s/g,'') + '_H' + horaActual + '_' + fmtFecha().replace(/\//g,'-') + '.pdf';
+  doc.save(fname);
+  notify('PDF de devolución generado ✓','ok');
+  cerrarModalDev();
 }
 </script>
 </body>
