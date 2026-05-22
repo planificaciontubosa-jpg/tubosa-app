@@ -243,7 +243,7 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:#EEF2F7;color:var(--
         <div class="fila fila-3">
           <div class="campo"><label>Nombre</label><input type="text" id="nu-nombre" placeholder="Nombre completo"></div>
           <div class="campo"><label>Rol</label>
-            <select id="nu-rol"><option value="operario">Operario</option><option value="admin">Administrador</option></select>
+            <select id="nu-rol"><option value="operario">Operario</option><option value="coordinador">Coordinador</option><option value="supervisor">Supervisor</option><option value="jefe">Jefe</option><option value="admin">Administrador</option></select>
           </div>
           <div class="campo"><label>PIN (4 dígitos)</label><input type="text" id="nu-pin" placeholder="XXXX" maxlength="4"></div>
         </div>
@@ -354,6 +354,10 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:#EEF2F7;color:var(--
       <div class="campo"><label>Peso Estándar (kg/m)</label><input type="text" id="cab-peso" readonly class="auto"></div>
       <div class="campo"><label>Cantidad Orden (und)</label><input type="text" id="cab-cantOrden" readonly class="auto"></div>
     </div>
+    <div class="fila fila-2">
+      <div class="campo"><label>Carga Estándar Output</label><input type="text" id="cab-cargaEstandar" readonly class="auto" placeholder="Auto"></div>
+      <div class="campo"><label>Línea de la Orden</label><input type="text" id="cab-lineaOrden" readonly class="auto" placeholder="Auto"></div>
+    </div>
     <div class="campo" style="margin-bottom:10px">
       <label>Rotulado (descripción o referencia de imagen)</label>
       <textarea id="cab-rotulado" placeholder="Describe el rotulado requerido o pega la referencia..." rows="2"></textarea>
@@ -415,8 +419,8 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:#EEF2F7;color:var(--
       <button class="btn btn-sm" style="background:#533AB7;color:#fff" onclick="abrirModalDev()">📄 Generar PDF Devolución</button>
     </div>
     <div class="fila fila-3">
-      <div class="campo"><label>Peso Promedio (kg)</label><input type="number" id="reg-pesoPromedio" placeholder="0.000" step="0.001"></div>
-      <div class="campo"><label>Sobre Peso</label><input type="number" id="reg-sobrePeso" placeholder="0.000" step="0.001"></div>
+      <div class="campo"><label>Peso Promedio (kg)</label><input type="number" id="reg-pesoPromedio" placeholder="0.000" step="0.001" oninput="calcSobrePeso()"></div>
+      <div class="campo"><label>Sobre Peso (%)</label><input type="text" id="reg-sobrePeso" readonly class="auto" placeholder="Auto"></div>
       <div class="campo"><label>Longitud (m)</label><input type="number" id="reg-longitud" placeholder="0.0" step="0.1"></div>
     </div>
     <!-- ROTULADO CHECK -->
@@ -466,12 +470,13 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:#EEF2F7;color:var(--
     <button class="btn btn-vd" onclick="guardarHora()">✔ Guardar Hora <span id="btn-hora-num">1</span></button>
     <button class="btn btn-az" onclick="irResumen()">Ver Resumen</button>
     <button class="btn btn-gr" onclick="limpiarForm()">🗑 Limpiar</button>
+    <button class="btn btn-rd" onclick="abrirModalTM()" style="margin-left:auto">🔴 Tiempo Muerto</button>
   </div>
 
   <!-- Pesaje (todo el turno) -->
   <div class="card"><div class="card-head nr">⚖ Pesaje y Rendimiento — Todo el Turno</div><div class="card-body">
     <p class="ts" style="margin-bottom:10px">Este pesaje aplica para todo el turno. Se puede ir llenando a lo largo de las 8 horas y se guarda al final.</p>
-    <table class="pt"><thead><tr><th>Pos.</th><th>Peso (kg)</th><th>Rendimiento (%)</th><th>Observación</th></tr></thead>
+    <table class="pt"><thead><tr><th>Pos.</th><th>Peso (kg)</th><th>Carga de Línea</th><th>Observación</th></tr></thead>
     <tbody id="pesaje-tbody"></tbody></table>
     <button class="btn btn-nr btn-sm" onclick="guardarPesaje()" style="margin-top:10px">💾 Guardar Pesaje del Turno</button>
   </div></div>
@@ -543,11 +548,12 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:#EEF2F7;color:var(--
     <button class="btn btn-vd" onclick="guardarHoraCorr()">✔ Guardar Hora <span id="corr-btn-hora">1</span></button>
     <button class="btn btn-az" onclick="irResumen()">Ver Resumen</button>
     <button class="btn btn-gr" onclick="limpiarFormCorr()">🗑 Limpiar</button>
+    <button class="btn btn-rd" onclick="abrirModalTM()" style="margin-left:auto">🔴 Tiempo Muerto</button>
   </div>
 
   <!-- Pesaje corrugada (3 por turno) -->
   <div class="card"><div class="card-head nr">⚖ Pesaje y Rendimiento — Todo el Turno (3 posiciones)</div><div class="card-body">
-    <table class="pt"><thead><tr><th>Pos.</th><th>Peso (kg)</th><th>Rendimiento (%)</th><th>Observación</th></tr></thead>
+    <table class="pt"><thead><tr><th>Pos.</th><th>Peso (kg)</th><th>Carga de Línea</th><th>Observación</th></tr></thead>
     <tbody id="pesaje-tbody-corr"></tbody></table>
     <button class="btn btn-nr btn-sm" onclick="guardarPesajeCorr()" style="margin-top:10px">💾 Guardar Pesaje</button>
   </div></div>
@@ -650,6 +656,32 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:#EEF2F7;color:var(--
     <div style="font-size:48px;margin-bottom:12px">📭</div>
     <div style="font-size:16px;font-weight:600">Sin datos para esta orden</div>
     <div style="font-size:13px;margin-top:6px">Verifica que la orden tenga turnos registrados</div>
+  </div>
+</div>
+
+<!-- MODAL TIEMPO MUERTO -->
+<div id="modal-tm" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:998;align-items:center;justify-content:center">
+  <div style="background:#fff;border-radius:var(--rad);padding:20px;width:min(420px,95vw);box-shadow:0 20px 60px rgba(0,0,0,.3)">
+    <div style="background:var(--rd);border-radius:var(--rad2) var(--rad2) 0 0;margin:-20px -20px 16px;padding:14px 20px;display:flex;justify-content:space-between;align-items:center">
+      <div style="color:#fff;font-size:15px;font-weight:700">🔴 Registro de Tiempo Muerto</div>
+      <button onclick="cerrarModalTM()" style="background:none;border:none;color:#fff;font-size:20px;cursor:pointer">✕</button>
+    </div>
+    <div class="info-grid" style="margin-bottom:14px" id="tm-linea-info"></div>
+    <div class="fila fila-2">
+      <div class="campo"><label>Hora Inicio *</label><input type="time" id="tm-inicio"></div>
+      <div class="campo"><label>Hora Fin</label><input type="time" id="tm-fin" oninput="calcDuracionTM()" placeholder="Dejar vacío si sigue detenida"></div>
+    </div>
+    <div style="background:var(--az3);border-radius:var(--rad2);padding:10px;margin-bottom:10px;font-size:12px;color:var(--az)">
+      ⏱ Duración: <strong id="tm-duracion">—</strong>
+    </div>
+    <div class="campo" style="margin-bottom:14px">
+      <label>Motivo / Observación *</label>
+      <textarea id="tm-motivo" placeholder="Describir el motivo del paro..." rows="3"></textarea>
+    </div>
+    <div style="display:flex;gap:8px">
+      <button class="btn btn-rd" style="flex:1;justify-content:center" onclick="guardarTiempoMuerto()">💾 Registrar Tiempo Muerto</button>
+      <button class="btn btn-gr" onclick="cerrarModalTM()">Cancelar</button>
+    </div>
   </div>
 </div>
 
@@ -882,7 +914,8 @@ async function loginOk(){
       rolActual=res.rol; nombreActual=res.nombre||'';
       document.getElementById('v-login').style.display='none';
       document.getElementById('topbar').style.display='flex';
-      document.getElementById('rol-badge').textContent=rolActual==='admin'?'⚙ Admin':'👷 Operario';
+      var badges={admin:'⚙ Admin',coordinador:'📋 Coordinador',supervisor:'👁 Supervisor',jefe:'🏭 Jefe',operario:'👷 Operario'};
+      document.getElementById('rol-badge').textContent=badges[rolActual]||rolActual;
       document.getElementById('user-nombre').textContent=nombreActual;
       document.getElementById('btn-admin').style.display=rolActual==='admin'?'inline-flex':'none';
       await cargarMaestros();
@@ -942,18 +975,24 @@ async function cargarMaestros(){
   try{
     const [ro,rm]=await Promise.all([api({action:'getOrdenes'}),api({action:'getMezclas'})]);
     if(ro.ok && ro.data.length){
-      // Si no tiene columna Estado, mostrar todas
-      maestroOrdenes=ro.data.filter(o=>!o.Estado || o.Estado!=='Cerrada');
-      const opts=maestroOrdenes.map(o=>`<option value="${String(o.OrdenFab).trim()}">${o.OrdenFab} — ${o.Producto||''}</option>`).join('');
+      maestroOrdenes=ro.data.filter(function(o){return !o.Estado||o.Estado!=='Cerrada';});
+      // Filtrar por línea si hay una activa
+      var ordenesLinea = lineaActual.ID ?
+        maestroOrdenes.filter(function(o){
+          if(!o.Linea||String(o.Linea).trim()==='') return true;
+          return String(o.Linea).trim().toLowerCase()===lineaActual.NombreLinea.toLowerCase()||
+                 String(o.Linea).trim()===String(lineaActual.ID);
+        }) : maestroOrdenes;
+      var opts=ordenesLinea.map(function(o){return '<option value="'+o.OrdenFab+'">'+o.OrdenFab+' — '+(o.Producto||'')+'</option>';}).join('');
       document.getElementById('ordenes-list').innerHTML=opts;
-      document.getElementById('ordenes-list-inf').innerHTML=opts;
+      var optsAll=maestroOrdenes.map(function(o){return '<option value="'+o.OrdenFab+'">'+o.OrdenFab+' — '+(o.Producto||'')+'</option>';}).join('');
+      document.getElementById('ordenes-list-inf').innerHTML=optsAll;
     }
     if(rm.ok && rm.data.length){
-      // Si no tiene columna Activa, mostrar todas
-      maestroMezclas=rm.data.filter(m=>!m.Activa || m.Activa!=='No');
-      const opts=maestroMezclas.map(m=>`<option value="${String(m.CodigoMezcla).trim()}">${m.CodigoMezcla} — ${m.NombreMezcla||''}</option>`).join('');
-      document.getElementById('mezclas-list').innerHTML=opts;
-      document.getElementById('mezclas-list-corr').innerHTML=opts;
+      maestroMezclas=rm.data.filter(function(m){return !m.Activa||m.Activa!=='No';});
+      var opts2=maestroMezclas.map(function(m){return '<option value="'+m.CodigoMezcla+'">'+m.CodigoMezcla+' — '+(m.NombreMezcla||'')+'</option>';}).join('');
+      document.getElementById('mezclas-list').innerHTML=opts2;
+      document.getElementById('mezclas-list-corr').innerHTML=opts2;
     }
   }catch(e){console.error('Error cargando maestros:',e);}
 }
@@ -961,22 +1000,76 @@ async function cargarMaestros(){
 async function cargarLineas(){
   loader(true,'Cargando líneas...');
   try{
-    const [rl,rt]=await Promise.all([api({action:'getLineas'}),api({action:'getTurnosActivos'})]);
+    const esTablero=['coordinador','supervisor','jefe'].includes(rolActual);
+    const [rl,rt]=await Promise.all([
+      api({action:'getLineas'}),
+      esTablero?api({action:'getTurnosActivosDetalle'}):api({action:'getTurnosActivos'})
+    ]);
     loader(false);
     if(!rl.ok){notify('Error: '+rl.msg,'err');return;}
-    const act=(rt.ok?rt.data:[]).reduce((a,t)=>{a[t.Linea]=t;return a;},{});
-    turnosActivosMap = act; // guardar globalmente para selLinea
-    document.getElementById('lineas-grid').innerHTML=rl.data.filter(l=>l.Activa!=='No').map(l=>{
-      const ta=act[l.ID];
-      const esCorr=l.Tipo==='Corrugada'||LINEAS_CORRUGADAS.includes(parseInt(l.ID));
-      return `<div class="linea-card ${ta?'con-turno':''} ${esCorr?'corrugada':''}" onclick='selLinea(${JSON.stringify(l)})'>
-        <div class="linea-num">${String(l.ID).padStart(2,'0')}</div>
-        <div class="linea-nombre">${l.NombreLinea}</div>
-        ${esCorr?'<div class="linea-tipo">CORRUGADA</div>':''}
-        <div class="linea-estado ${ta?'e-abierto':'e-libre'}">${ta?'● Turno '+ta.Turno:'Libre'}</div>
-      </div>`;
-    }).join('');
-  }catch(e){loader(false);notify('Error cargando líneas','err');}
+
+    if(esTablero){
+      const detalles=(rt.ok?rt.data:[]).reduce((a,t)=>{a[t.lineaId]=t;return a;},{});
+      turnosActivosMap=(rt.ok?rt.data:[]).reduce((a,t)=>{
+        a[t.lineaId]={TurnoID:t.turnoId,Turno:t.turno,Operario:t.operario,
+          OrdenFab:t.ordenFab,Fecha:t.fecha,LineaNombre:t.linea,Linea:t.lineaId,
+          CodigoSAP:'',Producto:t.producto||'',EspesorMin:'',Diametro:'',
+          PesoEstandar:t.pesoEstandar||0,CantidadOrden:t.cantidadOrden||0,
+          CargaEstandar:t.cargaEstandar||0};
+        return a;},{});
+      document.getElementById('lineas-grid').innerHTML=rl.data.filter(l=>l.Activa!=='No').map(l=>{
+        const d=detalles[l.ID];
+        const tieneT=!!d;
+        const esCo=l.Tipo==='Corrugada'||LINEAS_CORRUGADAS.includes(parseInt(l.ID));
+        const parada=d&&d.tiempoMuertoActivo;
+        const borde=parada?'border-color:#C0392B;background:#FDECEA':tieneT?'border-color:var(--vd);background:var(--vd2)':'';
+        return `<div class="linea-card ${esCo?'corrugada':''}" style="${borde}" onclick='selLinea(${JSON.stringify(l)})'>
+          <div style="display:flex;justify-content:space-between;align-items:center">
+            <div class="linea-num">${String(l.ID).padStart(2,'0')}</div>
+            ${parada?'<span style="background:var(--rd);color:#fff;font-size:9px;padding:2px 6px;border-radius:8px;font-weight:700">🔴 PARADA</span>':tieneT?'<span style="background:var(--vd);color:#fff;font-size:9px;padding:2px 6px;border-radius:8px">Turno '+d.turno+'</span>':''}
+          </div>
+          <div class="linea-nombre">${l.NombreLinea}</div>
+          ${esCo?'<div class="linea-tipo">CORRUGADA</div>':''}
+          ${tieneT?`
+            <div style="font-size:10px;color:var(--gr3);margin-top:4px">${d.operario||'—'}</div>
+            <div style="font-size:10px;color:var(--az);font-weight:600">${d.ordenFab||'—'}</div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:3px;margin-top:6px">
+              <div style="background:rgba(0,0,0,.06);border-radius:4px;padding:3px 5px;text-align:center">
+                <div style="font-size:9px;color:var(--gr3)">Kg acum.</div>
+                <div style="font-size:12px;font-weight:700;color:var(--az)">${d.kgAcumulados||0}</div>
+              </div>
+              <div style="background:rgba(0,0,0,.06);border-radius:4px;padding:3px 5px;text-align:center">
+                <div style="font-size:9px;color:var(--gr3)">Sobre peso</div>
+                <div style="font-size:12px;font-weight:700;color:${parseFloat(d.sobrePesoActual||0)>3?'var(--rd)':'var(--vd)'}">${d.sobrePesoActual||0}%</div>
+              </div>
+              <div style="background:rgba(0,0,0,.06);border-radius:4px;padding:3px 5px;text-align:center">
+                <div style="font-size:9px;color:var(--gr3)">Carga línea</div>
+                <div style="font-size:12px;font-weight:700;color:var(--az)">${d.cargaLinea!==null?d.cargaLinea:'—'}</div>
+              </div>
+              <div style="background:rgba(0,0,0,.06);border-radius:4px;padding:3px 5px;text-align:center">
+                <div style="font-size:9px;color:var(--gr3)">Output std</div>
+                <div style="font-size:12px;font-weight:700;color:var(--az)">${d.cargaEstandar||'—'}</div>
+              </div>
+            </div>
+            ${parada?`<div style="margin-top:6px;font-size:10px;background:var(--rd2);border-radius:4px;padding:4px 6px;color:var(--rd)">⏱ Desde ${d.tiempoMuertoActivo.horaInicio}: ${d.tiempoMuertoActivo.motivo}</div>`:''}
+          `:`<div class="linea-estado e-libre" style="margin-top:8px">Libre</div>`}
+        </div>`;
+      }).join('');
+    } else {
+      const act=(rt.ok?rt.data:[]).reduce((a,t)=>{a[t.Linea]=t;return a;},{});
+      turnosActivosMap=act;
+      document.getElementById('lineas-grid').innerHTML=rl.data.filter(l=>l.Activa!=='No').map(l=>{
+        const ta=act[l.ID];
+        const esCo=l.Tipo==='Corrugada'||LINEAS_CORRUGADAS.includes(parseInt(l.ID));
+        return `<div class="linea-card ${ta?'con-turno':''} ${esCo?'corrugada':''}" onclick='selLinea(${JSON.stringify(l)})'>
+          <div class="linea-num">${String(l.ID).padStart(2,'0')}</div>
+          <div class="linea-nombre">${l.NombreLinea}</div>
+          ${esCo?'<div class="linea-tipo">CORRUGADA</div>':''}
+          <div class="linea-estado ${ta?'e-abierto':'e-libre'}">${ta?'● Turno '+ta.Turno:'Libre'}</div>
+        </div>`;
+      }).join('');
+    }
+  }catch(e){loader(false);notify('Error cargando líneas','err');console.error(e);}
 }
 
 // Variable global para turnos activos por línea
@@ -987,12 +1080,11 @@ function selLinea(l){
   esCorrugada=l.Tipo==='Corrugada'||LINEAS_CORRUGADAS.includes(parseInt(l.ID));
   const turnoActivo = turnosActivosMap[l.ID];
   if(turnoActivo){
-    // Línea tiene turno abierto — preguntar si retomar
     mostrarModalRetomar(turnoActivo);
   } else {
-    // Libre — ir a crear cabecera
     document.getElementById('cab-linea-nombre').textContent=l.NombreLinea;
     setVal('cab-linea',l.NombreLinea); setVal('cab-fecha',fmtFecha());
+    cargarMaestros(); // Recarga órdenes filtradas por esta línea
     irA('cabecera','Nueva Cabecera',l.NombreLinea);
   }
 }
@@ -1115,8 +1207,18 @@ async function retomarTurno(){
 
 function buscarOrden(v){
   if(!v) return;
-  const vClean=v.trim().toLowerCase();
-  const o=maestroOrdenes.find(o=>String(o.OrdenFab).trim().toLowerCase()===vClean);
+  var vClean=v.trim().toLowerCase();
+  // Filtrar por línea actual
+  var o=maestroOrdenes.find(function(o){
+    var matchOrden=String(o.OrdenFab).trim().toLowerCase()===vClean;
+    if(!matchOrden) return false;
+    // Si la orden tiene línea asignada, verificar que coincida
+    if(o.Linea && String(o.Linea).trim()!==''){
+      return String(o.Linea).trim().toLowerCase()===lineaActual.NombreLinea.toLowerCase() ||
+             String(o.Linea).trim()===String(lineaActual.ID);
+    }
+    return true;
+  });
   if(o){
     setVal('cab-codigoSAP',o.CodigoSAP||'');
     setVal('cab-producto',o.Producto||'');
@@ -1124,6 +1226,8 @@ function buscarOrden(v){
     setVal('cab-diametro',o.Diametro_mm||'');
     setVal('cab-peso',o.PesoEstandar_kgm||'');
     setVal('cab-cantOrden',o.CantidadOrden_und||'');
+    setVal('cab-cargaEstandar',o.CargaEstandar_output||'');
+    setVal('cab-lineaOrden',o.Linea||'');
   }
 }
 
@@ -1141,8 +1245,83 @@ function buscarMezclaCo(v){
   if(m) setVal('corr-mezcla',m.NombreMezcla||'');
   calcConsecCorr();
 }
-function calcConsec(){} // Consecutivo lo digita el operario
-function calcConsecCorr(){} // Consecutivo lo digita el operario
+function calcSobrePeso(){
+  var pesoPromedio=flt('reg-pesoPromedio');
+  var pesoEstandar=parseFloat(turnoActual.pesoEstandar)||0;
+  if(pesoPromedio>0 && pesoEstandar>0){
+    var sp=((pesoPromedio-pesoEstandar)/pesoEstandar*100).toFixed(2);
+    setVal('reg-sobrePeso',sp);
+  }
+}
+function calcSobrePesoCorr(){
+  var pesoPromedio=flt('corr-pesoPromedio');
+  var pesoEstandar=parseFloat(turnoActual.pesoEstandar)||0;
+  if(pesoPromedio>0 && pesoEstandar>0){
+    var sp=((pesoPromedio-pesoEstandar)/pesoEstandar*100).toFixed(2);
+    setVal('corr-sobrePeso',sp);
+  }
+}
+// ── TIEMPO MUERTO ─────────────────────────────────────────────
+function abrirModalTM(){
+  var t=turnoActual;
+  document.getElementById('tm-linea-info').innerHTML=
+    '<div class="info-item"><label>Línea</label><span>'+t.lineaNombre+'</span></div>'+
+    '<div class="info-item"><label>Turno</label><span>'+t.turno+'</span></div>'+
+    '<div class="info-item"><label>Fecha</label><span>'+t.fecha+'</span></div>'+
+    '<div class="info-item"><label>Operario</label><span>'+t.operario+'</span></div>';
+  // Poner hora actual como inicio
+  var now=new Date();
+  var hh=String(now.getHours()).padStart(2,'0');
+  var mm=String(now.getMinutes()).padStart(2,'0');
+  document.getElementById('tm-inicio').value=hh+':'+mm;
+  document.getElementById('tm-fin').value='';
+  document.getElementById('tm-motivo').value='';
+  document.getElementById('tm-duracion').textContent='—';
+  document.getElementById('modal-tm').style.display='flex';
+}
+function cerrarModalTM(){
+  document.getElementById('modal-tm').style.display='none';
+}
+function calcDuracionTM(){
+  var ini=document.getElementById('tm-inicio').value;
+  var fin=document.getElementById('tm-fin').value;
+  if(ini && fin){
+    var [h1,m1]=ini.split(':').map(Number);
+    var [h2,m2]=fin.split(':').map(Number);
+    var min=(h2*60+m2)-(h1*60+m1);
+    if(min<0) min+=1440; // cruzó medianoche
+    var hh=Math.floor(min/60);
+    var mm=min%60;
+    document.getElementById('tm-duracion').textContent=(hh>0?hh+'h ':'')+mm+'min';
+    return min;
+  }
+  return 0;
+}
+async function guardarTiempoMuerto(){
+  var ini=document.getElementById('tm-inicio').value;
+  var motivo=document.getElementById('tm-motivo').value.trim();
+  if(!ini){notify('Ingresa la hora de inicio','err');return;}
+  if(!motivo){notify('Ingresa el motivo del paro','err');return;}
+  var fin=document.getElementById('tm-fin').value;
+  var durMin=calcDuracionTM();
+  loader(true,'Registrando tiempo muerto...');
+  try{
+    var r=await api({action:'registrarTiempoMuerto',
+      turnoId:turnoActual.id,
+      lineaNombre:turnoActual.lineaNombre,
+      fecha:turnoActual.fecha,
+      horaInicio:ini, horaFin:fin||'',
+      duracionMin:durMin,
+      motivo:motivo,
+      estado:fin?'Cerrado':'Activo'
+    });
+    loader(false);
+    if(r.ok){
+      notify('Tiempo muerto registrado ✓','ok');
+      cerrarModalTM();
+    }else notify(r.msg||'Error','err');
+  }catch(e){loader(false);notify('Error: '+e.message,'err');}
+}
 
 // ── TURNO ─────────────────────────────────────────────────────
 async function crearTurno(){
@@ -1162,6 +1341,7 @@ async function crearTurno(){
       ordenFab:val('cab-orden'),codigoSAP:val('cab-codigoSAP'),producto:val('cab-producto'),
       espesorMin:val('cab-espesor'),diametro:val('cab-diametro'),pesoEstandar:val('cab-peso'),
       cantidadOrden:parseInt(val('cab-cantOrden'))||0,
+      cargaEstandar:parseFloat(val('cab-cargaEstandar'))||0,
       rotulado:val('cab-rotulado')
     });
     loader(false);
@@ -1171,7 +1351,9 @@ async function crearTurno(){
         coordinador:val('cab-coordinador'),supervisor:val('cab-supervisor'),
         ordenFab:val('cab-orden'),codigoSAP:val('cab-codigoSAP'),producto:val('cab-producto'),
         espesorMin:val('cab-espesor'),diametro:val('cab-diametro'),pesoEstandar:val('cab-peso'),
-        cantidadOrden:parseInt(val('cab-cantOrden'))||0,rotulado:val('cab-rotulado')};
+        cantidadOrden:parseInt(val('cab-cantOrden'))||0,
+        cargaEstandar:parseFloat(val('cab-cargaEstandar'))||0,
+        rotulado:val('cab-rotulado')};
       horasGuardadas={}; horaActual=1;
       if(esCorrugada) iniciarRegistroCorr();
       else iniciarRegistro();
@@ -1217,7 +1399,7 @@ function renderPesaje(tbodyId,nPos){
   document.getElementById(tbodyId).innerHTML=Array.from({length:nPos},(_,i)=>`
     <tr><td style="text-align:center;font-weight:700;color:var(--nr)">${i+1}</td>
     <td><input type="number" id="p-peso-${i+1}" placeholder="0.000" step="0.001"></td>
-    <td><input type="number" id="p-rend-${i+1}" placeholder="0.0" step="0.1"></td>
+    <td><input type="number" id="p-carga-${i+1}" placeholder="0.0"></td>
     <td><input type="text" id="p-obs-${i+1}" placeholder="Obs."></td></tr>`).join('');
 }
 
@@ -1274,8 +1456,8 @@ async function guardarHora(){
 async function guardarPesaje(){
   const pesajes=Array.from({length:6},(_,i)=>({
     posicion:i+1,pesoKg:flt(`p-peso-${i+1}`),
-    rendimiento:flt(`p-rend-${i+1}`),obs:val(`p-obs-${i+1}`)
-  })).filter(p=>p.pesoKg>0||p.rendimiento>0);
+    cargaLinea:flt(`p-carga-${i+1}`),obs:val(`p-obs-${i+1}`)
+  })).filter(p=>p.pesoKg>0||p.cargaLinea>0);
   if(!pesajes.length){notify('Ingresa al menos un pesaje','err');return;}
   loader(true,'Guardando pesaje...');
   try{
@@ -1362,8 +1544,8 @@ async function guardarHoraCorr(){
 async function guardarPesajeCorr(){
   const pesajes=Array.from({length:3},(_,i)=>({
     posicion:i+1,pesoKg:flt(`p-peso-${i+1}`),
-    rendimiento:flt(`p-rend-${i+1}`),obs:val(`p-obs-${i+1}`)
-  })).filter(p=>p.pesoKg>0||p.rendimiento>0);
+    cargaLinea:flt(`p-carga-${i+1}`),obs:val(`p-obs-${i+1}`)
+  })).filter(p=>p.pesoKg>0||p.cargaLinea>0);
   if(!pesajes.length){notify('Ingresa al menos un pesaje','err');return;}
   loader(true);
   try{
