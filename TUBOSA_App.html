@@ -337,8 +337,23 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:#EEF2F7;color:var(--
     </div>
     <div class="fila fila-3">
       <div class="campo"><label>Operario</label><input type="text" id="cab-operario" placeholder="Nombre operario"></div>
-      <div class="campo"><label>Coordinador</label><input type="text" id="cab-coordinador" placeholder="Nombre coordinador"></div>
-      <div class="campo"><label>Supervisor</label><input type="text" id="cab-supervisor" placeholder="Nombre supervisor"></div>
+      <div class="campo"><label>Coordinador</label>
+        <select id="cab-coordinador">
+          <option value="">Seleccionar coordinador...</option>
+          <option>John A Donneys</option>
+          <option>Ricardo Cañizalez</option>
+          <option>Daniel Gutierrez</option>
+        </select>
+      </div>
+      <div class="campo"><label>Supervisor</label>
+        <select id="cab-supervisor">
+          <option value="">Seleccionar supervisor...</option>
+          <option>Andres Rivera</option>
+          <option>Carlos Garzon</option>
+          <option>Hernando Lopez</option>
+          <option>Jonathan Castañeda</option>
+        </select>
+      </div>
     </div>
     <div class="sec-t mt">Orden de Fabricación</div>
     <div class="fila fila-2">
@@ -674,11 +689,19 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:#EEF2F7;color:var(--
       <div class="fila fila-3" style="margin-bottom:10px">
         <div class="campo"><label>Turno</label><input type="text" id="rwa-turno" placeholder="A / B / C" readonly class="auto"></div>
         <div class="campo"><label>Fecha</label><input type="text" id="rwa-fecha" readonly class="auto"></div>
-        <div class="campo"><label>Supervisor</label><input type="text" id="rwa-supervisor" placeholder="Nombre supervisor"></div>
+        <div class="campo"><label>Supervisor</label>
+          <select id="rwa-supervisor">
+            <option value="">Seleccionar...</option>
+            <option>Andres Rivera</option>
+            <option>Carlos Garzon</option>
+            <option>Hernando Lopez</option>
+            <option>Jonathan Castañeda</option>
+          </select>
+        </div>
       </div>
       <div class="fila fila-2" style="margin-bottom:10px">
-        <div class="campo"><label>Kg/h del turno</label><input type="number" id="rwa-kgh" placeholder="0"></div>
-        <div class="campo"><label>Kg/T del turno</label><input type="number" id="rwa-kgt" placeholder="0"></div>
+        <div class="campo"><label>Kg/h del turno</label><input type="number" id="rwa-kgh" placeholder="0" oninput="calcKgT()"></div>
+        <div class="campo"><label>Kg/T del turno (auto)</label><input type="text" id="rwa-kgt" readonly class="auto" placeholder="Auto = Kg/h × 8"></div>
       </div>
 
       <!-- Líneas activas -->
@@ -2242,6 +2265,11 @@ function generarPDFDevolucion(){
 // ── REPORTE WHATSAPP ─────────────────────────────────────────
 var datosReporteWA = [];
 
+function calcKgT(){
+  var kgh = parseFloat(document.getElementById('rwa-kgh').value)||0;
+  document.getElementById('rwa-kgt').value = kgh > 0 ? (kgh * 8).toFixed(0) : '';
+}
+
 async function abrirReporteWA(){
   loader(true,'Cargando datos del turno...');
   try{
@@ -2254,8 +2282,11 @@ async function abrirReporteWA(){
     const primerTurno = turnos[0];
     setVal('rwa-turno', primerTurno ? primerTurno.turno : '');
     setVal('rwa-fecha', fmtFecha());
-    setVal('rwa-supervisor', '');
-    setVal('rwa-kgh',''); setVal('rwa-kgt','');
+
+    // Calcular Kg/h total sumando cargaLinea de todas las líneas activas
+    var totalCarga = turnos.reduce(function(s,t){ return s + (parseFloat(t.cargaLinea)||0); }, 0);
+    document.getElementById('rwa-kgh').value = totalCarga > 0 ? totalCarga.toFixed(0) : '';
+    document.getElementById('rwa-kgt').value = totalCarga > 0 ? (totalCarga * 8).toFixed(0) : '';
     document.getElementById('rwa-resultado').style.display='none';
 
     // Renderizar una tarjeta por línea activa
