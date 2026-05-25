@@ -317,6 +317,7 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:#EEF2F7;color:var(--
       <button class="btn btn-gr btn-sm" onclick="cargarLineas()">🔄</button>
       <button class="btn btn-az btn-sm" id="btn-admin" onclick="irA('admin','Administración','Maestros y Usuarios')" style="display:none">⚙ Admin</button>
       <button class="btn btn-az btn-sm" onclick="irA('informes','Informes','Balance por Orden')">📊 Informes</button>
+      <button class="btn btn-sm" style="background:#25D366;color:#fff" onclick="abrirReporteWA()" id="btn-reporte-wa">💬 Reporte Turno</button>
     </div>
   </div>
   <div class="lineas-grid" id="lineas-grid"></div>
@@ -656,6 +657,54 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:#EEF2F7;color:var(--
     <div style="font-size:48px;margin-bottom:12px">📭</div>
     <div style="font-size:16px;font-weight:600">Sin datos para esta orden</div>
     <div style="font-size:13px;margin-top:6px">Verifica que la orden tenga turnos registrados</div>
+  </div>
+</div>
+
+<!-- MODAL REPORTE WHATSAPP -->
+<div id="modal-reporte-wa" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:998;align-items:flex-start;justify-content:center;overflow-y:auto;padding:16px">
+  <div style="background:#fff;border-radius:var(--rad);width:min(600px,95vw);box-shadow:0 20px 60px rgba(0,0,0,.3);margin:auto">
+    <!-- Header -->
+    <div style="background:#25D366;border-radius:var(--rad) var(--rad) 0 0;padding:14px 20px;display:flex;justify-content:space-between;align-items:center">
+      <div style="color:#fff;font-size:15px;font-weight:700">💬 Reporte de Turno — WhatsApp</div>
+      <button onclick="cerrarReporteWA()" style="background:none;border:none;color:#fff;font-size:20px;cursor:pointer">✕</button>
+    </div>
+    <div style="padding:16px">
+      <!-- Datos generales -->
+      <div class="sec-t">Datos generales del turno</div>
+      <div class="fila fila-3" style="margin-bottom:10px">
+        <div class="campo"><label>Turno</label><input type="text" id="rwa-turno" placeholder="A / B / C" readonly class="auto"></div>
+        <div class="campo"><label>Fecha</label><input type="text" id="rwa-fecha" readonly class="auto"></div>
+        <div class="campo"><label>Supervisor</label><input type="text" id="rwa-supervisor" placeholder="Nombre supervisor"></div>
+      </div>
+      <div class="fila fila-2" style="margin-bottom:10px">
+        <div class="campo"><label>Kg/h del turno</label><input type="number" id="rwa-kgh" placeholder="0"></div>
+        <div class="campo"><label>Kg/T del turno</label><input type="number" id="rwa-kgt" placeholder="0"></div>
+      </div>
+
+      <!-- Líneas activas -->
+      <div class="sec-t">Líneas activas — completa los datos faltantes</div>
+      <div id="rwa-lineas-container"></div>
+
+      <!-- Personal adicional -->
+      <div class="sec-t" style="margin-top:12px">Personal adicional (auxiliares, montacargas, etc.)</div>
+      <div class="campo" style="margin-bottom:10px">
+        <label>Personal (uno por línea, ej: "Auxiliar Documentación: Nombre")</label>
+        <textarea id="rwa-personal" rows="4" placeholder="Auxiliar Documentación: No hay.&#10;Mezanine: Tedy Asprilla, Jesus Criollo.&#10;Control Scrap: Jeison Martinez&#10;Montacargas: Jorge Ochoa&#10;Marcadora: Lesly Vidal&#10;Personal ausente: No hubo"></textarea>
+      </div>
+
+      <!-- Botones -->
+      <div style="display:flex;gap:8px;margin-bottom:12px">
+        <button class="btn btn-sm" style="background:#25D366;color:#fff;flex:1;justify-content:center" onclick="generarTextoWA()">📋 Generar Texto</button>
+        <button class="btn btn-gr btn-sm" onclick="cerrarReporteWA()">Cancelar</button>
+      </div>
+
+      <!-- Resultado -->
+      <div id="rwa-resultado" style="display:none">
+        <div class="sec-t">Texto generado — copia y pega en WhatsApp</div>
+        <textarea id="rwa-texto" rows="20" style="width:100%;font-family:monospace;font-size:12px;padding:10px;border:1px solid var(--gr2);border-radius:var(--rad2);background:var(--gr);resize:vertical" readonly></textarea>
+        <button class="btn btn-sm" style="background:#25D366;color:#fff;width:100%;justify-content:center;margin-top:8px" onclick="copiarTextoWA()">📋 Copiar al portapapeles</button>
+      </div>
+    </div>
   </div>
 </div>
 
@@ -2189,6 +2238,135 @@ function generarPDFDevolucion(){
   doc.save(fname);
   notify('PDF de devolución generado ✓','ok');
   cerrarModalDev();
+}
+// ── REPORTE WHATSAPP ─────────────────────────────────────────
+var datosReporteWA = [];
+
+async function abrirReporteWA(){
+  loader(true,'Cargando datos del turno...');
+  try{
+    // Cargar turnos activos con detalle
+    const rt = await api({action:'getTurnosActivosDetalle'});
+    loader(false);
+    const turnos = rt.ok ? rt.data : [];
+
+    // Pre-llenar datos generales
+    const primerTurno = turnos[0];
+    setVal('rwa-turno', primerTurno ? primerTurno.turno : '');
+    setVal('rwa-fecha', fmtFecha());
+    setVal('rwa-supervisor', '');
+    setVal('rwa-kgh',''); setVal('rwa-kgt','');
+    document.getElementById('rwa-resultado').style.display='none';
+
+    // Renderizar una tarjeta por línea activa
+    datosReporteWA = turnos;
+    var cont = document.getElementById('rwa-lineas-container');
+    if(!turnos.length){
+      cont.innerHTML='<p style="color:var(--gr3);font-size:13px;padding:12px 0">No hay líneas con turno activo en este momento.</p>';
+    } else {
+      cont.innerHTML = turnos.map(function(t,i){
+        return '<div style="background:var(--gr);border-radius:var(--rad2);padding:12px;margin-bottom:10px;border-left:3px solid var(--az)">' +
+          '<div style="font-size:12px;font-weight:700;color:var(--az);margin-bottom:8px">' + t.linea + ' — ' + (t.ordenFab||'') + '</div>' +
+          '<div class="fila fila-2">' +
+            '<div class="campo"><label>Carga (kg)</label><input type="number" id="rwa-kg-'+i+'" value="' + (t.kgAcumulados||0) + '"></div>' +
+            '<div class="campo"><label>Referencia / Producto</label><input type="text" id="rwa-ref-'+i+'" value="' + (t.producto||'') + '" placeholder="Ej: Tubo CPVC 3/4&quot;"></div>' +
+          '</div>' +
+          '<div class="fila fila-2">' +
+            '<div class="campo"><label>Material / Mezcla</label><input type="text" id="rwa-mat-'+i+'" placeholder="Ej: Mezcla CPVC"></div>' +
+            '<div class="campo"><label>Operario(s)</label><input type="text" id="rwa-op-'+i+'" value="' + (t.operario||'') + '" placeholder="Nombres separados por coma"></div>' +
+          '</div>' +
+          '<div class="campo"><label>Observación de la línea</label><input type="text" id="rwa-obs-'+i+'" placeholder="Ej: Línea en calentamiento..."></div>' +
+        '</div>';
+      }).join('');
+    }
+
+    document.getElementById('modal-reporte-wa').style.display='flex';
+  }catch(e){
+    loader(false);
+    notify('Error cargando datos: '+e.message,'err');
+  }
+}
+
+function cerrarReporteWA(){
+  document.getElementById('modal-reporte-wa').style.display='none';
+}
+
+function generarTextoWA(){
+  var turno = val('rwa-turno');
+  var fecha = val('rwa-fecha');
+  var supervisor = val('rwa-supervisor');
+  var kgh = val('rwa-kgh');
+  var kgt = val('rwa-kgt');
+  var personal = val('rwa-personal');
+
+  // Construir texto estilo WhatsApp
+  var txt = '';
+  txt += '🏭 *Buenos días*\n';
+  txt += '*Status de planta ' + fecha + ' Turno ' + turno + '*\n';
+  txt += '\n';
+  txt += '*Supervisor de turno*\n';
+  txt += '*' + (supervisor||'—') + '*\n';
+  txt += '\n';
+
+  var lineasActivas = 0;
+  var lineasInactivas = 0;
+
+  datosReporteWA.forEach(function(t, i){
+    var kg = document.getElementById('rwa-kg-'+i) ? document.getElementById('rwa-kg-'+i).value : '0';
+    var ref = document.getElementById('rwa-ref-'+i) ? document.getElementById('rwa-ref-'+i).value : '';
+    var mat = document.getElementById('rwa-mat-'+i) ? document.getElementById('rwa-mat-'+i).value : '';
+    var op = document.getElementById('rwa-op-'+i) ? document.getElementById('rwa-op-'+i).value : '';
+    var obs = document.getElementById('rwa-obs-'+i) ? document.getElementById('rwa-obs-'+i).value : '';
+
+    var kgNum = parseFloat(kg)||0;
+    if(kgNum > 0) lineasActivas++; else lineasInactivas++;
+
+    txt += '*' + t.linea + '*\n';
+    txt += '*' + kgNum + 'kg*\n';
+    if(ref) txt += '*' + ref + '*\n';
+    if(mat) txt += '*' + mat + '*\n';
+
+    if(op){
+      txt += 'Operario\n';
+      var ops = op.split(',');
+      ops.forEach(function(o, idx){
+        txt += (idx+1) + '- ' + o.trim() + '\n';
+      });
+    }
+    if(obs) txt += obs + '\n';
+    txt += '\n';
+  });
+
+  // Personal adicional
+  if(personal){
+    txt += personal + '\n\n';
+  }
+
+  // Totales
+  txt += '*Kg/h:*\n' + (kgh||'—') + '\n';
+  txt += '*Kg/T:*\n' + (kgt||'—') + '\n';
+
+  document.getElementById('rwa-texto').value = txt;
+  document.getElementById('rwa-resultado').style.display='block';
+  // Scroll al resultado
+  document.getElementById('rwa-texto').scrollIntoView({behavior:'smooth'});
+}
+
+function copiarTextoWA(){
+  var txt = document.getElementById('rwa-texto');
+  txt.select();
+  txt.setSelectionRange(0,99999);
+  try{
+    document.execCommand('copy');
+    notify('Texto copiado ✓ — pégalo en WhatsApp','ok',4000);
+  }catch(e){
+    // Fallback para móviles
+    navigator.clipboard.writeText(txt.value).then(function(){
+      notify('Texto copiado ✓','ok',4000);
+    }).catch(function(){
+      notify('Selecciona el texto y cópialo manualmente','info',5000);
+    });
+  }
 }
 </script>
 </body>
