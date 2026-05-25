@@ -476,9 +476,9 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:#EEF2F7;color:var(--
   <!-- Pesaje (todo el turno) -->
   <div class="card"><div class="card-head nr">⚖ Pesaje y Rendimiento — Todo el Turno</div><div class="card-body">
     <p class="ts" style="margin-bottom:10px">Este pesaje aplica para todo el turno. Se puede ir llenando a lo largo de las 8 horas y se guarda al final.</p>
-    <table class="pt"><thead><tr><th>Pos.</th><th>Peso (kg)</th><th>Carga de Línea</th><th>Observación</th></tr></thead>
+    <table class="pt"><thead><tr><th>Pos.</th><th>Peso (kg)</th><th>Carga de Línea</th><th>Observación</th><th></th></tr></thead>
     <tbody id="pesaje-tbody"></tbody></table>
-    <button class="btn btn-nr btn-sm" onclick="guardarPesaje()" style="margin-top:10px">💾 Guardar Pesaje del Turno</button>
+    <button class="btn btn-nr btn-sm" onclick="guardarPesaje()" style="margin-top:10px">💾 Guardar Todo el Pesaje</button>
   </div></div>
 </div>
 
@@ -553,9 +553,9 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:#EEF2F7;color:var(--
 
   <!-- Pesaje corrugada (3 por turno) -->
   <div class="card"><div class="card-head nr">⚖ Pesaje y Rendimiento — Todo el Turno (3 posiciones)</div><div class="card-body">
-    <table class="pt"><thead><tr><th>Pos.</th><th>Peso (kg)</th><th>Carga de Línea</th><th>Observación</th></tr></thead>
+    <table class="pt"><thead><tr><th>Pos.</th><th>Peso (kg)</th><th>Carga de Línea</th><th>Observación</th><th></th></tr></thead>
     <tbody id="pesaje-tbody-corr"></tbody></table>
-    <button class="btn btn-nr btn-sm" onclick="guardarPesajeCorr()" style="margin-top:10px">💾 Guardar Pesaje</button>
+    <button class="btn btn-nr btn-sm" onclick="guardarPesajeCorr()" style="margin-top:10px">💾 Guardar Todo el Pesaje</button>
   </div></div>
 
   <!-- Tendencias corrugada (por turno, 4 posiciones) -->
@@ -1399,10 +1399,13 @@ function renderTabs(elId,corrugada){
 
 function renderPesaje(tbodyId,nPos){
   document.getElementById(tbodyId).innerHTML=Array.from({length:nPos},(_,i)=>`
-    <tr><td style="text-align:center;font-weight:700;color:var(--nr)">${i+1}</td>
-    <td><input type="number" id="p-peso-${i+1}" placeholder="0.000" step="0.001"></td>
-    <td><input type="number" id="p-carga-${i+1}" placeholder="0.0"></td>
-    <td><input type="text" id="p-obs-${i+1}" placeholder="Obs."></td></tr>`).join('');
+    <tr id="pesaje-row-${i+1}">
+      <td style="text-align:center;font-weight:700;color:var(--nr)">${i+1}</td>
+      <td><input type="number" id="p-peso-${i+1}" placeholder="0.000" step="0.001"></td>
+      <td><input type="number" id="p-carga-${i+1}" placeholder="0.0"></td>
+      <td><input type="text" id="p-obs-${i+1}" placeholder="Obs."></td>
+      <td><button class="btn btn-nr btn-sm" onclick="guardarPosicionPesaje(${i+1})" id="p-btn-${i+1}" style="padding:4px 10px;font-size:11px">💾</button></td>
+    </tr>`).join('');
 }
 
 function selHora(h){
@@ -1455,19 +1458,56 @@ async function guardarHora(){
   }catch(e){loader(false);notify('Error: '+e.message,'err');}
 }
 
-async function guardarPesaje(){
-  const pesajes=Array.from({length:6},(_,i)=>({
-    posicion:i+1,pesoKg:flt(`p-peso-${i+1}`),
-    cargaLinea:flt(`p-carga-${i+1}`),obs:val(`p-obs-${i+1}`)
-  })).filter(p=>p.pesoKg>0||p.cargaLinea>0);
-  if(!pesajes.length){notify('Ingresa al menos un pesaje','err');return;}
-  loader(true,'Guardando pesaje...');
+// Posiciones de pesaje guardadas en esta sesión
+var pesajesGuardados = {};
+
+async function guardarPosicionPesaje(pos){
+  var pesoKg=flt('p-peso-'+pos);
+  var cargaLinea=flt('p-carga-'+pos);
+  if(!pesoKg && !cargaLinea){notify('Ingresa al menos el peso o la carga','err');return;}
+  loader(true,'Guardando posición '+pos+'...');
   try{
-    const r=await api({action:'guardarPesaje',turnoId:turnoActual.id,pesajes});
+    var r=await api({action:'guardarPesaje',turnoId:turnoActual.id,
+      pesajes:[{posicion:pos,pesoKg:pesoKg,cargaLinea:cargaLinea,obs:val('p-obs-'+pos)}]
+    });
     loader(false);
-    if(r.ok)notify('Pesaje guardado ✓','ok');
-    else notify(r.msg||'Error','err');
-  }catch(e){loader(false);notify('Error','err');}
+    if(r.ok){
+      pesajesGuardados[pos]={pesoKg:pesoKg,cargaLinea:cargaLinea,obs:val('p-obs-'+pos)};
+      // Bloquear la fila
+      var row=document.getElementById('pesaje-row-'+pos);
+      if(row){
+        ['p-peso-'+pos,'p-carga-'+pos,'p-obs-'+pos].forEach(function(id){
+          var el=document.getElementById(id);
+          if(el){el.setAttribute('readonly','true');el.classList.add('auto');}
+        });
+        var btn=document.getElementById('p-btn-'+pos);
+        if(btn){btn.textContent='✓';btn.style.background='var(--vd)';btn.disabled=true;}
+      }
+      notify('Posición '+pos+' guardada ✓','ok');
+    }else notify(r.msg||'Error','err');
+  }catch(e){loader(false);notify('Error: '+e.message,'err');}
+}
+
+async function guardarPosicionPesajeCorr(pos){
+  var pesoKg=flt('p-peso-'+pos);
+  var cargaLinea=flt('p-carga-'+pos);
+  if(!pesoKg && !cargaLinea){notify('Ingresa al menos el peso o la carga','err');return;}
+  loader(true,'Guardando posición '+pos+'...');
+  try{
+    var r=await api({action:'guardarPesaje',turnoId:turnoActual.id,
+      pesajes:[{posicion:pos,pesoKg:pesoKg,cargaLinea:cargaLinea,obs:val('p-obs-'+pos)}]
+    });
+    loader(false);
+    if(r.ok){
+      ['p-peso-'+pos,'p-carga-'+pos,'p-obs-'+pos].forEach(function(id){
+        var el=document.getElementById(id);
+        if(el){el.setAttribute('readonly','true');el.classList.add('auto');}
+      });
+      var btn=document.getElementById('p-btn-'+pos);
+      if(btn){btn.textContent='✓';btn.style.background='var(--vd)';btn.disabled=true;}
+      notify('Posición '+pos+' guardada ✓','ok');
+    }else notify(r.msg||'Error','err');
+  }catch(e){loader(false);notify('Error: '+e.message,'err');}
 }
 
 // Contador unidades
@@ -1639,49 +1679,129 @@ async function cerrarTurnoYPDF(){
 function generarPDF(){
   const {jsPDF}=window.jspdf;
   const doc=new jsPDF({orientation:'portrait',unit:'mm',format:'a4'});
-  const AZ=[31,56,100],VD=[30,107,60],NR=[197,90,17];
+  const AZ=[31,56,100],VD=[30,107,60],NR=[197,90,17],PU=[83,58,183];
   const ml=10,t=turnoActual;
+  const horas=Object.values(horasGuardadas);
+
+  // ── ENCABEZADO ──
   doc.setFillColor(...AZ);doc.rect(0,0,210,28,'F');
   doc.setTextColor(255,255,255);doc.setFontSize(16);doc.setFont('helvetica','bold');
   doc.text('TUBOSA S.A.',ml,11);
   doc.setFontSize(10);doc.setFont('helvetica','normal');
   doc.text('Control de Líneas de Producción — Informe de Turno',ml,18);
   doc.setFontSize(9);doc.text('Generado: '+fmtFecha()+' '+new Date().toLocaleTimeString('es-CO',{hour:'2-digit',minute:'2-digit'}),200,24,{align:'right'});
+
+  // ── DATOS DEL TURNO ──
   let y=34;
   doc.setTextColor(...AZ);doc.setFontSize(11);doc.setFont('helvetica','bold');
   doc.text('DATOS DEL TURNO',ml,y);y+=4;
   doc.autoTable({startY:y,margin:{left:ml,right:ml},
-    body:[['Línea',t.lineaNombre,'Turno',t.turno],['Fecha',t.fecha,'Orden Fabricación',t.ordenFab],
+    body:[
+      ['Línea',t.lineaNombre,'Turno',t.turno],
+      ['Fecha',t.fecha,'Orden Fabricación',t.ordenFab],
       ['Operario',t.operario||'-','Código SAP',t.codigoSAP||'-'],
       ['Coordinador',t.coordinador||'-','Producto',t.producto||'-'],
       ['Supervisor',t.supervisor||'-','Espesor Mín.',(t.espesorMin||'-')+' mm'],
       ['Rotulado',t.rotulado||'-','Diámetro',(t.diametro||'-')+' mm'],
-      ['Cant. Orden',(t.cantidadOrden||'-')+' und','Peso Estándar',(t.pesoEstandar||'-')+' kg/m']],
+      ['Cant. Orden',(t.cantidadOrden||0)+' und','Peso Estándar',(t.pesoEstandar||'-')+' kg/m'],
+      ['Carga Estándar Output',(t.cargaEstandar||'-'),'Horas Registradas',horas.length+'/8'],
+    ],
     theme:'grid',styles:{fontSize:9,cellPadding:2.5},
-    columnStyles:{0:{fontStyle:'bold',fillColor:[214,228,247],cellWidth:32},1:{cellWidth:58},2:{fontStyle:'bold',fillColor:[214,228,247],cellWidth:38},3:{cellWidth:62}}});
-  y=doc.lastAutoTable.finalY+8;
+    columnStyles:{0:{fontStyle:'bold',fillColor:[214,228,247],cellWidth:38},1:{cellWidth:52},2:{fontStyle:'bold',fillColor:[214,228,247],cellWidth:38},3:{cellWidth:62}}});
+  y=doc.lastAutoTable.finalY+6;
+
+  // ── BALANCE DE UNIDADES ──
+  const totalTubos=horas.reduce((s,h)=>s+(h.nroTubos||0),0);
+  const pendientes=t.cantidadOrden>0?Math.max(0,t.cantidadOrden-totalTubos):0;
+  const pctAvance=t.cantidadOrden>0?(totalTubos/t.cantidadOrden*100).toFixed(1):0;
+  doc.setTextColor(...VD);doc.setFontSize(11);doc.setFont('helvetica','bold');
+  doc.text('BALANCE DE UNIDADES',ml,y);y+=4;
+  doc.autoTable({startY:y,margin:{left:ml,right:ml},
+    body:[
+      ['Unidades Programadas',(t.cantidadOrden||0)+' und','Avance',pctAvance+'%'],
+      ['Unidades Producidas (turno)',totalTubos+' und','Pendientes',pendientes+' und'],
+    ],
+    theme:'grid',styles:{fontSize:9,cellPadding:2.5},
+    columnStyles:{0:{fontStyle:'bold',fillColor:[214,240,224],cellWidth:60},1:{cellWidth:30},2:{fontStyle:'bold',fillColor:[214,240,224],cellWidth:40},3:{cellWidth:60}}});
+  y=doc.lastAutoTable.finalY+6;
+
+  // ── REGISTRO HORA A HORA ──
+  if(y>220){doc.addPage();y=15;}
   doc.setTextColor(...AZ);doc.setFontSize(11);doc.setFont('helvetica','bold');
   doc.text('REGISTRO HORA A HORA',ml,y);y+=4;
-  const horas=Object.values(horasGuardadas);
   doc.autoTable({startY:y,margin:{left:ml,right:ml},
-    head:[['Hora','Cód.Mezcla','Mezcla','Consec.','Kg Mezcla','Tubos','Peso Total','Reproceso','Rotulado']],
-    body:[...horas.map(h=>['H'+h.hora,h.codigoMezcla,h.mezcla||'-',h.consecutivo||'-',
-      (h.cantidadKgMezcla||0).toFixed(1),h.nroTubos||0,(h.pesoTotal||0).toFixed(1),
+    head:[['Hora','Cód.Mezcla','Consec.','Kg Mezcla','Tubos','Peso Total kg','Peso Prom.','Sobre Peso%','Longitud','Reproceso','Rotulado']],
+    body:[...horas.map(h=>['H'+h.hora,h.codigoMezcla||'-',h.consecutivoOperario||'-',
+      (h.cantidadKgMezcla||0).toFixed(1),h.nroTubos||0,
+      (h.pesoTotal||0).toFixed(1),(h.pesoPromedio||0).toFixed(3),
+      (h.sobrePeso||0).toFixed(2)+'%',(h.longitud||0).toFixed(1),
       (h.reprocesoKg||0).toFixed(1),h.rotuladoOk?'✓':'—']),
-      ['TOTAL','','','',horas.reduce((s,h)=>s+(h.cantidadKgMezcla||0),0).toFixed(1),
-       horas.reduce((s,h)=>s+(h.nroTubos||0),0),
-       horas.reduce((s,h)=>s+(h.pesoTotal||0),0).toFixed(1),
-       horas.reduce((s,h)=>s+(h.reprocesoKg||0),0).toFixed(1),'']],
-    theme:'striped',styles:{fontSize:8,cellPadding:2},headStyles:{fillColor:VD,textColor:255,fontStyle:'bold'},
+      ['TOTAL','','',
+        horas.reduce((s,h)=>s+(h.cantidadKgMezcla||0),0).toFixed(1),
+        horas.reduce((s,h)=>s+(h.nroTubos||0),0),
+        horas.reduce((s,h)=>s+(h.pesoTotal||0),0).toFixed(1),
+        '—','—','—',
+        horas.reduce((s,h)=>s+(h.reprocesoKg||0),0).toFixed(1),'']],
+    theme:'striped',styles:{fontSize:7,cellPadding:1.5},
+    headStyles:{fillColor:AZ,textColor:255,fontStyle:'bold',fontSize:7},
     didParseCell:(d)=>{if(d.row.index===horas.length){d.cell.styles.fontStyle='bold';d.cell.styles.fillColor=[214,228,247];}}});
+  y=doc.lastAutoTable.finalY+6;
+
+  // ── PESAJE Y RENDIMIENTO ──
+  const pesajesArr=Object.values(pesajesGuardados);
+  if(pesajesArr.length>0){
+    if(y>240){doc.addPage();y=15;}
+    doc.setTextColor(...NR);doc.setFontSize(11);doc.setFont('helvetica','bold');
+    doc.text('PESAJE Y CARGA DE LÍNEA',ml,y);y+=4;
+    doc.autoTable({startY:y,margin:{left:ml,right:ml},
+      head:[['Posición','Peso (kg)','Carga de Línea','Observación']],
+      body:Object.entries(pesajesGuardados).map(([pos,p])=>[
+        'Posición '+pos,(p.pesoKg||0).toFixed(3),(p.cargaLinea||0),p.obs||'-'
+      ]),
+      theme:'grid',styles:{fontSize:9,cellPadding:2},
+      headStyles:{fillColor:NR,textColor:255,fontStyle:'bold'}});
+    y=doc.lastAutoTable.finalY+6;
+  }
+
+  // ── TENDENCIAS (tabla) ──
+  const horaCon=horas.filter(h=>h.espL1||h.espL2);
+  if(horaCon.length>0){
+    if(y>220){doc.addPage();y=15;}
+    doc.setTextColor(...PU);doc.setFontSize(11);doc.setFont('helvetica','bold');
+    doc.text('TENDENCIAS',ml,y);y+=4;
+    doc.autoTable({startY:y,margin:{left:ml,right:ml},
+      head:[['Hora','Esp.L1(mm)','Desc.L1(%)','Diám.L1(mm)','Oval.L1','Esp.L2(mm)','Desc.L2(%)','Diám.L2(mm)','Oval.L2']],
+      body:horaCon.map(h=>['H'+h.hora,h.espL1||'-',h.descL1||'-',h.diamL1||'-',h.ovalL1||'-',h.espL2||'-',h.descL2||'-',h.diamL2||'-',h.ovalL2||'-']),
+      theme:'striped',styles:{fontSize:8,cellPadding:2},
+      headStyles:{fillColor:PU,textColor:255,fontStyle:'bold',fontSize:7}});
+    y=doc.lastAutoTable.finalY+6;
+  }
+
+  // ── OBSERVACIONES ──
+  const obsHoras=horas.filter(h=>h.observaciones);
+  if(obsHoras.length){
+    if(y>250){doc.addPage();y=15;}
+    doc.setTextColor(...PU);doc.setFontSize(11);doc.setFont('helvetica','bold');
+    doc.text('OBSERVACIONES',ml,y);y+=4;
+    doc.autoTable({startY:y,margin:{left:ml,right:ml},
+      head:[['Hora','Observación']],
+      body:obsHoras.map(h=>['H'+h.hora,h.observaciones]),
+      theme:'grid',styles:{fontSize:8,cellPadding:2},
+      headStyles:{fillColor:PU,textColor:255},
+      columnStyles:{0:{cellWidth:20}}});
+  }
+
+  // ── PIE DE PÁGINA ──
   const pages=doc.getNumberOfPages();
   for(let i=1;i<=pages;i++){
-    doc.setPage(i);doc.setDrawColor(...AZ);doc.setLineWidth(0.5);doc.line(ml,287,200,287);
+    doc.setPage(i);
+    doc.setDrawColor(...AZ);doc.setLineWidth(0.5);doc.line(ml,287,200,287);
     doc.setTextColor(150,150,150);doc.setFontSize(8);doc.setFont('helvetica','normal');
-    doc.text(`TUBOSA S.A. · Turno ${t.turno} · ${t.lineaNombre} · ${t.fecha}`,ml,292);
-    doc.text(`Página ${i} de ${pages}`,200,292,{align:'right'});
+    doc.text('TUBOSA S.A. · Turno '+t.turno+' · '+t.lineaNombre+' · '+t.fecha,ml,292);
+    doc.text('Página '+i+' de '+pages,200,292,{align:'right'});
   }
-  doc.save(`TUBOSA_Turno${t.turno}_${t.lineaNombre.replace(/\s/g,'')}_${t.fecha.replace(/\//g,'-')}.pdf`);
+
+  doc.save('TUBOSA_Turno'+t.turno+'_'+t.lineaNombre.replace(/\s/g,'')+'_'+t.fecha.replace(/\//g,'-')+'.pdf');
   notify('PDF descargado ✓','ok',5000);
   setTimeout(()=>irA('lineas','Líneas de Producción',''),2000);
 }
@@ -1842,11 +1962,11 @@ function generarTicketScrap(){
 
   const {jsPDF}=window.jspdf;
   // Ticket 9cm x 12cm = 90mm x 120mm
-  const doc=new jsPDF({orientation:'portrait',unit:'mm',format:[90,120]});
+  const doc=new jsPDF({orientation:'portrait',unit:'mm',format:[90,125]});
 
   // Fondo rojo
   doc.setFillColor(192,57,43);
-  doc.rect(0,0,90,120,'F');
+  doc.rect(0,0,90,125,'F');
 
   // Marco blanco interior
   doc.setDrawColor(255,255,255);
@@ -1911,13 +2031,26 @@ function generarTicketScrap(){
   const lines=doc.splitTextToSize(motivo,70);
   doc.text(lines.slice(0,3),ml,y+5);
 
+  // Firmas
+  var fy = 99;
+  doc.setFillColor(140,20,10);
+  doc.rect(3,fy,84,16,'F');
+  doc.setFont('helvetica','bold');doc.setFontSize(6);doc.setTextColor(255,230,230);
+  // Tres líneas de firma
+  var firmas=[['Analista Calidad',12],['Supervisor',44],['Analista Báscula',72]];
+  firmas.forEach(function(f){
+    doc.setDrawColor(255,150,150);doc.setLineWidth(0.3);
+    doc.line(f[1],fy+10,f[1]+30,fy+10);
+    doc.text(f[0],f[1]+15,fy+14,{align:'center'});
+  });
+
   // Pie
   doc.setFillColor(140,20,10);
-  doc.rect(3,111,84,6,'F');
+  doc.rect(3,117,84,6,'F');
   doc.setFont('helvetica','italic');
   doc.setFontSize(6);
   doc.setTextColor(255,200,200);
-  doc.text('Documento generado: '+fmtFecha()+' '+new Date().toLocaleTimeString('es-CO',{hour:'2-digit',minute:'2-digit'}),45,115,{align:'center'});
+  doc.text('Documento generado: '+fmtFecha()+' '+new Date().toLocaleTimeString('es-CO',{hour:'2-digit',minute:'2-digit'}),45,121,{align:'center'});
 
   doc.save('TicketScrap_'+val('sk-linea').replace(/\s/g,'')+'_H'+horaActual+'_'+val('sk-fecha').replace(/\//g,'-')+'.pdf');
   notify('Ticket de scrap generado ✓','ok');
