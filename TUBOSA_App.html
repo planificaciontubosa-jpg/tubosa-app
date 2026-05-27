@@ -1520,14 +1520,17 @@ async function retomarTurno(){
           hora,
           horaId: h.HoraID,
           turnoId: ta.TurnoID,
+          _tipo: h._tipo||'normal',
           codigoMezcla: h.CodigoMezcla||'',
           mezcla: h.Mezcla||'',
-          consecutivoOperario: h.ConsecutivoMezcla||'',
+          consecutivoOperario: h.ConsecutivoMezcla||h.Consec80||'',
           cantidadKgMezcla: parseFloat(h.CantidadKgMezcla)||0,
           nroTubos: parseInt(h.NroTubos)||0,
           pesoTotal: parseFloat(h.PesoTotal_kg)||0,
           reprocesoKg: parseFloat(h.Reproceso_kg)||0,
           motivoReproceso: h.MotivoReproceso||'',
+          devolucionKg: parseFloat(h.DevolucionKg)||0,
+          motivoDevolucion: h.MotivoDevolucion||'',
           rotuladoOk: h.RotuladoOk==='Sí',
           pesoPromedio: parseFloat(h.PesoPromedio)||0,
           sobrePeso: parseFloat(h.SobrePeso)||0,
@@ -1540,7 +1543,14 @@ async function retomarTurno(){
           espL2:  (h.EspesorL2  !== undefined && h.EspesorL2  !== '') ? h.EspesorL2  : '',
           descL2: (h.DescalibreL2 !== undefined && h.DescalibreL2 !== '') ? h.DescalibreL2 : '',
           diamL2: (h.DiamExtL2  !== undefined && h.DiamExtL2  !== '') ? h.DiamExtL2  : '',
-          ovalL2: (h.OvalizacionL2 !== undefined && h.OvalizacionL2 !== '') ? h.OvalizacionL2 : ''
+          ovalL2: (h.OvalizacionL2 !== undefined && h.OvalizacionL2 !== '') ? h.OvalizacionL2 : '',
+          // Campos coextrusor
+          codMezcla80: h.CodMezcla80||'', mezcla80: h.Mezcla80||'',
+          consec80: h.Consec80||'', kg80: parseFloat(h.KgMezcla80)||0,
+          dev80: parseFloat(h.Devolucion80)||0, motivoDev80: h.MotivoDev80||'',
+          codMezcla65: h.CodMezcla65||'', mezcla65: h.Mezcla65||'',
+          consec65: h.Consec65||'', kg65: parseFloat(h.KgMezcla65)||0,
+          dev65: parseFloat(h.Devolucion65)||0, motivoDev65: h.MotivoDev65||''
         };
       });
       // Ir a la primera hora no guardada
@@ -1792,7 +1802,7 @@ function renderTabs(elId, corrugada, tipo){
   document.getElementById(elId).innerHTML=Array.from({length:8},(_,i)=>{
     const h=i+1,g=horasGuardadas[h],a=h===horaActual;
     var fn;
-    if(tipo==='coext') fn=`selHoraCoext(${h})`;
+    if(tipo==='coext') fn=g?`selHoraCoext(${h},true)`:`selHoraCoext(${h},false)`;
     else if(corrugada) fn=`selHoraCorr(${h})`;
     else fn=g?`selHora(${h},true)`:`selHora(${h},false)`;
     return `<div class="hora-tab ${g?'hecho':a?'activo':''}" onclick="${fn}">H${h}${g?' ✓':''}</div>`;
@@ -2685,20 +2695,52 @@ function iniciarRegistroCoext(){
   }).join('');
   document.getElementById('mezclas-list-coext').innerHTML = opts;
   irA('registro-coext','Línea 10 Coextrusor','Turno '+turnoActual.turno+' · '+turnoActual.fecha);
-  selHoraCoext(1);
+  selHoraCoext(1, false);
   document.getElementById('coext-rotuladoOk').addEventListener('change', function(){
     document.getElementById('coext-rotulado-txt').textContent = this.checked ? '✓ Rotulado VERIFICADO' : 'Rotulado NO verificado';
     document.getElementById('coext-rotulado-txt').style.color = this.checked ? 'var(--vd)' : 'var(--gr3)';
   });
 }
 
-function selHoraCoext(h){
+function selHoraCoext(h, esEdicion){
   horaActual = h;
   document.getElementById('coext-hora-num').textContent = h;
   document.getElementById('coext-tend-hora').textContent = h;
   document.getElementById('coext-btn-hora').textContent = h;
   renderTabs('horas-tabs-coext', false, 'coext');
-  limpiarFormCoext();
+
+  if(esEdicion && horasGuardadas[h]){
+    var d=horasGuardadas[h];
+    setVal('coext-codMezcla80',d.codMezcla80||'');
+    setVal('coext-mezcla80',d.mezcla80||'');
+    setVal('coext-consec80',d.consec80||'');
+    setVal('coext-kg80',d.kg80||'');
+    setVal('coext-dev80',d.dev80||'');
+    setVal('coext-motivoDev80',d.motivoDev80||'');
+    setVal('coext-codMezcla65',d.codMezcla65||'');
+    setVal('coext-mezcla65',d.mezcla65||'');
+    setVal('coext-consec65',d.consec65||'');
+    setVal('coext-kg65',d.kg65||'');
+    setVal('coext-dev65',d.dev65||'');
+    setVal('coext-motivoDev65',d.motivoDev65||'');
+    setVal('coext-nroTubos',d.nroTubos||'');
+    setVal('coext-pesoTotal',d.pesoTotal||'');
+    setVal('coext-reproceso',d.reprocesoKg||'');
+    setVal('coext-motivoRep',d.motivoReproceso||'');
+    setVal('coext-pesoPromedio',d.pesoPromedio||'');
+    setVal('coext-sobrePeso',d.sobrePeso||'');
+    setVal('coext-longitud',d.longitud||'');
+    setVal('coext-observaciones',d.observaciones||'');
+    document.getElementById('coext-rotuladoOk').checked=d.rotuladoOk||false;
+    document.getElementById('coext-rotulado-txt').textContent=d.rotuladoOk?'✓ Rotulado VERIFICADO':'Rotulado NO verificado';
+    document.getElementById('coext-rotulado-txt').style.color=d.rotuladoOk?'var(--vd)':'var(--gr3)';
+    setVal('coext-espL1',d.espL1||''); setVal('coext-descL1',d.descL1||'');
+    setVal('coext-diamL1',d.diamL1||''); setVal('coext-ovalL1',d.ovalL1||'');
+    setVal('coext-espL2',d.espL2||''); setVal('coext-descL2',d.descL2||'');
+    setVal('coext-diamL2',d.diamL2||''); setVal('coext-ovalL2',d.ovalL2||'');
+  } else {
+    limpiarFormCoext();
+  }
 }
 
 function limpiarFormCoext(){
