@@ -243,7 +243,7 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:#EEF2F7;color:var(--
         <div class="fila fila-3">
           <div class="campo"><label>Nombre</label><input type="text" id="nu-nombre" placeholder="Nombre completo"></div>
           <div class="campo"><label>Rol</label>
-            <select id="nu-rol"><option value="operario">Operario</option><option value="coordinador">Coordinador</option><option value="supervisor">Supervisor</option><option value="jefe">Jefe</option><option value="admin">Administrador</option></select>
+            <select id="nu-rol"><option value="operario">Operario</option><option value="coordinador">Coordinador</option><option value="supervisor">Supervisor</option><option value="jefe">Jefe</option><option value="marcadora">Marcadora</option><option value="admin">Administrador</option></select>
           </div>
           <div class="campo"><label>PIN (4 dígitos)</label><input type="text" id="nu-pin" placeholder="XXXX" maxlength="4"></div>
         </div>
@@ -406,51 +406,75 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:#EEF2F7;color:var(--
   </div></div>
 
   <!-- Datos producción -->
-  <div class="card"><div class="card-head az">📦 Hora <span id="reg-hora-num">1</span> — Datos de Producción</div><div class="card-body">
-    <div class="fila fila-3">
-      <div class="campo"><label>Código Mezcla</label><input type="text" id="reg-codMezcla" placeholder="MZ-001" list="mezclas-list" oninput="buscarMezcla(this.value)"><datalist id="mezclas-list"></datalist></div>
-      <div class="campo"><label>Mezcla</label><input type="text" id="reg-mezcla" placeholder="Auto al escribir código"></div>
-      <div class="campo"><label>Consecutivo Mezcla</label><input type="text" id="reg-consecutivo" placeholder="Ej: 001"></div>
-    </div>
-    <div class="fila fila-3">
-      <div class="campo"><label>Cantidad kg Mezcla</label><input type="number" id="reg-kgMezcla" placeholder="0.0" step="0.01"></div>
-      <div class="campo"><label>Nro. Tubos (Und)</label><input type="number" id="reg-nroTubos" placeholder="0" oninput="actualizarContador()"></div>
-      <div class="campo"><label>Peso Total (kg)</label><input type="number" id="reg-pesoTotal" placeholder="0.0" step="0.01"></div>
-    </div>
-    <div class="fila fila-2">
-      <div class="campo"><label>Reproceso (kg)</label><input type="number" id="reg-reproceso" placeholder="0.0" step="0.01"></div>
-      <div class="campo"><label>Motivo Reproceso</label><input type="text" id="reg-motivoRep" placeholder="Describir si aplica"></div>
-    </div>
-    <div style="background:var(--rd2);border:1px solid #e8a8a8;border-radius:var(--rad2);padding:10px 14px;margin-bottom:10px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px">
-      <div style="font-size:12px;color:var(--rd);font-weight:600">🔴 Si hay scrap en esta hora, genera el ticket de reporte</div>
-      <button class="btn btn-rd btn-sm" onclick="abrirTicketScrap()">🖨 Generar Ticket de Scrap</button>
-    </div>
-    <!-- DEVOLUCIÓN MEZCLA -->
-    <div class="fila fila-2">
-      <div class="campo"><label>Devolución Mezcla (kg)</label><input type="number" id="reg-devolucion" placeholder="0.0" step="0.01"></div>
-      <div class="campo"><label>Motivo Devolución</label><input type="text" id="reg-motivoDev" placeholder="Describir motivo de devolución"></div>
-    </div>
-    <div style="background:#EDE7F6;border:1px solid #9C7FC3;border-radius:var(--rad2);padding:10px 14px;margin-bottom:10px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px">
-      <div style="font-size:12px;color:#533AB7;font-weight:600">🔵 Si hay devolución de mezcla, genera el PDF de devolución</div>
-      <button class="btn btn-sm" style="background:#533AB7;color:#fff" onclick="abrirModalDev()">📄 Generar PDF Devolución</button>
-    </div>
-    <div class="fila fila-3">
-      <div class="campo"><label>Peso Promedio (kg)</label><input type="number" id="reg-pesoPromedio" placeholder="0.000" step="0.001" oninput="calcSobrePeso()"></div>
-      <div class="campo"><label>Sobre Peso (%)</label><input type="text" id="reg-sobrePeso" readonly class="auto" placeholder="Auto"></div>
-      <div class="campo"><label>Longitud (m)</label><input type="number" id="reg-longitud" placeholder="0.0" step="0.1"></div>
-    </div>
-    <!-- ROTULADO CHECK -->
-    <div style="background:var(--az3);border-radius:var(--rad2);padding:10px 14px;margin-top:4px">
-      <div style="font-size:11px;font-weight:700;color:var(--az);text-transform:uppercase;margin-bottom:6px">✔ Verificación de Rotulado</div>
-      <div class="check-toggle">
-        <input type="checkbox" id="reg-rotuladoOk">
-        <span id="rotulado-txt" style="color:var(--gr3)">Rotulado NO verificado</span>
+  <!-- Indicador de modo edición -->
+  <div id="reg-edit-banner" style="display:none;background:var(--nr);color:#fff;border-radius:var(--rad2);padding:10px 14px;margin-bottom:10px;display:none;align-items:center;justify-content:space-between">
+    <span>✏ <strong>Modo edición</strong> — Hora <span id="reg-edit-hora-lbl">1</span> ya guardada. Modifica lo que necesites y guarda.</span>
+    <button class="btn btn-gr btn-sm" onclick="cancelarEdicion()">Cancelar</button>
+  </div>
+
+  <!-- BLOQUE 1 — MEZCLA -->
+  <div class="card">
+    <div class="card-head" style="background:#533AB7;color:#fff">🧪 Bloque 1 — Mezcla · Hora <span id="reg-hora-num">1</span></div>
+    <div class="card-body">
+      <div class="fila fila-3">
+        <div class="campo"><label>Código Mezcla</label><input type="text" id="reg-codMezcla" placeholder="MZ-001" list="mezclas-list" oninput="buscarMezcla(this.value)"><datalist id="mezclas-list"></datalist></div>
+        <div class="campo"><label>Mezcla</label><input type="text" id="reg-mezcla" placeholder="Auto al escribir código"></div>
+        <div class="campo"><label>Consecutivo Mezcla</label><input type="text" id="reg-consecutivo" placeholder="Ej: 001"></div>
+      </div>
+      <div class="fila fila-2">
+        <div class="campo"><label>Cantidad kg Mezcla</label><input type="number" id="reg-kgMezcla" placeholder="0.0" step="0.01"></div>
+        <div class="campo" style="display:flex;align-items:flex-end">
+          <div style="width:100%">
+            <div style="background:#EDE7F6;border:1px solid #9C7FC3;border-radius:var(--rad2);padding:8px 12px;display:flex;align-items:center;justify-content:space-between;gap:8px">
+              <div style="font-size:11px;color:#533AB7;font-weight:600">📄 PDF Devolución</div>
+              <button class="btn btn-sm" style="background:#533AB7;color:#fff;padding:5px 10px" onclick="abrirModalDev()">Generar</button>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="fila fila-2">
+        <div class="campo"><label>Devolución Mezcla (kg)</label><input type="number" id="reg-devolucion" placeholder="0.0" step="0.01"></div>
+        <div class="campo"><label>Motivo Devolución</label><input type="text" id="reg-motivoDev" placeholder="Describir motivo"></div>
       </div>
     </div>
-  </div></div>
+  </div>
 
-  <!-- Tendencias L1 y L2 -->
-  <div class="card"><div class="card-head az2">📈 Tendencias — Hora <span id="tend-hora-num">1</span></div><div class="card-body">
+  <!-- BLOQUE 2 — PRODUCCIÓN -->
+  <div class="card">
+    <div class="card-head az">📦 Bloque 2 — Producción · Hora <span id="reg-hora-num2">1</span></div>
+    <div class="card-body">
+      <div class="fila fila-3">
+        <div class="campo"><label>Nro. Tubos (Und)</label><input type="number" id="reg-nroTubos" placeholder="0" oninput="actualizarContador()"></div>
+        <div class="campo"><label>Peso Total (kg)</label><input type="number" id="reg-pesoTotal" placeholder="0.0" step="0.01"></div>
+        <div class="campo"><label>Reproceso (kg)</label><input type="number" id="reg-reproceso" placeholder="0.0" step="0.01"></div>
+      </div>
+      <div class="fila fila-3">
+        <div class="campo"><label>Peso Promedio (kg)</label><input type="number" id="reg-pesoPromedio" placeholder="0.000" step="0.001" oninput="calcSobrePeso()"></div>
+        <div class="campo"><label>Sobre Peso (%)</label><input type="text" id="reg-sobrePeso" readonly class="auto" placeholder="Auto"></div>
+        <div class="campo"><label>Longitud (m)</label><input type="number" id="reg-longitud" placeholder="0.0" step="0.1"></div>
+      </div>
+      <div class="campo">
+        <label>Motivo Reproceso</label>
+        <input type="text" id="reg-motivoRep" placeholder="Describir si aplica">
+      </div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px">
+        <div style="flex:1;background:var(--rd2);border:1px solid #e8a8a8;border-radius:var(--rad2);padding:8px 12px;display:flex;align-items:center;justify-content:space-between;gap:8px">
+          <div style="font-size:11px;color:var(--rd);font-weight:600">🔴 Ticket Scrap</div>
+          <button class="btn btn-rd btn-sm" style="padding:5px 10px" onclick="abrirTicketScrap()">Generar</button>
+        </div>
+        <div style="flex:1;background:var(--az3);border:1px solid #9FBFE0;border-radius:var(--rad2);padding:8px 12px;display:flex;align-items:center;justify-content:space-between;gap:8px">
+          <div style="font-size:11px;color:var(--az);font-weight:600">✔ Rotulado</div>
+          <div class="check-toggle" style="margin:0">
+            <input type="checkbox" id="reg-rotuladoOk">
+            <span id="rotulado-txt" style="color:var(--gr3);font-size:12px">No verificado</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- BLOQUE 3 — TENDENCIAS -->
+  <div class="card"><div class="card-head az2">📈 Bloque 3 — Tendencias · Hora <span id="tend-hora-num">1</span></div><div class="card-body">
     <div class="fila fila-2">
       <div>
         <div class="sec-t">Lado 1</div>
@@ -483,7 +507,7 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:#EEF2F7;color:var(--
   </div></div>
 
   <div class="btn-group">
-    <button class="btn btn-vd" onclick="guardarHora()">✔ Guardar Hora <span id="btn-hora-num">1</span></button>
+    <button class="btn btn-vd" id="btn-guardar-hora" onclick="guardarHora()">✔ Guardar Hora <span id="btn-hora-num">1</span></button>
     <button class="btn btn-az" onclick="irResumen()">Ver Resumen</button>
     <button class="btn btn-gr" onclick="limpiarForm()">🗑 Limpiar</button>
     <button class="btn btn-rd" onclick="abrirModalTM()" style="margin-left:auto">🔴 Tiempo Muerto</button>
@@ -548,6 +572,10 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:#EEF2F7;color:var(--
     <div class="fila fila-2">
       <div class="campo"><label>Peso Promedio (kg)</label><input type="number" id="corr-pesoPromedio" placeholder="0.000" step="0.001"></div>
       <div class="campo"><label>Longitud (m)</label><input type="number" id="corr-longitud" placeholder="0.0" step="0.1"></div>
+    </div>
+    <div class="fila fila-2">
+      <div class="campo"><label>Diámetro Exterior 90° (mm)</label><input type="number" id="corr-diamExt90" placeholder="0.0" step="0.01"></div>
+      <div class="campo"></div>
     </div>
     <div style="background:var(--az3);border-radius:var(--rad2);padding:10px 14px;margin-top:4px">
       <div style="font-size:11px;font-weight:700;color:var(--az);text-transform:uppercase;margin-bottom:6px">✔ Verificación de Rotulado</div>
@@ -635,6 +663,201 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:#EEF2F7;color:var(--
     <button class="btn btn-rd" onclick="cerrarTurnoYPDF()">🔒 Cerrar Turno y Generar PDF</button>
     <button class="btn btn-az" onclick="volverRegistro()">← Volver al Registro</button>
   </div>
+</div>
+
+<!-- MARCADORA -->
+<div class="vista" id="v-marcadora">
+  <div class="card">
+    <div class="card-head" style="background:#0F7B6C;color:#fff">🖊 Seguimiento Marcadoras — <span id="marc-turno-info"></span></div>
+    <div class="card-body">
+      <div class="fila fila-3">
+        <div class="campo"><label>Operaria Marcadora</label>
+          <select id="marc-operaria">
+            <option value="">Seleccionar...</option>
+            <option>Lesly Vidal</option>
+            <option>Daniela Montilla</option>
+            <option>Laura Mosquera</option>
+            <option>Diego Chacon</option>
+          </select>
+        </div>
+        <div class="campo"><label>Fecha</label><input type="text" id="marc-fecha" readonly class="auto"></div>
+        <div class="campo"><label>Turno</label>
+          <select id="marc-turno-sel">
+            <option value="A">Turno A</option>
+            <option value="B">Turno B</option>
+            <option value="C">Turno C</option>
+          </select>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Tabla de líneas -->
+  <div class="card">
+    <div class="card-head az">📋 Revisión por Línea</div>
+    <div class="card-body" style="padding:0;overflow-x:auto">
+      <table style="width:100%;border-collapse:collapse;font-size:12px;min-width:800px">
+        <thead>
+          <tr style="background:#1F3864;color:#fff">
+            <th style="padding:10px 8px;text-align:center;font-size:10px;text-transform:uppercase;letter-spacing:.5px;width:50px">Línea</th>
+            <th style="padding:10px 8px;text-align:left;font-size:10px;text-transform:uppercase;letter-spacing:.5px">Estado</th>
+            <th style="padding:10px 8px;text-align:left;font-size:10px;text-transform:uppercase;letter-spacing:.5px;min-width:180px">Referencia / Orden</th>
+            <th style="padding:10px 8px;text-align:center;font-size:10px;text-transform:uppercase;letter-spacing:.5px;width:80px">Longitud (m)</th>
+            <th style="padding:10px 8px;text-align:center;font-size:10px;text-transform:uppercase;letter-spacing:.5px;min-width:320px">Revisiones (4 horas)</th>
+            <th style="padding:10px 8px;text-align:left;font-size:10px;text-transform:uppercase;letter-spacing:.5px;min-width:140px">Observaciones</th>
+          </tr>
+        </thead>
+        <tbody id="marc-tbody"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Leyenda -->
+  <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px;font-size:11px">
+    <span style="background:var(--vd2);color:var(--vd);padding:3px 10px;border-radius:10px;font-weight:600">✓ OK</span>
+    <span style="background:var(--az3);color:var(--az);padding:3px 10px;border-radius:10px;font-weight:600">SP Sobre Producción</span>
+    <span style="background:var(--rd2);color:var(--rd);padding:3px 10px;border-radius:10px;font-weight:600">LP Línea Parada</span>
+    <span style="background:var(--nr2);color:var(--nr);padding:3px 10px;border-radius:10px;font-weight:600">PI Pendiente Inspección</span>
+  </div>
+
+  <div class="btn-group">
+    <button class="btn btn-vd" onclick="guardarMarcadora()">💾 Guardar Registro</button>
+    <button class="btn btn-rd" onclick="generarPDFMarcadora()" style="background:#0F7B6C">📄 Generar PDF</button>
+    <button class="btn btn-gr" onclick="irA('lineas')">← Volver</button>
+  </div>
+</div>
+
+<!-- REGISTRO COEXTRUSOR (LÍNEA 10) -->
+<div class="vista" id="v-registro-coext">
+  <!-- Contador -->
+  <div class="contador" id="reg-contador-coext">
+    <div class="contador-item"><div class="val" id="cnt-orden-coext">—</div><div class="lbl">Und. Orden</div></div>
+    <div class="contador-item"><div class="val" id="cnt-prod-coext">—</div><div class="lbl">Producidas</div></div>
+    <div class="contador-item"><div class="val" id="cnt-pend-coext" style="color:#FFD700">—</div><div class="lbl">Pendientes</div></div>
+    <div style="width:100%"><div class="contador-progress"><div class="contador-bar" id="cnt-bar-coext" style="width:0%"></div></div>
+    <div style="font-size:10px;opacity:.7;margin-top:4px;text-align:right" id="cnt-pct-coext">0%</div></div>
+  </div>
+
+  <div class="card" style="margin-bottom:10px"><div class="card-body" style="padding:10px 14px"><div class="info-grid" id="reg-info-coext"></div></div></div>
+
+  <div class="card"><div class="card-head" style="background:#6A0DAD;color:#fff">⚡ LÍNEA 10 — Coextrusor</div><div class="card-body">
+    <div class="horas-tabs" id="horas-tabs-coext"></div>
+    <div class="ts"><span class="badge" style="background:var(--vd2);color:var(--vd)">✓ Guardada</span> &nbsp;<span class="badge" style="background:var(--az3);color:var(--az)">Activa</span></div>
+  </div></div>
+
+  <!-- Datos hora coextrusor -->
+  <div class="card">
+    <div class="card-head az">📦 Hora <span id="coext-hora-num">1</span> — Datos de Producción</div>
+    <div class="card-body">
+
+      <!-- BLOQUE EXT80 -->
+      <div style="background:#F3E5F5;border-radius:var(--rad2);padding:12px;margin-bottom:12px;border-left:4px solid #6A0DAD">
+        <div style="font-size:11px;font-weight:700;color:#6A0DAD;text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px">🔵 Extrusora 80 — Capa</div>
+        <div class="fila fila-4">
+          <div class="campo"><label>Código Mezcla EXT80</label><input type="text" id="coext-codMezcla80" placeholder="MZ-001" list="mezclas-list-coext" oninput="buscarMezclaCoext('80')"></div>
+          <div class="campo"><label>Mezcla EXT80</label><input type="text" id="coext-mezcla80" placeholder="Auto"></div>
+          <div class="campo"><label>Consecutivo EXT80</label><input type="text" id="coext-consec80" placeholder="001"></div>
+          <div class="campo clave"><label>Cantidad kg EXT80</label><input type="number" id="coext-kg80" placeholder="0.0" step="0.01"></div>
+        </div>
+        <div class="fila fila-2">
+          <div class="campo"><label>Devolución EXT80 (kg)</label><input type="number" id="coext-dev80" placeholder="0.0" step="0.01"></div>
+          <div class="campo"><label>Motivo Devolución EXT80</label><input type="text" id="coext-motivoDev80" placeholder="Describir si aplica"></div>
+        </div>
+      </div>
+
+      <!-- BLOQUE EXT65 -->
+      <div style="background:#E8F5E9;border-radius:var(--rad2);padding:12px;margin-bottom:12px;border-left:4px solid #1E6B3C">
+        <div style="font-size:11px;font-weight:700;color:#1E6B3C;text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px">🟢 Extrusora 65 — Relleno</div>
+        <div class="fila fila-4">
+          <div class="campo"><label>Código Mezcla EXT65</label><input type="text" id="coext-codMezcla65" placeholder="MZ-002" list="mezclas-list-coext"></div>
+          <div class="campo"><label>Mezcla EXT65</label><input type="text" id="coext-mezcla65" placeholder="Auto" oninput="buscarMezclaCoext('65')"></div>
+          <div class="campo"><label>Consecutivo EXT65</label><input type="text" id="coext-consec65" placeholder="001"></div>
+          <div class="campo clave"><label>Cantidad kg EXT65</label><input type="number" id="coext-kg65" placeholder="0.0" step="0.01"></div>
+        </div>
+        <div class="fila fila-2">
+          <div class="campo"><label>Devolución EXT65 (kg)</label><input type="number" id="coext-dev65" placeholder="0.0" step="0.01"></div>
+          <div class="campo"><label>Motivo Devolución EXT65</label><input type="text" id="coext-motivoDev65" placeholder="Describir si aplica"></div>
+        </div>
+      </div>
+
+      <datalist id="mezclas-list-coext"></datalist>
+
+      <!-- Datos producción comunes -->
+      <div class="fila fila-3">
+        <div class="campo"><label>Nro. Tubos (Und)</label><input type="number" id="coext-nroTubos" placeholder="0" oninput="actualizarContadorCoext()"></div>
+        <div class="campo"><label>Peso Total (kg)</label><input type="number" id="coext-pesoTotal" placeholder="0.0" step="0.01"></div>
+        <div class="campo"><label>Reproceso (kg)</label><input type="number" id="coext-reproceso" placeholder="0.0" step="0.01"></div>
+      </div>
+      <div class="fila fila-3">
+        <div class="campo"><label>Peso Promedio (kg)</label><input type="number" id="coext-pesoPromedio" placeholder="0.000" step="0.001" oninput="calcSobrePesoCoext()"></div>
+        <div class="campo"><label>Sobre Peso (%)</label><input type="text" id="coext-sobrePeso" readonly class="auto" placeholder="Auto"></div>
+        <div class="campo"><label>Longitud (m)</label><input type="number" id="coext-longitud" placeholder="0.0" step="0.1"></div>
+      </div>
+      <div class="fila fila-2">
+        <div class="campo"><label>Motivo Reproceso</label><input type="text" id="coext-motivoRep" placeholder="Describir si aplica"></div>
+        <div style="background:var(--rd2);border:1px solid #e8a8a8;border-radius:var(--rad2);padding:10px 14px;display:flex;align-items:center;justify-content:space-between;gap:8px">
+          <div style="font-size:12px;color:var(--rd);font-weight:600">🔴 Ticket Scrap</div>
+          <button class="btn btn-rd btn-sm" onclick="abrirTicketScrap()">🖨 Generar</button>
+        </div>
+      </div>
+      <!-- Rotulado -->
+      <div style="background:var(--az3);border-radius:var(--rad2);padding:10px 14px;margin-top:4px">
+        <div style="font-size:11px;font-weight:700;color:var(--az);text-transform:uppercase;margin-bottom:6px">✔ Verificación de Rotulado</div>
+        <div class="check-toggle">
+          <input type="checkbox" id="coext-rotuladoOk">
+          <span id="coext-rotulado-txt" style="color:var(--gr3)">Rotulado NO verificado</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Tendencias -->
+  <div class="card"><div class="card-head az2">📈 Tendencias — Hora <span id="coext-tend-hora">1</span></div><div class="card-body">
+    <div class="fila fila-2">
+      <div>
+        <div class="sec-t">Lado 1</div>
+        <div class="fila fila-2">
+          <div class="campo"><label>Espesor Pared (mm)</label><input type="number" id="coext-espL1" placeholder="0.00" step="0.01"></div>
+          <div class="campo"><label>Descalibre (%)</label><input type="number" id="coext-descL1" placeholder="0.0" step="0.1"></div>
+        </div>
+        <div class="fila fila-2">
+          <div class="campo"><label>Diám. Exterior (mm)</label><input type="number" id="coext-diamL1" placeholder="0.0" step="0.01"></div>
+          <div class="campo"><label>Ovalización</label><input type="number" id="coext-ovalL1" placeholder="0.0" step="0.01"></div>
+        </div>
+      </div>
+      <div>
+        <div class="sec-t">Lado 2</div>
+        <div class="fila fila-2">
+          <div class="campo"><label>Espesor Pared (mm)</label><input type="number" id="coext-espL2" placeholder="0.00" step="0.01"></div>
+          <div class="campo"><label>Descalibre (%)</label><input type="number" id="coext-descL2" placeholder="0.0" step="0.1"></div>
+        </div>
+        <div class="fila fila-2">
+          <div class="campo"><label>Diám. Exterior (mm)</label><input type="number" id="coext-diamL2" placeholder="0.0" step="0.01"></div>
+          <div class="campo"><label>Ovalización</label><input type="number" id="coext-ovalL2" placeholder="0.0" step="0.01"></div>
+        </div>
+      </div>
+    </div>
+  </div></div>
+
+  <!-- Observaciones -->
+  <div class="card"><div class="card-head pu">📝 Observaciones</div><div class="card-body">
+    <div class="campo mb0"><textarea id="coext-observaciones" placeholder="Novedades, paros, ajustes..."></textarea></div>
+  </div></div>
+
+  <div class="btn-group">
+    <button class="btn btn-vd" onclick="guardarHoraCoext()">✔ Guardar Hora <span id="coext-btn-hora">1</span></button>
+    <button class="btn btn-az" onclick="irResumen()">Ver Resumen</button>
+    <button class="btn btn-gr" onclick="limpiarFormCoext()">🗑 Limpiar</button>
+    <button class="btn btn-rd" onclick="abrirModalTM()" style="margin-left:auto">🔴 Tiempo Muerto</button>
+  </div>
+
+  <!-- Pesaje turno -->
+  <div class="card"><div class="card-head nr">⚖ Pesaje y Rendimiento — Todo el Turno</div><div class="card-body">
+    <p class="ts" style="margin-bottom:10px">Se puede ir llenando durante las 8 horas.</p>
+    <table class="pt"><thead><tr><th>Pos.</th><th>Peso (kg)</th><th>Carga de Línea</th><th>Observación</th><th></th></tr></thead>
+    <tbody id="pesaje-tbody-coext"></tbody></table>
+    <button class="btn btn-nr btn-sm" onclick="guardarPesaje()" style="margin-top:10px">💾 Guardar Todo el Pesaje</button>
+  </div></div>
 </div>
 
 <!-- INFORMES -->
@@ -857,6 +1080,8 @@ let API_URL = API_URL_FIJA;
 localStorage.setItem('tubosa_url', API_URL_FIJA); // Actualizar localStorage con la correcta
 let rolActual='', nombreActual='', lineaActual={}, turnoActual={};
 let esCorrugada = false;
+let esCoextrusor = false;
+const LINEA_COEXTRUSOR = 10;
 let horaActual=1, horasGuardadas={};
 let maestroOrdenes=[], maestroMezclas=[];
 let datosArchivo={ordenes:null,mezclas:null};
@@ -936,10 +1161,10 @@ function irA(vista,titulo='',sub='') {
 }
 function volverAtras(){
   const v=document.querySelector('.vista.activa')?.id?.replace('v-','');
-  const m={admin:'lineas',cabecera:'lineas','registro':'lineas','registro-corr':'lineas',resumen:esCorrugada?'registro-corr':'registro',informes:'lineas'};
+  const m={admin:'lineas',cabecera:'lineas','registro':'lineas','registro-corr':'lineas','registro-coext':'lineas',resumen:esCorrugada?'registro-corr':esCoextrusor?'registro-coext':'registro',informes:'lineas'};
   irA(m[v]||'lineas');
 }
-function volverRegistro(){irA(esCorrugada?'registro-corr':'registro');}
+function volverRegistro(){irA(esCorrugada?'registro-corr':esCoextrusor?'registro-coext':'registro');}
 
 // ── URL CONFIG ────────────────────────────────────────────────
 function toggleUrl(){const b=document.getElementById('url-box');b.style.display=b.style.display==='none'?'block':'none';if(b.style.display==='block')document.getElementById('url-input').value=API_URL;}
@@ -988,14 +1213,19 @@ async function loginOk(){
       rolActual=res.rol; nombreActual=res.nombre||'';
       document.getElementById('v-login').style.display='none';
       document.getElementById('topbar').style.display='flex';
-      var badges={admin:'⚙ Admin',coordinador:'📋 Coordinador',supervisor:'👁 Supervisor',jefe:'🏭 Jefe',operario:'👷 Operario'};
+      var badges={admin:'⚙ Admin',coordinador:'📋 Coordinador',supervisor:'👁 Supervisor',jefe:'🏭 Jefe',operario:'👷 Operario',marcadora:'🖊 Marcadora'};
       document.getElementById('rol-badge').textContent=badges[rolActual]||rolActual;
       document.getElementById('user-nombre').textContent=nombreActual;
       document.getElementById('btn-admin').style.display=rolActual==='admin'?'inline-flex':'none';
       await cargarMaestros();
-      await cargarLineas();
-      irA('lineas','Líneas de Producción','Selecciona una línea');
-      if(rolActual==='admin') cargarUsuarios();
+      // Marcadora va directo a su pantalla
+      if(rolActual==='marcadora'){
+        await abrirMarcadora();
+      } else {
+        await cargarLineas();
+        irA('lineas','Líneas de Producción','Selecciona una línea');
+        if(rolActual==='admin') cargarUsuarios();
+      }
     }else{document.getElementById('pin-err').textContent='❌ PIN incorrecto';pinActual='';upPin();}
   }catch(e){loader(false);document.getElementById('pin-err').textContent='❌ '+e.message;document.getElementById('url-box').style.display='block';}
 }
@@ -1152,6 +1382,7 @@ let turnosActivosMap = {};
 function selLinea(l){
   lineaActual=l;
   esCorrugada=l.Tipo==='Corrugada'||LINEAS_CORRUGADAS.includes(parseInt(l.ID));
+  esCoextrusor=parseInt(l.ID)===LINEA_COEXTRUSOR;
   const turnoActivo = turnosActivosMap[l.ID];
   if(turnoActivo){
     mostrarModalRetomar(turnoActivo);
@@ -1250,27 +1481,25 @@ async function retomarTurno(){
       renderPesaje('pesaje-tbody-corr', 3);
       actualizarContadorCorr();
       irA('registro-corr','Registro Corrugada — '+turnoActual.lineaNombre,'Turno '+turnoActual.turno+' · '+turnoActual.fecha);
-      // Posicionar en hora correcta sin limpiar
       document.getElementById('corr-hora-num').textContent = horaActual;
       document.getElementById('corr-btn-hora').textContent = horaActual;
-      document.getElementById('corr-rotuladoOk').onchange = function(){
-        document.getElementById('corr-rotulado-txt').textContent=this.checked?'✓ Rotulado VERIFICADO':'Rotulado NO verificado';
-        document.getElementById('corr-rotulado-txt').style.color=this.checked?'var(--vd)':'var(--gr3)';
-      };
+    } else if(esCoextrusor){
+      renderInfo('reg-info-coext');
+      renderTabs('horas-tabs-coext', false, 'coext');
+      renderPesaje('pesaje-tbody-coext', 6);
+      actualizarContadorCoext();
+      irA('registro-coext','Línea 10 Coextrusor','Turno '+turnoActual.turno+' · '+turnoActual.fecha);
+      document.getElementById('coext-hora-num').textContent = horaActual;
+      document.getElementById('coext-btn-hora').textContent = horaActual;
     } else {
       renderInfo('reg-info');
       renderTabs('horas-tabs', false);
       renderPesaje('pesaje-tbody', 6);
       actualizarContador();
       irA('registro','Registro — '+turnoActual.lineaNombre,'Turno '+turnoActual.turno+' · '+turnoActual.fecha);
-      // Posicionar en hora correcta sin limpiar
       document.getElementById('reg-hora-num').textContent = horaActual;
       document.getElementById('tend-hora-num').textContent = horaActual;
       document.getElementById('btn-hora-num').textContent = horaActual;
-      document.getElementById('reg-rotuladoOk').onchange = function(){
-        document.getElementById('rotulado-txt').textContent=this.checked?'✓ Rotulado VERIFICADO':'Rotulado NO verificado';
-        document.getElementById('rotulado-txt').style.color=this.checked?'var(--vd)':'var(--gr3)';
-      };
     }
 
   }catch(e){
@@ -1430,6 +1659,7 @@ async function crearTurno(){
         rotulado:val('cab-rotulado')};
       horasGuardadas={}; horaActual=1;
       if(esCorrugada) iniciarRegistroCorr();
+      else if(esCoextrusor) iniciarRegistroCoext();
       else iniciarRegistro();
       notify('Turno creado ✓','ok');
     }else notify(res.msg||'Error','err');
@@ -1461,10 +1691,13 @@ function renderInfo(elId){
   ].map(([l,v])=>`<div class="info-item"><label>${l}</label><span style="font-size:12px">${v||'-'}</span></div>`).join('');
 }
 
-function renderTabs(elId,corrugada){
+function renderTabs(elId, corrugada, tipo){
   document.getElementById(elId).innerHTML=Array.from({length:8},(_,i)=>{
     const h=i+1,g=horasGuardadas[h],a=h===horaActual;
-    const fn=corrugada?`selHoraCorr(${h})`:`selHora(${h})`;
+    var fn;
+    if(tipo==='coext') fn=`selHoraCoext(${h})`;
+    else if(corrugada) fn=`selHoraCorr(${h})`;
+    else fn=`selHora(${h})`;
     return `<div class="hora-tab ${g?'hecho':a?'activo':''}" onclick="${fn}">H${h}${g?' ✓':''}</div>`;
   }).join('');
 }
@@ -1480,13 +1713,56 @@ function renderPesaje(tbodyId,nPos){
     </tr>`).join('');
 }
 
+var modoEdicion = false;
+
 function selHora(h){
   horaActual=h;
   document.getElementById('reg-hora-num').textContent=h;
+  document.getElementById('reg-hora-num2').textContent=h;
   document.getElementById('tend-hora-num').textContent=h;
   document.getElementById('btn-hora-num').textContent=h;
   renderTabs('horas-tabs',false);
-  limpiarForm();calcConsec();
+
+  var banner = document.getElementById('reg-edit-banner');
+  if(horasGuardadas[h]){
+    // Cargar datos guardados para edición
+    modoEdicion = true;
+    var d = horasGuardadas[h];
+    setVal('reg-codMezcla', d.codigoMezcla||'');
+    setVal('reg-mezcla', d.mezcla||'');
+    setVal('reg-consecutivo', d.consecutivoOperario||'');
+    setVal('reg-kgMezcla', d.cantidadKgMezcla||'');
+    setVal('reg-devolucion', d.devolucionKg||'');
+    setVal('reg-motivoDev', d.motivoDevolucion||'');
+    setVal('reg-nroTubos', d.nroTubos||'');
+    setVal('reg-pesoTotal', d.pesoTotal||'');
+    setVal('reg-reproceso', d.reprocesoKg||'');
+    setVal('reg-motivoRep', d.motivoReproceso||'');
+    setVal('reg-pesoPromedio', d.pesoPromedio||'');
+    setVal('reg-sobrePeso', d.sobrePeso||'');
+    setVal('reg-longitud', d.longitud||'');
+    setVal('reg-observaciones', d.observaciones||'');
+    document.getElementById('reg-rotuladoOk').checked = d.rotuladoOk||false;
+    document.getElementById('rotulado-txt').textContent = d.rotuladoOk ? '✓ Rotulado VERIFICADO' : 'Rotulado NO verificado';
+    document.getElementById('rotulado-txt').style.color = d.rotuladoOk ? 'var(--vd)' : 'var(--gr3)';
+    // Mostrar banner edición
+    if(banner){ banner.style.display='flex'; document.getElementById('reg-edit-hora-lbl').textContent=h; }
+    document.getElementById('btn-guardar-hora').textContent='💾 Actualizar Hora '+h;
+    document.getElementById('btn-hora-num').textContent='';
+  } else {
+    modoEdicion = false;
+    limpiarForm();
+    if(banner) banner.style.display='none';
+    document.getElementById('btn-guardar-hora').textContent='✔ Guardar Hora '+h;
+  }
+}
+
+function cancelarEdicion(){
+  modoEdicion = false;
+  limpiarForm();
+  var banner = document.getElementById('reg-edit-banner');
+  if(banner) banner.style.display='none';
+  document.getElementById('btn-guardar-hora').textContent='✔ Guardar Hora '+horaActual;
 }
 
 function limpiarForm(){
@@ -1500,9 +1776,13 @@ function limpiarForm(){
 }
 
 async function guardarHora(){
-  loader(true,'Guardando hora '+horaActual+'...');
+  loader(true,(modoEdicion?'Actualizando':'Guardando')+' hora '+horaActual+'...');
   try{
-    const hd={action:'guardarHora',turnoId:turnoActual.id,hora:horaActual,
+    var horaIdExistente = modoEdicion && horasGuardadas[horaActual] ? horasGuardadas[horaActual].horaId : null;
+    const hd={
+      action: horaIdExistente ? 'actualizarHora' : 'guardarHora',
+      horaId: horaIdExistente,
+      turnoId:turnoActual.id,hora:horaActual,
       codigoMezcla:val('reg-codMezcla'),mezcla:val('reg-mezcla'),
       cantidadKgMezcla:flt('reg-kgMezcla'),nroTubos:parseInt(val('reg-nroTubos'))||0,
       pesoTotal:flt('reg-pesoTotal'),reprocesoKg:flt('reg-reproceso'),
@@ -1514,19 +1794,23 @@ async function guardarHora(){
       consecutivoOperario:val('reg-consecutivo')};
     const r=await api(hd);
     if(!r.ok){loader(false);notify(r.msg||'Error','err');return;}
-    horasGuardadas[horaActual]={...hd,horaId:r.horaId};
+    horasGuardadas[horaActual]={...hd,horaId:r.horaId||horaIdExistente};
 
     // Guardar tendencias si hay datos
     if(val('reg-espL1')||val('reg-espL2')){
-      await api({action:'guardarTendencia',horaId:r.horaId,turnoId:turnoActual.id,hora:horaActual,
+      await api({action:'guardarTendencia',horaId:r.horaId||horaIdExistente,turnoId:turnoActual.id,hora:horaActual,
         espesorL1:flt('reg-espL1'),descalibreL1:flt('reg-descL1'),diamExtL1:flt('reg-diamL1'),ovalizacionL1:flt('reg-ovalL1'),
         espesorL2:flt('reg-espL2'),descalibreL2:flt('reg-descL2'),diamExtL2:flt('reg-diamL2'),ovalizacionL2:flt('reg-ovalL2')});
     }
     loader(false);
+    // Resetear modo edición
+    modoEdicion = false;
+    var banner = document.getElementById('reg-edit-banner');
+    if(banner) banner.style.display='none';
     renderTabs('horas-tabs',false);
     actualizarContador();
-    notify(`Hora ${horaActual} guardada ✓`,'ok');
-    if(horaActual<8)selHora(horaActual+1);
+    notify((horaIdExistente?'Hora '+horaActual+' actualizada ✓':'Hora '+horaActual+' guardada ✓'),'ok');
+    if(!horaIdExistente && horaActual<8) selHora(horaActual+1);
   }catch(e){loader(false);notify('Error: '+e.message,'err');}
 }
 
@@ -1624,7 +1908,7 @@ function selHoraCorr(h){
 }
 
 function limpiarFormCorr(){
-  ['codMezcla','mezcla','consecutivo','kgMezcla','nroTubos','pesoTotal','reproceso','motivoRep','devolucion','motivoDev','pesoPromedio','longitud','observaciones']
+  ['codMezcla','mezcla','consecutivo','kgMezcla','nroTubos','pesoTotal','reproceso','motivoRep','devolucion','motivoDev','pesoPromedio','longitud','diamExt90','observaciones']
   .forEach(id=>setVal('corr-'+id,''));
   document.getElementById('corr-rotuladoOk').checked=false;
   document.getElementById('corr-rotulado-txt').textContent='Rotulado NO verificado';
@@ -1642,6 +1926,7 @@ async function guardarHoraCorr(){
       devolucionKg:flt('corr-devolucion'),motivoDevolucion:val('corr-motivoDev'),
       rotuladoOk:document.getElementById('corr-rotuladoOk').checked,
       pesoPromedio:flt('corr-pesoPromedio'),sobrePeso:0,longitud:flt('corr-longitud'),
+      diamExt90:flt('corr-diamExt90'),
       observaciones:val('corr-observaciones'),
       consecutivoOperario:val('corr-consecutivo')};
     const r=await api(hd);
@@ -2262,6 +2547,128 @@ function generarPDFDevolucion(){
   notify('PDF de devolución generado ✓','ok');
   cerrarModalDev();
 }
+// ── REGISTRO COEXTRUSOR (LÍNEA 10) ───────────────────────────
+function iniciarRegistroCoext(){
+  renderInfo('reg-info-coext');
+  renderTabs('horas-tabs-coext', false, 'coext');
+  renderPesaje('pesaje-tbody-coext', 6);
+  actualizarContadorCoext();
+  // Sincronizar datalist de mezclas
+  var opts = maestroMezclas.map(function(m){
+    return '<option value="'+m.CodigoMezcla+'">'+m.CodigoMezcla+' — '+(m.NombreMezcla||'')+'</option>';
+  }).join('');
+  document.getElementById('mezclas-list-coext').innerHTML = opts;
+  irA('registro-coext','Línea 10 Coextrusor','Turno '+turnoActual.turno+' · '+turnoActual.fecha);
+  selHoraCoext(1);
+  document.getElementById('coext-rotuladoOk').addEventListener('change', function(){
+    document.getElementById('coext-rotulado-txt').textContent = this.checked ? '✓ Rotulado VERIFICADO' : 'Rotulado NO verificado';
+    document.getElementById('coext-rotulado-txt').style.color = this.checked ? 'var(--vd)' : 'var(--gr3)';
+  });
+}
+
+function selHoraCoext(h){
+  horaActual = h;
+  document.getElementById('coext-hora-num').textContent = h;
+  document.getElementById('coext-tend-hora').textContent = h;
+  document.getElementById('coext-btn-hora').textContent = h;
+  renderTabs('horas-tabs-coext', false, 'coext');
+  limpiarFormCoext();
+}
+
+function limpiarFormCoext(){
+  ['codMezcla80','mezcla80','consec80','kg80','dev80','motivoDev80',
+   'codMezcla65','mezcla65','consec65','kg65','dev65','motivoDev65',
+   'nroTubos','pesoTotal','reproceso','motivoRep','pesoPromedio','sobrePeso','longitud',
+   'espL1','descL1','diamL1','ovalL1','espL2','descL2','diamL2','ovalL2','observaciones']
+  .forEach(function(id){ setVal('coext-'+id, ''); });
+  document.getElementById('coext-rotuladoOk').checked = false;
+  document.getElementById('coext-rotulado-txt').textContent = 'Rotulado NO verificado';
+  document.getElementById('coext-rotulado-txt').style.color = 'var(--gr3)';
+}
+
+function buscarMezclaCoext(ext){
+  var v = val('coext-codMezcla'+ext).trim().toLowerCase();
+  var m = maestroMezclas.find(function(m){ return String(m.CodigoMezcla).trim().toLowerCase() === v; });
+  if(m) setVal('coext-mezcla'+ext, m.NombreMezcla||'');
+}
+
+function calcSobrePesoCoext(){
+  var pp = flt('coext-pesoPromedio');
+  var pe = parseFloat(turnoActual.pesoEstandar)||0;
+  if(pp > 0 && pe > 0){
+    setVal('coext-sobrePeso', ((pp-pe)/pe*100).toFixed(2));
+  }
+}
+
+function actualizarContadorCoext(){
+  var cantOrden = turnoActual.cantidadOrden||0;
+  if(!cantOrden){ document.getElementById('reg-contador-coext').style.display='none'; return; }
+  document.getElementById('reg-contador-coext').style.display='flex';
+  var tubosEn = parseInt(val('coext-nroTubos'))||0;
+  var tubosGuard = Object.values(horasGuardadas).reduce(function(s,h){ return s+(h.nroTubos||0); }, 0);
+  var total = tubosGuard + tubosEn;
+  var pend = Math.max(0, cantOrden - total);
+  var pct = Math.min(100, (total/cantOrden*100)).toFixed(0);
+  document.getElementById('cnt-orden-coext').textContent = cantOrden.toLocaleString();
+  document.getElementById('cnt-prod-coext').textContent = total.toLocaleString();
+  document.getElementById('cnt-pend-coext').textContent = pend.toLocaleString();
+  document.getElementById('cnt-bar-coext').style.width = pct+'%';
+  document.getElementById('cnt-pct-coext').textContent = pct+'%';
+}
+
+async function guardarHoraCoext(){
+  loader(true, 'Guardando hora '+horaActual+'...');
+  try{
+    var hd = {
+      action:'guardarHoraCoext', turnoId:turnoActual.id, hora:horaActual,
+      // EXT80
+      codigoMezcla80:val('coext-codMezcla80'), mezcla80:val('coext-mezcla80'),
+      consecutivo80:val('coext-consec80'), cantidadKg80:flt('coext-kg80'),
+      devolucion80:flt('coext-dev80'), motivoDev80:val('coext-motivoDev80'),
+      // EXT65
+      codigoMezcla65:val('coext-codMezcla65'), mezcla65:val('coext-mezcla65'),
+      consecutivo65:val('coext-consec65'), cantidadKg65:flt('coext-kg65'),
+      devolucion65:flt('coext-dev65'), motivoDev65:val('coext-motivoDev65'),
+      // Comunes
+      nroTubos:parseInt(val('coext-nroTubos'))||0,
+      pesoTotal:flt('coext-pesoTotal'), reprocesoKg:flt('coext-reproceso'),
+      motivoReproceso:val('coext-motivoRep'),
+      rotuladoOk:document.getElementById('coext-rotuladoOk').checked,
+      pesoPromedio:flt('coext-pesoPromedio'), sobrePeso:flt('coext-sobrePeso'),
+      longitud:flt('coext-longitud'), observaciones:val('coext-observaciones')
+    };
+    var r = await api(hd);
+    if(!r.ok){ loader(false); notify(r.msg||'Error','err'); return; }
+    horasGuardadas[horaActual] = {
+      hora:horaActual, horaId:r.horaId,
+      codigoMezcla: val('coext-codMezcla80')+' / '+val('coext-codMezcla65'),
+      mezcla: val('coext-mezcla80')+' / '+val('coext-mezcla65'),
+      cantidadKgMezcla: flt('coext-kg80') + flt('coext-kg65'),
+      nroTubos: parseInt(val('coext-nroTubos'))||0,
+      pesoTotal: flt('coext-pesoTotal'),
+      reprocesoKg: flt('coext-reproceso'),
+      rotuladoOk: document.getElementById('coext-rotuladoOk').checked,
+      pesoPromedio: flt('coext-pesoPromedio'),
+      sobrePeso: flt('coext-sobrePeso'),
+      longitud: flt('coext-longitud'),
+      observaciones: val('coext-observaciones')
+    };
+    // Tendencias
+    if(val('coext-espL1')||val('coext-espL2')){
+      await api({action:'guardarTendencia', horaId:r.horaId, turnoId:turnoActual.id, hora:horaActual,
+        espesorL1:flt('coext-espL1'), descalibreL1:flt('coext-descL1'),
+        diamExtL1:flt('coext-diamL1'), ovalizacionL1:flt('coext-ovalL1'),
+        espesorL2:flt('coext-espL2'), descalibreL2:flt('coext-descL2'),
+        diamExtL2:flt('coext-diamL2'), ovalizacionL2:flt('coext-ovalL2')});
+    }
+    loader(false);
+    renderTabs('horas-tabs-coext', false, 'coext');
+    actualizarContadorCoext();
+    notify('Hora '+horaActual+' guardada ✓','ok');
+    if(horaActual < 8) selHoraCoext(horaActual+1);
+  }catch(e){ loader(false); notify('Error: '+e.message,'err'); }
+}
+
 // ── REPORTE WHATSAPP ─────────────────────────────────────────
 var datosReporteWA = [];
 
@@ -2398,6 +2805,284 @@ function copiarTextoWA(){
       notify('Selecciona el texto y cópialo manualmente','info',5000);
     });
   }
+}
+// ── MARCADORA ────────────────────────────────────────────────
+var marcadoraLineas = []; // líneas activas cargadas
+
+async function abrirMarcadora(){
+  loader(true,'Cargando líneas activas...');
+  try{
+    const [rl, rt] = await Promise.all([api({action:'getLineas'}), api({action:'getTurnosActivosDetalle'})]);
+    loader(false);
+    const turnos = rt.ok ? rt.data : [];
+    const todasLineas = rl.ok ? rl.data.filter(l=>l.Activa!=='No') : [];
+
+    // Combinar líneas con datos de turno activo
+    marcadoraLineas = todasLineas.map(function(l){
+      const t = turnos.find(function(t){ return String(t.lineaId)===String(l.ID); });
+      return {
+        id: l.ID,
+        nombre: l.NombreLinea,
+        turnoId: t ? t.turnoId : '',
+        ordenFab: t ? (t.ordenFab||'') : '',
+        producto: t ? (t.producto||'') : '',
+        activa: !!t
+      };
+    });
+
+    // Llenar fecha y turno
+    document.getElementById('marc-fecha').value = fmtFecha();
+    document.getElementById('marc-turno-info').textContent = fmtFecha();
+
+    renderMarcadoraTabla();
+    irA('marcadora','Seguimiento Marcadoras','Revisión de turno');
+  }catch(e){
+    loader(false);
+    notify('Error cargando líneas: '+e.message,'err');
+  }
+}
+
+function renderMarcadoraTabla(){
+  var tbody = document.getElementById('marc-tbody');
+  tbody.innerHTML = marcadoraLineas.map(function(l, i){
+    var bg = l.activa ? '' : 'background:var(--gr);opacity:.7';
+    return '<tr id="marc-row-'+i+'" style="border-bottom:1px solid var(--gr2);'+bg+'">' +
+      // Línea
+      '<td style="text-align:center;padding:8px">' +
+        '<div style="width:32px;height:32px;background:'+(l.activa?'var(--az3)':'var(--gr2)')+';color:'+(l.activa?'var(--az)':'var(--gr3)')+';font-weight:700;font-size:13px;border-radius:50%;display:flex;align-items:center;justify-content:center;margin:auto">'+String(l.id).padStart(2,'0')+'</div>' +
+      '</td>' +
+      // Estado
+      '<td style="padding:6px 8px">' +
+        '<div style="display:flex;flex-direction:column;gap:4px">' +
+          '<div style="display:flex;gap:3px">' +
+            '<button class="marc-est" data-idx="'+i+'" data-est="OK"  onclick="setEstado('+i+',\'OK\')"  style="padding:3px 7px;font-size:10px;font-weight:700;border:none;border-radius:3px;cursor:pointer;background:var(--gr2);color:var(--gr3)">✓ OK</button>' +
+            '<button class="marc-est" data-idx="'+i+'" data-est="SP"  onclick="setEstado('+i+',\'SP\')"  style="padding:3px 7px;font-size:10px;font-weight:700;border:none;border-radius:3px;cursor:pointer;background:var(--az3);color:var(--az2)">SP</button>' +
+            '<button class="marc-est" data-idx="'+i+'" data-est="LP"  onclick="setEstado('+i+',\'LP\')"  style="padding:3px 7px;font-size:10px;font-weight:700;border:none;border-radius:3px;cursor:pointer;background:var(--rd2);color:var(--rd)">LP</button>' +
+            '<button class="marc-est" data-idx="'+i+'" data-est="PI"  onclick="setEstado('+i+',\'PI\')"  style="padding:3px 7px;font-size:10px;font-weight:700;border:none;border-radius:3px;cursor:pointer;background:var(--nr2);color:var(--nr)">PI</button>' +
+          '</div>' +
+          '<span id="marc-est-lbl-'+i+'" style="font-size:10px;color:var(--gr3)">Sin estado</span>' +
+        '</div>' +
+      '</td>' +
+      // Referencia / Orden
+      '<td style="padding:6px 8px">' +
+        '<div style="display:flex;flex-direction:column;gap:3px">' +
+          '<input id="marc-ref-'+i+'" type="text" value="'+(l.producto||'')+'" placeholder="Referencia" style="width:100%;padding:4px 7px;border:1px solid var(--gr2);border-radius:4px;font-size:11px;font-weight:600">' +
+          '<input id="marc-ord-'+i+'" type="text" value="'+(l.ordenFab||'')+'" placeholder="Orden" style="width:100%;padding:4px 7px;border:1px solid var(--gr2);border-radius:4px;font-size:11px">' +
+        '</div>' +
+      '</td>' +
+      // Longitud
+      '<td style="padding:6px 8px;text-align:center">' +
+        '<input id="marc-lon-'+i+'" type="number" placeholder="0.0" step="0.1" style="width:70px;padding:5px 6px;border:1px solid var(--gr2);border-radius:4px;font-size:12px;text-align:center">' +
+      '</td>' +
+      // 4 Revisiones
+      '<td style="padding:6px 8px">' +
+        '<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:4px;min-width:300px">' +
+          [1,2,3,4].map(function(r){
+            return '<div id="marc-rev-box-'+i+'-'+r+'" style="background:var(--gr);border:1px solid var(--gr2);border-radius:4px;padding:5px 4px;text-align:center">' +
+              '<div style="font-size:9px;font-weight:700;color:var(--gr3);text-transform:uppercase;margin-bottom:3px">Rev '+r+'</div>' +
+              '<div id="marc-rev-hora-'+i+'-'+r+'" style="font-size:11px;font-weight:700;color:var(--gr3);margin-bottom:4px;min-height:16px">—</div>' +
+              '<button onclick="marcarRevision('+i+','+r+')" id="marc-rev-btn-'+i+'-'+r+'" style="width:100%;padding:3px;font-size:10px;font-weight:700;border:none;border-radius:3px;cursor:pointer;background:var(--gr2);color:var(--gr3)">✓ OK</button>' +
+            '</div>';
+          }).join('') +
+        '</div>' +
+      '</td>' +
+      // Observaciones
+      '<td style="padding:6px 8px">' +
+        '<textarea id="marc-obs-'+i+'" placeholder="Observaciones..." style="width:100%;min-width:130px;padding:5px 7px;border:1px solid var(--gr2);border-radius:4px;font-size:11px;resize:none;height:58px"></textarea>' +
+      '</td>' +
+    '</tr>';
+  }).join('');
+}
+
+var marcadoraEstados = {};
+var marcadoraRevisiones = {};
+
+function setEstado(idx, est){
+  marcadoraEstados[idx] = est;
+  // Actualizar botones
+  var btns = document.querySelectorAll('.marc-est[data-idx="'+idx+'"]');
+  btns.forEach(function(b){
+    var bEst = b.getAttribute('data-est');
+    var colores = {
+      'OK': {bg:'var(--vd)',c:'#fff'},
+      'SP': {bg:'var(--az2)',c:'#fff'},
+      'LP': {bg:'var(--rd)',c:'#fff'},
+      'PI': {bg:'var(--nr)',c:'#fff'}
+    };
+    var normal = {
+      'OK': {bg:'var(--vd2)',c:'var(--vd)'},
+      'SP': {bg:'var(--az3)',c:'var(--az2)'},
+      'LP': {bg:'var(--rd2)',c:'var(--rd)'},
+      'PI': {bg:'var(--nr2)',c:'var(--nr)'}
+    };
+    if(bEst === est){
+      b.style.background = colores[bEst].bg;
+      b.style.color = colores[bEst].c;
+    } else {
+      b.style.background = normal[bEst].bg;
+      b.style.color = normal[bEst].c;
+    }
+  });
+  var lbls = {'OK':'✓ OK','SP':'Sobre Producción','LP':'Línea Parada','PI':'Pendiente Inspección'};
+  var cols  = {'OK':'var(--vd)','SP':'var(--az2)','LP':'var(--rd)','PI':'var(--nr)'};
+  var lbl = document.getElementById('marc-est-lbl-'+idx);
+  if(lbl){ lbl.textContent = lbls[est]||est; lbl.style.color = cols[est]||'var(--gr3)'; }
+}
+
+function marcarRevision(idx, rev){
+  var key = idx+'-'+rev;
+  if(marcadoraRevisiones[key]) return; // ya marcada
+
+  var now = new Date();
+  var hh = String(now.getHours()).padStart(2,'0');
+  var mm = String(now.getMinutes()).padStart(2,'0');
+  var hora = hh+':'+mm;
+  marcadoraRevisiones[key] = hora;
+
+  var horaEl = document.getElementById('marc-rev-hora-'+idx+'-'+rev);
+  var btnEl  = document.getElementById('marc-rev-btn-'+idx+'-'+rev);
+  var boxEl  = document.getElementById('marc-rev-box-'+idx+'-'+rev);
+  if(horaEl) horaEl.textContent = hora;
+  if(btnEl){ btnEl.textContent='✓ Revisado'; btnEl.style.background='var(--vd)'; btnEl.style.color='#fff'; btnEl.disabled=true; }
+  if(boxEl){ boxEl.style.background='var(--vd2)'; boxEl.style.borderColor='var(--vd)'; }
+  notify('Revisión '+rev+' registrada a las '+hora,'ok');
+}
+
+async function guardarMarcadora(){
+  var operaria = document.getElementById('marc-operaria').value;
+  var turno    = document.getElementById('marc-turno-sel').value;
+  var fecha    = document.getElementById('marc-fecha').value;
+  if(!operaria){ notify('Selecciona la operaria marcadora','err'); return; }
+
+  loader(true,'Guardando...');
+  try{
+    var lineas = marcadoraLineas.map(function(l, i){
+      return {
+        linea:        l.nombre,
+        estado:       marcadoraEstados[i]||'',
+        referencia:   document.getElementById('marc-ref-'+i)?document.getElementById('marc-ref-'+i).value:'',
+        orden:        document.getElementById('marc-ord-'+i)?document.getElementById('marc-ord-'+i).value:'',
+        longitud:     document.getElementById('marc-lon-'+i)?document.getElementById('marc-lon-'+i).value:'',
+        rev1_hora:    marcadoraRevisiones[i+'-1']||'',
+        rev2_hora:    marcadoraRevisiones[i+'-2']||'',
+        rev3_hora:    marcadoraRevisiones[i+'-3']||'',
+        rev4_hora:    marcadoraRevisiones[i+'-4']||'',
+        observaciones: document.getElementById('marc-obs-'+i)?document.getElementById('marc-obs-'+i).value:''
+      };
+    });
+
+    var r = await api({action:'guardarMarcadora',
+      fecha:fecha, turno:turno, operaria:operaria,
+      timestamp: new Date().toISOString(),
+      lineas:lineas
+    });
+    loader(false);
+    if(r.ok) notify('Registro guardado ✓','ok');
+    else notify(r.msg||'Error','err');
+  }catch(e){ loader(false); notify('Error: '+e.message,'err'); }
+}
+
+function generarPDFMarcadora(){
+  var operaria = document.getElementById('marc-operaria').value||'—';
+  var turno    = document.getElementById('marc-turno-sel').value;
+  var fecha    = document.getElementById('marc-fecha').value;
+
+  var jsPDFLib = window.jspdf;
+  var doc = new jsPDFLib.jsPDF({orientation:'landscape',unit:'mm',format:'a4'});
+  var TC = [15,123,108]; // teal color para marcadora
+  var AZ = [31,56,100];
+  var W  = 297, ml = 10;
+
+  // Header
+  doc.setFillColor(TC[0],TC[1],TC[2]); doc.rect(0,0,W,22,'F');
+  doc.setTextColor(255,255,255); doc.setFont('helvetica','bold'); doc.setFontSize(14);
+  doc.text('TUBOSA S.A. — Seguimiento Marcadoras',ml,10);
+  doc.setFontSize(9); doc.setFont('helvetica','normal');
+  doc.text('Turno: '+turno+'  |  Fecha: '+fecha+'  |  Operaria: '+operaria,ml,17);
+  doc.text('Generado: '+fmtFecha()+' '+new Date().toLocaleTimeString('es-CO',{hour:'2-digit',minute:'2-digit'}),W-ml,17,{align:'right'});
+
+  var y = 28;
+  var estColores = {
+    'OK':  [30,107,60],
+    'SP':  [46,91,168],
+    'LP':  [192,57,43],
+    'PI':  [197,90,17],
+    '':    [150,150,150]
+  };
+
+  // Tabla
+  var head = [['Línea','Estado','Referencia','Orden','Long.','Rev 1','Rev 2','Rev 3','Rev 4','Observaciones']];
+  var body = marcadoraLineas.map(function(l, i){
+    return [
+      l.nombre,
+      marcadoraEstados[i]||'—',
+      document.getElementById('marc-ref-'+i)?document.getElementById('marc-ref-'+i).value:'',
+      document.getElementById('marc-ord-'+i)?document.getElementById('marc-ord-'+i).value:'',
+      document.getElementById('marc-lon-'+i)?document.getElementById('marc-lon-'+i).value:'',
+      marcadoraRevisiones[i+'-1']||'—',
+      marcadoraRevisiones[i+'-2']||'—',
+      marcadoraRevisiones[i+'-3']||'—',
+      marcadoraRevisiones[i+'-4']||'—',
+      document.getElementById('marc-obs-'+i)?document.getElementById('marc-obs-'+i).value:''
+    ];
+  });
+
+  doc.autoTable({
+    startY: y, margin:{left:ml,right:ml},
+    head: head, body: body,
+    theme: 'grid',
+    styles: {fontSize:8, cellPadding:2.5},
+    headStyles: {fillColor:TC, textColor:255, fontStyle:'bold', fontSize:8},
+    columnStyles: {
+      0:{cellWidth:22}, 1:{cellWidth:18}, 2:{cellWidth:40},
+      3:{cellWidth:25}, 4:{cellWidth:16},
+      5:{cellWidth:20,halign:'center'}, 6:{cellWidth:20,halign:'center'},
+      7:{cellWidth:20,halign:'center'}, 8:{cellWidth:20,halign:'center'},
+      9:{cellWidth:'auto'}
+    },
+    didParseCell: function(d){
+      if(d.section==='body' && d.column.index===1){
+        var est = d.cell.raw;
+        var col = estColores[est]||[150,150,150];
+        d.cell.styles.fillColor = col;
+        d.cell.styles.textColor = [255,255,255];
+        d.cell.styles.fontStyle = 'bold';
+      }
+    }
+  });
+
+  y = doc.lastAutoTable.finalY + 10;
+
+  // Leyenda
+  doc.setFontSize(8); doc.setFont('helvetica','bold');
+  var leyenda = [
+    {est:'OK', c:[30,107,60], txt:'OK — Revisado sin novedad'},
+    {est:'SP', c:[46,91,168], txt:'SP — Sobre Producción'},
+    {est:'LP', c:[192,57,43], txt:'LP — Línea Parada'},
+    {est:'PI', c:[197,90,17], txt:'PI — Pendiente Inspección'}
+  ];
+  var lx = ml;
+  leyenda.forEach(function(l){
+    doc.setFillColor(l.c[0],l.c[1],l.c[2]);
+    doc.rect(lx,y,6,5,'F');
+    doc.setTextColor(50,50,50); doc.setFont('helvetica','normal');
+    doc.text(l.txt, lx+8, y+4);
+    lx += 65;
+  });
+
+  // Pie
+  var pages = doc.getNumberOfPages();
+  for(var i=1;i<=pages;i++){
+    doc.setPage(i);
+    doc.setDrawColor(TC[0],TC[1],TC[2]); doc.setLineWidth(0.5);
+    doc.line(ml,200,W-ml,200);
+    doc.setTextColor(150,150,150); doc.setFontSize(7); doc.setFont('helvetica','normal');
+    doc.text('TUBOSA S.A. · Seguimiento Marcadoras · Turno '+turno+' · '+fecha,ml,204);
+    doc.text('Página '+i+' de '+pages,W-ml,204,{align:'right'});
+  }
+
+  doc.save('Marcadora_Turno'+turno+'_'+fecha.replace(/\//g,'-')+'.pdf');
+  notify('PDF de marcadora generado ✓','ok',4000);
 }
 </script>
 </body>
