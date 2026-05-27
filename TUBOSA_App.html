@@ -1437,8 +1437,12 @@ async function retomarTurno(){
     };
 
     // Cargar horas ya guardadas desde Sheets
-    const resH = await api({action:'getHoras', turnoId: ta.TurnoID});
+    const [resH, resP] = await Promise.all([
+      api({action:'getHoras', turnoId: ta.TurnoID}),
+      api({action:'getPesaje', turnoId: ta.TurnoID})
+    ]);
     horasGuardadas = {};
+    pesajesGuardados = {};
     horaActual = 1;
 
     if(resH.ok && resH.data.length){
@@ -1461,10 +1465,10 @@ async function retomarTurno(){
           sobrePeso: parseFloat(h.SobrePeso)||0,
           longitud: parseFloat(h.Longitud)||0,
           observaciones: h.Observaciones||'',
-          espL1: parseFloat(h.EspesorL1)||0, descL1: parseFloat(h.DescalibreL1)||0,
-          diamL1: parseFloat(h.DiamExtL1)||0, ovalL1: parseFloat(h.OvalizacionL1)||0,
-          espL2: parseFloat(h.EspesorL2)||0, descL2: parseFloat(h.DescalibreL2)||0,
-          diamL2: parseFloat(h.DiamExtL2)||0, ovalL2: parseFloat(h.OvalizacionL2)||0
+          espL1: h.EspesorL1||'', descL1: h.DescalibreL1||'',
+          diamL1: h.DiamExtL1||'', ovalL1: h.OvalizacionL1||'',
+          espL2: h.EspesorL2||'', descL2: h.DescalibreL2||'',
+          diamL2: h.DiamExtL2||'', ovalL2: h.OvalizacionL2||''
         };
       });
       // Ir a la primera hora no guardada
@@ -1473,6 +1477,18 @@ async function retomarTurno(){
         if(!horasGuardadas[i]){ horaActual=i; break; }
         if(i===8) horaActual=8;
       }
+    }
+
+    // Restaurar pesajes guardados en memoria
+    if(resP.ok && resP.data.length){
+      resP.data.forEach(function(p){
+        var pos = parseInt(p.Posicion)||parseInt(p.posicion);
+        if(pos) pesajesGuardados[pos] = {
+          pesoKg: parseFloat(p.Peso_kg)||0,
+          cargaLinea: parseFloat(p.CargaLinea)||parseFloat(p.Rendimiento_pct)||0,
+          obs: p.Observaciones||''
+        };
+      });
     }
 
     loader(false);
@@ -1501,6 +1517,7 @@ async function retomarTurno(){
       renderInfo('reg-info');
       renderTabs('horas-tabs', false);
       renderPesaje('pesaje-tbody', 6);
+      restorePesajeInputs();
       actualizarContador();
       irA('registro','Registro — '+turnoActual.lineaNombre,'Turno '+turnoActual.turno+' · '+turnoActual.fecha);
       document.getElementById('reg-hora-num').textContent = horaActual;
@@ -1755,10 +1772,15 @@ function selHora(h, esEdicion){
     document.getElementById('reg-rotuladoOk').checked = d.rotuladoOk||false;
     document.getElementById('rotulado-txt').textContent = d.rotuladoOk ? '✓ Rotulado VERIFICADO' : 'Rotulado NO verificado';
     document.getElementById('rotulado-txt').style.color = d.rotuladoOk ? 'var(--vd)' : 'var(--gr3)';
-    setVal('reg-espL1', d.espL1||''); setVal('reg-descL1', d.descL1||'');
-    setVal('reg-diamL1', d.diamL1||''); setVal('reg-ovalL1', d.ovalL1||'');
-    setVal('reg-espL2', d.espL2||''); setVal('reg-descL2', d.descL2||'');
-    setVal('reg-diamL2', d.diamL2||''); setVal('reg-ovalL2', d.ovalL2||'');
+    // Cargar tendencias — usar null/undefined check para no borrar valores 0 válidos
+    setVal('reg-espL1',  d.espL1  != null ? d.espL1  : '');
+    setVal('reg-descL1', d.descL1 != null ? d.descL1 : '');
+    setVal('reg-diamL1', d.diamL1 != null ? d.diamL1 : '');
+    setVal('reg-ovalL1', d.ovalL1 != null ? d.ovalL1 : '');
+    setVal('reg-espL2',  d.espL2  != null ? d.espL2  : '');
+    setVal('reg-descL2', d.descL2 != null ? d.descL2 : '');
+    setVal('reg-diamL2', d.diamL2 != null ? d.diamL2 : '');
+    setVal('reg-ovalL2', d.ovalL2 != null ? d.ovalL2 : '');
     if(banner){ banner.style.display='flex'; document.getElementById('reg-edit-hora-lbl').textContent=h; }
     if(btnG) btnG.textContent='💾 Actualizar Hora '+h;
   } else {
@@ -1807,8 +1829,10 @@ async function guardarHora(){
     const r=await api(hd);
     if(!r.ok){loader(false);notify(r.msg||'Error','err');return;}
     horasGuardadas[horaActual]={...hd,horaId:r.horaId||horaIdExistente,
-      espL1:flt('reg-espL1'),descL1:flt('reg-descL1'),diamL1:flt('reg-diamL1'),ovalL1:flt('reg-ovalL1'),
-      espL2:flt('reg-espL2'),descL2:flt('reg-descL2'),diamL2:flt('reg-diamL2'),ovalL2:flt('reg-ovalL2')};
+      espL1: val('reg-espL1'), descL1: val('reg-descL1'),
+      diamL1: val('reg-diamL1'), ovalL1: val('reg-ovalL1'),
+      espL2: val('reg-espL2'), descL2: val('reg-descL2'),
+      diamL2: val('reg-diamL2'), ovalL2: val('reg-ovalL2')};
 
     // Guardar tendencias si hay datos
     if(val('reg-espL1')||val('reg-espL2')){
@@ -1830,6 +1854,20 @@ async function guardarHora(){
 
 // Posiciones de pesaje guardadas en esta sesión
 var pesajesGuardados = {};
+
+function restorePesajeInputs(){
+  Object.entries(pesajesGuardados).forEach(function(entry){
+    var pos = entry[0], p = entry[1];
+    var pesoEl = document.getElementById('p-peso-'+pos);
+    var cargaEl = document.getElementById('p-carga-'+pos);
+    var obsEl = document.getElementById('p-obs-'+pos);
+    var btnEl = document.getElementById('p-btn-'+pos);
+    if(pesoEl){ pesoEl.value = p.pesoKg||''; pesoEl.setAttribute('readonly','true'); pesoEl.classList.add('auto'); }
+    if(cargaEl){ cargaEl.value = p.cargaLinea||''; cargaEl.setAttribute('readonly','true'); cargaEl.classList.add('auto'); }
+    if(obsEl){ obsEl.value = p.obs||''; obsEl.setAttribute('readonly','true'); obsEl.classList.add('auto'); }
+    if(btnEl){ btnEl.textContent='✓'; btnEl.style.background='var(--vd)'; btnEl.disabled=true; }
+  });
+}
 
 async function guardarPosicionPesaje(pos){
   var pesoKg=flt('p-peso-'+pos);
