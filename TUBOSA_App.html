@@ -1679,7 +1679,7 @@ function iniciarRegistro(){
   renderPesaje('pesaje-tbody',6);
   actualizarContador();
   irA('registro','Registro — '+turnoActual.lineaNombre,'Turno '+turnoActual.turno+' · '+turnoActual.fecha);
-  selHora(1);
+  selHora(1, false);
   // Check rotulado
   document.getElementById('reg-rotuladoOk').addEventListener('change',function(){
     document.getElementById('rotulado-txt').textContent=this.checked?'✓ Rotulado VERIFICADO':'Rotulado NO verificado';
@@ -1703,7 +1703,7 @@ function renderTabs(elId, corrugada, tipo){
     var fn;
     if(tipo==='coext') fn=`selHoraCoext(${h})`;
     else if(corrugada) fn=`selHoraCorr(${h})`;
-    else fn=`selHora(${h})`;
+    else fn=g?`selHora(${h},true)`:`selHora(${h},false)`;
     return `<div class="hora-tab ${g?'hecho':a?'activo':''}" onclick="${fn}">H${h}${g?' ✓':''}</div>`;
   }).join('');
 }
@@ -1721,7 +1721,7 @@ function renderPesaje(tbodyId,nPos){
 
 var modoEdicion = false;
 
-function selHora(h){
+function selHora(h, esEdicion){
   horaActual=h;
   document.getElementById('reg-hora-num').textContent=h;
   document.getElementById('reg-hora-num2').textContent=h;
@@ -1730,8 +1730,9 @@ function selHora(h){
   renderTabs('horas-tabs',false);
 
   var banner = document.getElementById('reg-edit-banner');
-  if(horasGuardadas[h]){
-    // Cargar datos guardados para edición
+  // Solo cargar datos si se hace clic explícitamente en una hora guardada (esEdicion=true)
+  // Al avanzar automáticamente a la siguiente hora, siempre limpiar
+  if(esEdicion && horasGuardadas[h]){
     modoEdicion = true;
     var d = horasGuardadas[h];
     setVal('reg-codMezcla', d.codigoMezcla||'');
@@ -1751,20 +1752,17 @@ function selHora(h){
     document.getElementById('reg-rotuladoOk').checked = d.rotuladoOk||false;
     document.getElementById('rotulado-txt').textContent = d.rotuladoOk ? '✓ Rotulado VERIFICADO' : 'Rotulado NO verificado';
     document.getElementById('rotulado-txt').style.color = d.rotuladoOk ? 'var(--vd)' : 'var(--gr3)';
-    // Cargar tendencias
     setVal('reg-espL1', d.espL1||''); setVal('reg-descL1', d.descL1||'');
     setVal('reg-diamL1', d.diamL1||''); setVal('reg-ovalL1', d.ovalL1||'');
     setVal('reg-espL2', d.espL2||''); setVal('reg-descL2', d.descL2||'');
     setVal('reg-diamL2', d.diamL2||''); setVal('reg-ovalL2', d.ovalL2||'');
-    // Mostrar banner edición
     if(banner){ banner.style.display='flex'; document.getElementById('reg-edit-hora-lbl').textContent=h; }
-    document.getElementById('btn-guardar-hora').textContent='💾 Actualizar Hora '+h;
-    document.getElementById('btn-hora-num').textContent='';
+    document.getElementById('btn-guardar-hora').innerHTML='💾 Actualizar Hora '+h;
   } else {
     modoEdicion = false;
     limpiarForm();
     if(banner) banner.style.display='none';
-    document.getElementById('btn-guardar-hora').textContent='✔ Guardar Hora '+h;
+    document.getElementById('btn-guardar-hora').innerHTML='✔ Guardar Hora '+h;
   }
 }
 
@@ -1823,7 +1821,7 @@ async function guardarHora(){
     renderTabs('horas-tabs',false);
     actualizarContador();
     notify((horaIdExistente?'Hora '+horaActual+' actualizada ✓':'Hora '+horaActual+' guardada ✓'),'ok');
-    if(!horaIdExistente && horaActual<8) selHora(horaActual+1);
+    if(!horaIdExistente && horaActual<8) selHora(horaActual+1, false);
   }catch(e){loader(false);notify('Error: '+e.message,'err');}
 }
 
