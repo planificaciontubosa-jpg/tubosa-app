@@ -1458,7 +1458,11 @@ async function retomarTurno(){
           pesoPromedio: parseFloat(h.PesoPromedio)||0,
           sobrePeso: parseFloat(h.SobrePeso)||0,
           longitud: parseFloat(h.Longitud)||0,
-          observaciones: h.Observaciones||''
+          observaciones: h.Observaciones||'',
+          espL1: parseFloat(h.EspesorL1)||0, descL1: parseFloat(h.DescalibreL1)||0,
+          diamL1: parseFloat(h.DiamExtL1)||0, ovalL1: parseFloat(h.OvalizacionL1)||0,
+          espL2: parseFloat(h.EspesorL2)||0, descL2: parseFloat(h.DescalibreL2)||0,
+          diamL2: parseFloat(h.DiamExtL2)||0, ovalL2: parseFloat(h.OvalizacionL2)||0
         };
       });
       // Ir a la primera hora no guardada
@@ -1745,6 +1749,11 @@ function selHora(h){
     document.getElementById('reg-rotuladoOk').checked = d.rotuladoOk||false;
     document.getElementById('rotulado-txt').textContent = d.rotuladoOk ? '✓ Rotulado VERIFICADO' : 'Rotulado NO verificado';
     document.getElementById('rotulado-txt').style.color = d.rotuladoOk ? 'var(--vd)' : 'var(--gr3)';
+    // Cargar tendencias
+    setVal('reg-espL1', d.espL1||''); setVal('reg-descL1', d.descL1||'');
+    setVal('reg-diamL1', d.diamL1||''); setVal('reg-ovalL1', d.ovalL1||'');
+    setVal('reg-espL2', d.espL2||''); setVal('reg-descL2', d.descL2||'');
+    setVal('reg-diamL2', d.diamL2||''); setVal('reg-ovalL2', d.ovalL2||'');
     // Mostrar banner edición
     if(banner){ banner.style.display='flex'; document.getElementById('reg-edit-hora-lbl').textContent=h; }
     document.getElementById('btn-guardar-hora').textContent='💾 Actualizar Hora '+h;
@@ -1794,7 +1803,9 @@ async function guardarHora(){
       consecutivoOperario:val('reg-consecutivo')};
     const r=await api(hd);
     if(!r.ok){loader(false);notify(r.msg||'Error','err');return;}
-    horasGuardadas[horaActual]={...hd,horaId:r.horaId||horaIdExistente};
+    horasGuardadas[horaActual]={...hd,horaId:r.horaId||horaIdExistente,
+      espL1:flt('reg-espL1'),descL1:flt('reg-descL1'),diamL1:flt('reg-diamL1'),ovalL1:flt('reg-ovalL1'),
+      espL2:flt('reg-espL2'),descL2:flt('reg-descL2'),diamL2:flt('reg-diamL2'),ovalL2:flt('reg-ovalL2')};
 
     // Guardar tendencias si hay datos
     if(val('reg-espL1')||val('reg-espL2')){
