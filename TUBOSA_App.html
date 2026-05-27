@@ -1465,10 +1465,14 @@ async function retomarTurno(){
           sobrePeso: parseFloat(h.SobrePeso)||0,
           longitud: parseFloat(h.Longitud)||0,
           observaciones: h.Observaciones||'',
-          espL1: h.EspesorL1||'', descL1: h.DescalibreL1||'',
-          diamL1: h.DiamExtL1||'', ovalL1: h.OvalizacionL1||'',
-          espL2: h.EspesorL2||'', descL2: h.DescalibreL2||'',
-          diamL2: h.DiamExtL2||'', ovalL2: h.OvalizacionL2||''
+          espL1:  (h.EspesorL1  !== undefined && h.EspesorL1  !== '') ? h.EspesorL1  : '',
+          descL1: (h.DescalibreL1 !== undefined && h.DescalibreL1 !== '') ? h.DescalibreL1 : '',
+          diamL1: (h.DiamExtL1  !== undefined && h.DiamExtL1  !== '') ? h.DiamExtL1  : '',
+          ovalL1: (h.OvalizacionL1 !== undefined && h.OvalizacionL1 !== '') ? h.OvalizacionL1 : '',
+          espL2:  (h.EspesorL2  !== undefined && h.EspesorL2  !== '') ? h.EspesorL2  : '',
+          descL2: (h.DescalibreL2 !== undefined && h.DescalibreL2 !== '') ? h.DescalibreL2 : '',
+          diamL2: (h.DiamExtL2  !== undefined && h.DiamExtL2  !== '') ? h.DiamExtL2  : '',
+          ovalL2: (h.OvalizacionL2 !== undefined && h.OvalizacionL2 !== '') ? h.OvalizacionL2 : ''
         };
       });
       // Ir a la primera hora no guardada
