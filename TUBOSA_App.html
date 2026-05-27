@@ -520,6 +520,63 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:#EEF2F7;color:var(--
     <tbody id="pesaje-tbody"></tbody></table>
     <button class="btn btn-nr btn-sm" onclick="guardarPesaje()" style="margin-top:10px">💾 Guardar Todo el Pesaje</button>
   </div></div>
+
+  <!-- CONTROL DE ACAMPANADO -->
+  <div class="card">
+    <div class="card-head" style="background:#0277BD;color:#fff">🔧 Control de Acampanado — Todo el Turno</div>
+    <div class="card-body">
+      <p class="ts" style="margin-bottom:12px">Registro de tubería acampanada en esta línea durante el turno. Máximo 5 registros.</p>
+
+      <!-- Selector de orden para acampanado -->
+      <div class="fila fila-3" style="margin-bottom:10px">
+        <div class="campo">
+          <label>Orden de Fabricación</label>
+          <input type="text" id="aca-orden" placeholder="Seleccionar orden..." list="ordenes-list-aca" oninput="buscarOrdenAca(this.value)">
+          <datalist id="ordenes-list-aca"></datalist>
+        </div>
+        <div class="campo"><label>Código SAP</label><input type="text" id="aca-codSAP" readonly class="auto" placeholder="Auto"></div>
+        <div class="campo"><label>Descripción</label><input type="text" id="aca-descripcion" readonly class="auto" placeholder="Auto"></div>
+      </div>
+      <div class="fila fila-2" style="margin-bottom:12px">
+        <div class="campo"><label>N° Lote de la Referencia</label><input type="text" id="aca-lote" placeholder="Ej: LOT-001"></div>
+        <div style="display:flex;align-items:flex-end">
+          <button class="btn btn-sm btn-vd" onclick="agregarFilaAca()" style="width:100%;justify-content:center">+ Agregar Registro</button>
+        </div>
+      </div>
+
+      <!-- Tabla de registros -->
+      <div style="overflow-x:auto">
+        <table class="pt" id="aca-tabla">
+          <thead><tr>
+            <th>#</th>
+            <th>Orden</th>
+            <th>Cód. SAP</th>
+            <th>Descripción</th>
+            <th>N° Lote</th>
+            <th>Und. Acampanadas</th>
+            <th>Peso Total (kg)</th>
+            <th>Und. Dañadas</th>
+            <th>Reproceso (kg)</th>
+            <th>Observaciones</th>
+            <th></th>
+          </tr></thead>
+          <tbody id="aca-tbody"></tbody>
+          <tfoot id="aca-totales" style="display:none">
+            <tr style="background:var(--az3);font-weight:700">
+              <td colspan="5" style="padding:6px 8px;font-size:12px;color:var(--az)">TOTALES</td>
+              <td id="aca-tot-und" style="padding:6px 8px;color:var(--az)">0</td>
+              <td id="aca-tot-peso" style="padding:6px 8px;color:var(--az)">0.0</td>
+              <td id="aca-tot-danadas" style="padding:6px 8px;color:var(--rd)">0</td>
+              <td id="aca-tot-reproceso" style="padding:6px 8px;color:var(--rd)">0.0</td>
+              <td colspan="2"></td>
+            </tr>
+          </tfoot>
+        </table>
+      </div>
+      <div id="aca-empty" style="text-align:center;padding:20px;color:var(--gr3);font-size:13px">Sin registros de acampanado en este turno</div>
+      <button class="btn btn-sm" style="background:#0277BD;color:#fff;margin-top:10px" onclick="guardarAcampanado()">💾 Guardar Control de Acampanado</button>
+    </div>
+  </div>
 </div>
 
 <!-- REGISTRO CORRUGADA -->
@@ -1279,6 +1336,7 @@ async function cargarMaestros(){
   try{
     const [ro,rm]=await Promise.all([api({action:'getOrdenes'}),api({action:'getMezclas'})]);
     if(ro.ok && ro.data.length){
+      window._todasOrdenes = ro.data; // Todas incluyendo cerradas (para acampanado)
       maestroOrdenes=ro.data.filter(function(o){return !o.Estado||o.Estado!=='Cerrada';});
       // Filtrar por línea si hay una activa
       var ordenesLinea = lineaActual.ID ?
@@ -1301,6 +1359,16 @@ async function cargarMaestros(){
       if(coextList) coextList.innerHTML=opts2;
     }
   }catch(e){console.error('Error cargando maestros:',e);}
+}
+
+// Sincronizar datalist acampanado con maestro órdenes
+function syncOrdenesAca(){
+  var el=document.getElementById('ordenes-list-aca');
+  if(!el) return;
+  // Todas las órdenes sin filtro de estado para acampanado
+  el.innerHTML=(window._todasOrdenes||maestroOrdenes).map(function(o){
+    return '<option value="'+o.OrdenFab+'">'+o.OrdenFab+' — '+(o.Producto||'')+(o.Estado==='Cerrada'?' [Cerrada]':'')+'</option>';
+  }).join('');
 }
 
 async function cargarLineas(){
@@ -1701,6 +1769,8 @@ function iniciarRegistro(){
   actualizarContador();
   irA('registro','Registro — '+turnoActual.lineaNombre,'Turno '+turnoActual.turno+' · '+turnoActual.fecha);
   selHora(1, false);
+  syncOrdenesAca();
+  acaFilas=[];
   // Check rotulado
   document.getElementById('reg-rotuladoOk').addEventListener('change',function(){
     document.getElementById('rotulado-txt').textContent=this.checked?'✓ Rotulado VERIFICADO':'Rotulado NO verificado';
@@ -2723,6 +2793,108 @@ async function guardarHoraCoext(){
     notify('Hora '+horaActual+' guardada ✓','ok');
     if(horaActual < 8) selHoraCoext(horaActual+1);
   }catch(e){ loader(false); notify('Error: '+e.message,'err'); }
+}
+
+// ── CONTROL DE ACAMPANADO ─────────────────────────────────────
+var acaFilas = [];
+
+function buscarOrdenAca(v){
+  if(!v) return;
+  var vClean=v.trim().toLowerCase();
+  // Buscar en todas las órdenes incluyendo cerradas
+  var todas=window._todasOrdenes||maestroOrdenes;
+  var o=todas.find(function(o){ return String(o.OrdenFab).trim().toLowerCase()===vClean; });
+  if(o){
+    setVal('aca-codSAP', o.CodigoSAP||'');
+    setVal('aca-descripcion', o.Producto||'');
+  }
+}
+
+function agregarFilaAca(){
+  var orden=val('aca-orden');
+  var codSAP=val('aca-codSAP');
+  var desc=val('aca-descripcion');
+  var lote=val('aca-lote');
+  if(!orden){notify('Selecciona una orden primero','err');return;}
+  if(acaFilas.length>=5){notify('Máximo 5 registros por turno','err');return;}
+  acaFilas.push({orden:orden,codSAP:codSAP,descripcion:desc,lote:lote,und:0,peso:0,danadas:0,reproceso:0,obs:''});
+  renderAcaTabla();
+  // Limpiar campos de entrada
+  setVal('aca-orden',''); setVal('aca-codSAP',''); setVal('aca-descripcion',''); setVal('aca-lote','');
+}
+
+function renderAcaTabla(){
+  var tbody=document.getElementById('aca-tbody');
+  var empty=document.getElementById('aca-empty');
+  var tfoot=document.getElementById('aca-totales');
+  if(!acaFilas.length){
+    tbody.innerHTML='';
+    if(empty) empty.style.display='block';
+    if(tfoot) tfoot.style.display='none';
+    return;
+  }
+  if(empty) empty.style.display='none';
+  if(tfoot) tfoot.style.display='table-footer-group';
+  tbody.innerHTML=acaFilas.map(function(f,i){
+    return '<tr>'+
+      '<td style="text-align:center;font-weight:700;color:#0277BD">'+(i+1)+'</td>'+
+      '<td style="font-size:12px">'+f.orden+'</td>'+
+      '<td style="font-size:12px">'+f.codSAP+'</td>'+
+      '<td style="font-size:12px">'+f.descripcion+'</td>'+
+      '<td><input type="text" id="aca-lote-'+i+'" value="'+f.lote+'" style="width:90px;border:1px solid var(--gr2);border-radius:4px;padding:4px 6px;font-size:12px"></td>'+
+      '<td><input type="number" id="aca-und-'+i+'" value="'+f.und+'" min="0" style="width:80px;border:1px solid var(--gr2);border-radius:4px;padding:4px 6px;font-size:12px" oninput="calcTotalesAca()"></td>'+
+      '<td><input type="number" id="aca-peso-'+i+'" value="'+f.peso+'" min="0" step="0.1" style="width:80px;border:1px solid var(--gr2);border-radius:4px;padding:4px 6px;font-size:12px" oninput="calcTotalesAca()"></td>'+
+      '<td><input type="number" id="aca-dan-'+i+'" value="'+f.danadas+'" min="0" style="width:80px;border:1px solid var(--gr2);border-radius:4px;padding:4px 6px;font-size:12px" oninput="calcTotalesAca()"></td>'+
+      '<td><input type="number" id="aca-rep-'+i+'" value="'+f.reproceso+'" min="0" step="0.1" style="width:80px;border:1px solid var(--gr2);border-radius:4px;padding:4px 6px;font-size:12px" oninput="calcTotalesAca()"></td>'+
+      '<td><input type="text" id="aca-obs-'+i+'" value="'+f.obs+'" placeholder="Obs." style="width:120px;border:1px solid var(--gr2);border-radius:4px;padding:4px 6px;font-size:12px"></td>'+
+      '<td><button onclick="eliminarFilaAca('+i+')" style="background:var(--rd2);color:var(--rd);border:none;border-radius:4px;padding:4px 8px;cursor:pointer;font-size:12px">✕</button></td>'+
+    '</tr>';
+  }).join('');
+  calcTotalesAca();
+}
+
+function calcTotalesAca(){
+  var totUnd=0,totPeso=0,totDan=0,totRep=0;
+  acaFilas.forEach(function(_,i){
+    totUnd  += parseInt(document.getElementById('aca-und-'+i)?.value)||0;
+    totPeso += parseFloat(document.getElementById('aca-peso-'+i)?.value)||0;
+    totDan  += parseInt(document.getElementById('aca-dan-'+i)?.value)||0;
+    totRep  += parseFloat(document.getElementById('aca-rep-'+i)?.value)||0;
+  });
+  document.getElementById('aca-tot-und').textContent=totUnd;
+  document.getElementById('aca-tot-peso').textContent=totPeso.toFixed(1);
+  document.getElementById('aca-tot-danadas').textContent=totDan;
+  document.getElementById('aca-tot-reproceso').textContent=totRep.toFixed(1);
+}
+
+function eliminarFilaAca(i){
+  acaFilas.splice(i,1);
+  renderAcaTabla();
+}
+
+async function guardarAcampanado(){
+  if(!acaFilas.length){notify('Sin registros de acampanado para guardar','err');return;}
+  // Recoger valores actuales de los inputs
+  var filas=acaFilas.map(function(f,i){
+    return {
+      fecha:turnoActual.fecha, linea:turnoActual.lineaNombre,
+      operario:turnoActual.operario, turno:turnoActual.turno,
+      ordenFab:f.orden, lote:document.getElementById('aca-lote-'+i)?.value||f.lote,
+      codigoSAP:f.codSAP, descripcion:f.descripcion,
+      undAcampanadas:parseInt(document.getElementById('aca-und-'+i)?.value)||0,
+      pesoTotal:parseFloat(document.getElementById('aca-peso-'+i)?.value)||0,
+      undDanadas:parseInt(document.getElementById('aca-dan-'+i)?.value)||0,
+      reproceso:parseFloat(document.getElementById('aca-rep-'+i)?.value)||0,
+      observaciones:document.getElementById('aca-obs-'+i)?.value||''
+    };
+  });
+  loader(true,'Guardando acampanado...');
+  try{
+    var r=await api({action:'guardarAcampanado',turnoId:turnoActual.id,filas:filas});
+    loader(false);
+    if(r.ok){notify('Control de acampanado guardado ✓','ok',4000);}
+    else notify(r.msg||'Error','err');
+  }catch(e){loader(false);notify('Error: '+e.message,'err');}
 }
 
 // ── REPORTE WHATSAPP ─────────────────────────────────────────
