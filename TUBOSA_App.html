@@ -769,8 +769,8 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:#EEF2F7;color:var(--
       <div style="background:#E8F5E9;border-radius:var(--rad2);padding:12px;margin-bottom:12px;border-left:4px solid #1E6B3C">
         <div style="font-size:11px;font-weight:700;color:#1E6B3C;text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px">🟢 Extrusora 65 — Capa</div>
         <div class="fila fila-4">
-          <div class="campo"><label>Código Mezcla EXT65</label><input type="text" id="coext-codMezcla65" placeholder="MZ-002" list="mezclas-list-coext"></div>
-          <div class="campo"><label>Mezcla EXT65</label><input type="text" id="coext-mezcla65" placeholder="Auto" oninput="buscarMezclaCoext('65')"></div>
+          <div class="campo"><label>Código Mezcla EXT65</label><input type="text" id="coext-codMezcla65" placeholder="MZ-002" list="mezclas-list-coext" oninput="buscarMezclaCoext('65')"></div>
+          <div class="campo"><label>Mezcla EXT65</label><input type="text" id="coext-mezcla65" placeholder="Auto"></div>
           <div class="campo"><label>Consecutivo EXT65</label><input type="text" id="coext-consec65" placeholder="001"></div>
           <div class="campo clave"><label>Cantidad kg EXT65</label><input type="number" id="coext-kg65" placeholder="0.0" step="0.01"></div>
         </div>
@@ -1297,6 +1297,8 @@ async function cargarMaestros(){
       var opts2=maestroMezclas.map(function(m){return '<option value="'+m.CodigoMezcla+'">'+m.CodigoMezcla+' — '+(m.NombreMezcla||'')+'</option>';}).join('');
       document.getElementById('mezclas-list').innerHTML=opts2;
       document.getElementById('mezclas-list-corr').innerHTML=opts2;
+      var coextList=document.getElementById('mezclas-list-coext');
+      if(coextList) coextList.innerHTML=opts2;
     }
   }catch(e){console.error('Error cargando maestros:',e);}
 }
