@@ -598,55 +598,78 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:#EEF2F7;color:var(--
   </div></div>
 
   <!-- Datos hora corrugada -->
-  <div class="card"><div class="card-head az">📦 Hora <span id="corr-hora-num">1</span> — Datos de Producción</div><div class="card-body">
-    <div class="fila fila-3">
-      <div class="campo"><label>Código Mezcla</label><input type="text" id="corr-codMezcla" placeholder="MZ-001" list="mezclas-list-corr" oninput="buscarMezclaCo(this.value)"><datalist id="mezclas-list-corr"></datalist></div>
-      <div class="campo"><label>Mezcla</label><input type="text" id="corr-mezcla" placeholder="Auto"></div>
-      <div class="campo"><label>Consecutivo</label><input type="text" id="corr-consecutivo" placeholder="Ej: 001"></div>
-    </div>
-    <div class="fila fila-3">
-      <div class="campo"><label>Cantidad kg Mezcla</label><input type="number" id="corr-kgMezcla" placeholder="0.0" step="0.01"></div>
-      <div class="campo"><label>Nro. Tubos (Und)</label><input type="number" id="corr-nroTubos" placeholder="0" oninput="actualizarContadorCorr()"></div>
-      <div class="campo"><label>Peso Total (kg)</label><input type="number" id="corr-pesoTotal" placeholder="0.0" step="0.01"></div>
-    </div>
-    <div class="fila fila-2">
-      <div class="campo"><label>Reproceso (kg)</label><input type="number" id="corr-reproceso" placeholder="0.0" step="0.01"></div>
-      <div class="campo"><label>Motivo Reproceso</label><input type="text" id="corr-motivoRep"></div>
-    </div>
-    <div style="background:var(--rd2);border:1px solid #e8a8a8;border-radius:var(--rad2);padding:10px 14px;margin-bottom:10px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px">
-      <div style="font-size:12px;color:var(--rd);font-weight:600">🔴 Si hay scrap en esta hora, genera el ticket de reporte</div>
-      <button class="btn btn-rd btn-sm" onclick="abrirTicketScrap()">🖨 Generar Ticket de Scrap</button>
-    </div>
-    <!-- DEVOLUCIÓN MEZCLA CORRUGADA -->
-    <div class="fila fila-2">
-      <div class="campo"><label>Devolución Mezcla (kg)</label><input type="number" id="corr-devolucion" placeholder="0.0" step="0.01"></div>
-      <div class="campo"><label>Motivo Devolución</label><input type="text" id="corr-motivoDev" placeholder="Describir motivo"></div>
-    </div>
-    <div style="background:#EDE7F6;border:1px solid #9C7FC3;border-radius:var(--rad2);padding:10px 14px;margin-bottom:10px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px">
-      <div style="font-size:12px;color:#533AB7;font-weight:600">🔵 Si hay devolución de mezcla, genera el PDF de devolución</div>
-      <button class="btn btn-sm" style="background:#533AB7;color:#fff" onclick="abrirModalDev()">📄 Generar PDF Devolución</button>
-    </div>
-    <div class="fila fila-2">
-      <div class="campo"><label>Peso Promedio (kg)</label><input type="number" id="corr-pesoPromedio" placeholder="0.000" step="0.001"></div>
-      <div class="campo"><label>Longitud (m)</label><input type="number" id="corr-longitud" placeholder="0.0" step="0.1"></div>
-    </div>
-    <div class="fila fila-2">
-      <div class="campo"><label>Diámetro Exterior 90° (mm)</label><input type="number" id="corr-diamExt90" placeholder="0.0" step="0.01"></div>
-      <div class="campo"></div>
-    </div>
-    <div style="background:var(--az3);border-radius:var(--rad2);padding:10px 14px;margin-top:4px">
-      <div style="font-size:11px;font-weight:700;color:var(--az);text-transform:uppercase;margin-bottom:6px">✔ Verificación de Rotulado</div>
-      <div class="check-toggle"><input type="checkbox" id="corr-rotuladoOk"><span id="corr-rotulado-txt" style="color:var(--gr3)">Rotulado NO verificado</span></div>
-    </div>
-  </div></div>
+  <!-- Banner edición corrugada -->
+  <div id="corr-edit-banner" style="display:none;background:var(--nr);color:#fff;border-radius:var(--rad2);padding:10px 14px;margin-bottom:10px;align-items:center;justify-content:space-between">
+    <span>✏ <strong>Modo edición</strong> — Hora <span id="corr-edit-hora-lbl">1</span> ya guardada. Modifica lo que necesites y guarda.</span>
+    <button class="btn btn-gr btn-sm" onclick="cancelarEdicionCorr()">Cancelar</button>
+  </div>
 
-  <!-- Observaciones hora corrugada -->
+  <!-- BLOQUE 1 — MEZCLA CORRUGADA -->
+  <div class="card">
+    <div class="card-head" style="background:#533AB7;color:#fff">🧪 Bloque 1 — Mezcla · Hora <span id="corr-hora-num">1</span></div>
+    <div class="card-body">
+      <div class="fila fila-3">
+        <div class="campo"><label>Código Mezcla</label><input type="text" id="corr-codMezcla" placeholder="MZ-001" list="mezclas-list-corr" oninput="buscarMezclaCo(this.value)"><datalist id="mezclas-list-corr"></datalist></div>
+        <div class="campo"><label>Mezcla</label><input type="text" id="corr-mezcla" placeholder="Auto"></div>
+        <div class="campo"><label>Consecutivo</label><input type="text" id="corr-consecutivo" placeholder="Ej: 001"></div>
+      </div>
+      <div class="fila fila-2">
+        <div class="campo"><label>Cantidad kg Mezcla</label><input type="number" id="corr-kgMezcla" placeholder="0.0" step="0.01"></div>
+        <div style="display:flex;align-items:flex-end">
+          <div style="width:100%;background:#EDE7F6;border:1px solid #9C7FC3;border-radius:var(--rad2);padding:8px 12px;display:flex;align-items:center;justify-content:space-between;gap:8px">
+            <div style="font-size:11px;color:#533AB7;font-weight:600">📄 PDF Devolución</div>
+            <button class="btn btn-sm" style="background:#533AB7;color:#fff;padding:5px 10px" onclick="abrirModalDev()">Generar</button>
+          </div>
+        </div>
+      </div>
+      <div class="fila fila-2">
+        <div class="campo"><label>Devolución Mezcla (kg)</label><input type="number" id="corr-devolucion" placeholder="0.0" step="0.01"></div>
+        <div class="campo"><label>Motivo Devolución</label><input type="text" id="corr-motivoDev" placeholder="Describir motivo"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- BLOQUE 2 — PRODUCCIÓN CORRUGADA -->
+  <div class="card">
+    <div class="card-head az">📦 Bloque 2 — Producción · Hora <span id="corr-hora-num2">1</span></div>
+    <div class="card-body">
+      <div class="fila fila-3">
+        <div class="campo"><label>Nro. Tubos (Und)</label><input type="number" id="corr-nroTubos" placeholder="0" oninput="actualizarContadorCorr()"></div>
+        <div class="campo"><label>Peso Total (kg)</label><input type="number" id="corr-pesoTotal" placeholder="0.0" step="0.01"></div>
+        <div class="campo"><label>Reproceso (kg)</label><input type="number" id="corr-reproceso" placeholder="0.0" step="0.01"></div>
+      </div>
+      <div class="fila fila-3">
+        <div class="campo"><label>Peso Promedio (kg)</label><input type="number" id="corr-pesoPromedio" placeholder="0.000" step="0.001" oninput="calcSobrePesoCorr()"></div>
+        <div class="campo"><label>Sobre Peso (%)</label><input type="text" id="corr-sobrePeso" readonly class="auto" placeholder="Auto"></div>
+        <div class="campo"><label>Longitud (m)</label><input type="number" id="corr-longitud" placeholder="0.0" step="0.1"></div>
+      </div>
+      <div class="fila fila-2">
+        <div class="campo"><label>Diámetro Exterior 90° (mm)</label><input type="number" id="corr-diamExt90" placeholder="0.0" step="0.01"></div>
+        <div class="campo"><label>Motivo Reproceso</label><input type="text" id="corr-motivoRep"></div>
+      </div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px">
+        <div style="flex:1;background:var(--rd2);border:1px solid #e8a8a8;border-radius:var(--rad2);padding:8px 12px;display:flex;align-items:center;justify-content:space-between;gap:8px">
+          <div style="font-size:11px;color:var(--rd);font-weight:600">🔴 Ticket Scrap</div>
+          <button class="btn btn-rd btn-sm" style="padding:5px 10px" onclick="abrirTicketScrap()">Generar</button>
+        </div>
+        <div style="flex:1;background:var(--az3);border:1px solid #9FBFE0;border-radius:var(--rad2);padding:8px 12px;display:flex;align-items:center;justify-content:space-between;gap:8px">
+          <div style="font-size:11px;color:var(--az);font-weight:600">✔ Rotulado</div>
+          <div class="check-toggle" style="margin:0">
+            <input type="checkbox" id="corr-rotuladoOk">
+            <span id="corr-rotulado-txt" style="color:var(--gr3);font-size:12px">No verificado</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Observaciones corrugada -->
   <div class="card"><div class="card-head pu">📝 Observaciones</div><div class="card-body">
     <div class="campo mb0"><textarea id="corr-observaciones" placeholder="Novedades, paros, ajustes..."></textarea></div>
   </div></div>
 
   <div class="btn-group">
-    <button class="btn btn-vd" onclick="guardarHoraCorr()">✔ Guardar Hora <span id="corr-btn-hora">1</span></button>
+    <button class="btn btn-vd" id="corr-btn-guardar" onclick="guardarHoraCorr()">✔ Guardar Hora <span id="corr-btn-hora">1</span></button>
     <button class="btn btn-az" onclick="irResumen()">Ver Resumen</button>
     <button class="btn btn-gr" onclick="limpiarFormCorr()">🗑 Limpiar</button>
     <button class="btn btn-rd" onclick="abrirModalTM()" style="margin-left:auto">🔴 Tiempo Muerto</button>
@@ -1644,7 +1667,9 @@ async function retomarTurno(){
       renderInfo('reg-info-corr');
       renderTabs('horas-tabs-corr', true);
       renderPesaje('pesaje-tbody-corr', 3);
+      restorePesajeInputs();
       actualizarContadorCorr();
+      limpiarEspesoresCorr();
       irA('registro-corr','Registro Corrugada — '+turnoActual.lineaNombre,'Turno '+turnoActual.turno+' · '+turnoActual.fecha);
       document.getElementById('corr-hora-num').textContent = horaActual;
       document.getElementById('corr-btn-hora').textContent = horaActual;
@@ -1868,7 +1893,7 @@ function renderTabs(elId, corrugada, tipo){
     const h=i+1,g=horasGuardadas[h],a=h===horaActual;
     var fn;
     if(tipo==='coext') fn=g?`selHoraCoext(${h},true)`:`selHoraCoext(${h},false)`;
-    else if(corrugada) fn=`selHoraCorr(${h})`;
+    else if(corrugada) fn=g?`selHoraCorr(${h},true)`:`selHoraCorr(${h},false)`;
     else fn=g?`selHora(${h},true)`:`selHora(${h},false)`;
     return `<div class="hora-tab ${g?'hecho':a?'activo':''}" onclick="${fn}">H${h}${g?' ✓':''}</div>`;
   }).join('');
@@ -2107,52 +2132,121 @@ function iniciarRegistroCorr(){
   renderTabs('horas-tabs-corr',true);
   renderPesaje('pesaje-tbody-corr',3);
   actualizarContadorCorr();
+  // Limpiar espesores al iniciar turno nuevo
+  limpiarEspesoresCorr();
   irA('registro-corr','Registro Corrugada — '+turnoActual.lineaNombre,'Turno '+turnoActual.turno);
-  selHoraCorr(1);
-  document.getElementById('corr-rotuladoOk').addEventListener('change',function(){
-    document.getElementById('corr-rotulado-txt').textContent=this.checked?'✓ Rotulado VERIFICADO':'Rotulado NO verificado';
-    document.getElementById('corr-rotulado-txt').style.color=this.checked?'var(--vd)':'var(--gr3)';
-  });
+  selHoraCorr(1, false);
+  _tubosAcumuladosOrden=0;
+  cargarAcumuladoOrden();
 }
 
-function selHoraCorr(h){
+function limpiarEspesoresCorr(){
+  ['arr-ext','arr-int','arr-val','aba-ext','aba-int','aba-val',
+   'izq-ext','izq-int','izq-val','der-ext','der-int','der-val'].forEach(function(id){
+    setVal('tc-'+id,'');
+  });
+  document.getElementById('prom-ext').textContent='—';
+  document.getElementById('prom-int').textContent='—';
+  document.getElementById('prom-val').textContent='—';
+}
+
+var modoEdicionCorr = false;
+
+function selHoraCorr(h, esEdicion){
   horaActual=h;
   document.getElementById('corr-hora-num').textContent=h;
+  document.getElementById('corr-hora-num2') && (document.getElementById('corr-hora-num2').textContent=h);
   document.getElementById('corr-btn-hora').textContent=h;
   renderTabs('horas-tabs-corr',true);
-  limpiarFormCorr();calcConsecCorr();
+
+  var banner=document.getElementById('corr-edit-banner');
+  var btnG=document.getElementById('corr-btn-guardar');
+  if(esEdicion && horasGuardadas[h]){
+    modoEdicionCorr=true;
+    var d=horasGuardadas[h];
+    setVal('corr-codMezcla',d.codigoMezcla||'');
+    setVal('corr-mezcla',d.mezcla||'');
+    setVal('corr-consecutivo',d.consecutivoOperario||'');
+    setVal('corr-kgMezcla',d.cantidadKgMezcla||'');
+    setVal('corr-devolucion',d.devolucionKg||'');
+    setVal('corr-motivoDev',d.motivoDevolucion||'');
+    setVal('corr-nroTubos',d.nroTubos||'');
+    setVal('corr-pesoTotal',d.pesoTotal||'');
+    setVal('corr-reproceso',d.reprocesoKg||'');
+    setVal('corr-motivoRep',d.motivoReproceso||'');
+    setVal('corr-pesoPromedio',d.pesoPromedio||'');
+    setVal('corr-sobrePeso',d.sobrePeso||'');
+    setVal('corr-longitud',d.longitud||'');
+    setVal('corr-diamExt90',d.diamExt90||'');
+    setVal('corr-observaciones',d.observaciones||'');
+    document.getElementById('corr-rotuladoOk').checked=d.rotuladoOk||false;
+    document.getElementById('corr-rotulado-txt').textContent=d.rotuladoOk?'✓ Rotulado VERIFICADO':'Rotulado NO verificado';
+    document.getElementById('corr-rotulado-txt').style.color=d.rotuladoOk?'var(--vd)':'var(--gr3)';
+    if(banner){banner.style.display='flex';document.getElementById('corr-edit-hora-lbl').textContent=h;}
+    if(btnG) btnG.textContent='💾 Actualizar Hora '+h;
+  } else {
+    modoEdicionCorr=false;
+    limpiarFormCorr();
+    if(banner) banner.style.display='none';
+    if(btnG) btnG.textContent='✔ Guardar Hora '+h;
+  }
+}
+
+function cancelarEdicionCorr(){
+  modoEdicionCorr=false;
+  limpiarFormCorr();
+  var banner=document.getElementById('corr-edit-banner');
+  if(banner) banner.style.display='none';
+  var btnG=document.getElementById('corr-btn-guardar');
+  if(btnG) btnG.textContent='✔ Guardar Hora '+horaActual;
 }
 
 function limpiarFormCorr(){
-  ['codMezcla','mezcla','consecutivo','kgMezcla','nroTubos','pesoTotal','reproceso','motivoRep','devolucion','motivoDev','pesoPromedio','longitud','diamExt90','observaciones']
-  .forEach(id=>setVal('corr-'+id,''));
+  ['codMezcla','mezcla','consecutivo','kgMezcla','nroTubos','pesoTotal','reproceso',
+   'motivoRep','devolucion','motivoDev','pesoPromedio','sobrePeso','longitud','diamExt90','observaciones']
+  .forEach(function(id){setVal('corr-'+id,'');});
   document.getElementById('corr-rotuladoOk').checked=false;
   document.getElementById('corr-rotulado-txt').textContent='Rotulado NO verificado';
   document.getElementById('corr-rotulado-txt').style.color='var(--gr3)';
 }
 
+function calcSobrePesoCorr(){
+  var pp=flt('corr-pesoPromedio');
+  var pe=parseFloat(turnoActual.pesoEstandar)||0;
+  if(pp>0&&pe>0) setVal('corr-sobrePeso',((pp-pe)/pe*100).toFixed(2));
+}
+
 async function guardarHoraCorr(){
-  loader(true,'Guardando hora '+horaActual+'...');
+  loader(true,(modoEdicionCorr?'Actualizando':'Guardando')+' hora '+horaActual+'...');
   try{
-    const hd={action:'guardarHora',turnoId:turnoActual.id,hora:horaActual,
-      codigoMezcla:val('corr-codMezcla'),mezcla:val('corr-mezcla'),
-      cantidadKgMezcla:flt('corr-kgMezcla'),nroTubos:parseInt(val('corr-nroTubos'))||0,
-      pesoTotal:flt('corr-pesoTotal'),reprocesoKg:flt('corr-reproceso'),
+    var horaIdExistente = modoEdicionCorr && horasGuardadas[horaActual] ? horasGuardadas[horaActual].horaId : null;
+    const hd={
+      action: horaIdExistente ? 'actualizarHora' : 'guardarHora',
+      horaId: horaIdExistente,
+      turnoId:turnoActual.id, hora:horaActual,
+      codigoMezcla:val('corr-codMezcla'), mezcla:val('corr-mezcla'),
+      cantidadKgMezcla:flt('corr-kgMezcla'), nroTubos:parseInt(val('corr-nroTubos'))||0,
+      pesoTotal:flt('corr-pesoTotal'), reprocesoKg:flt('corr-reproceso'),
       motivoReproceso:val('corr-motivoRep'),
-      devolucionKg:flt('corr-devolucion'),motivoDevolucion:val('corr-motivoDev'),
+      devolucionKg:flt('corr-devolucion'), motivoDevolucion:val('corr-motivoDev'),
       rotuladoOk:document.getElementById('corr-rotuladoOk').checked,
-      pesoPromedio:flt('corr-pesoPromedio'),sobrePeso:0,longitud:flt('corr-longitud'),
-      diamExt90:flt('corr-diamExt90'),
+      pesoPromedio:flt('corr-pesoPromedio'), sobrePeso:flt('corr-sobrePeso'),
+      longitud:flt('corr-longitud'), diamExt90:flt('corr-diamExt90'),
       observaciones:val('corr-observaciones'),
       consecutivoOperario:val('corr-consecutivo')};
     const r=await api(hd);
     if(!r.ok){loader(false);notify(r.msg||'Error','err');return;}
-    horasGuardadas[horaActual]={...hd,horaId:r.horaId};
+    horasGuardadas[horaActual]={...hd, horaId:r.horaId||horaIdExistente};
     loader(false);
+    modoEdicionCorr=false;
+    var banner=document.getElementById('corr-edit-banner');
+    if(banner) banner.style.display='none';
+    var btnG=document.getElementById('corr-btn-guardar');
+    if(btnG) btnG.textContent='✔ Guardar Hora '+horaActual;
     renderTabs('horas-tabs-corr',true);
     actualizarContadorCorr();
-    notify(`Hora ${horaActual} guardada ✓`,'ok');
-    if(horaActual<8)selHoraCorr(horaActual+1);
+    notify((horaIdExistente?'Hora '+horaActual+' actualizada ✓':'Hora '+horaActual+' guardada ✓'),'ok');
+    if(!horaIdExistente && horaActual<8) selHoraCorr(horaActual+1, false);
   }catch(e){loader(false);notify('Error: '+e.message,'err');}
 }
 
