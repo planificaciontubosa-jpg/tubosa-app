@@ -1458,8 +1458,24 @@ function selLinea(l){
     mostrarModalRetomar(turnoActivo);
   } else {
     document.getElementById('cab-linea-nombre').textContent=l.NombreLinea;
-    setVal('cab-linea',l.NombreLinea); setVal('cab-fecha',fmtFecha());
-    cargarMaestros(); // Recarga órdenes filtradas por esta línea
+    setVal('cab-linea',l.NombreLinea);
+    setVal('cab-fecha',fmtFecha());
+    // Limpiar campos de la cabecera anterior
+    setVal('cab-turno','A');
+    setVal('cab-operario','');
+    setVal('cab-coordinador','');
+    setVal('cab-supervisor','');
+    setVal('cab-orden','');
+    setVal('cab-codigoSAP','');
+    setVal('cab-producto','');
+    setVal('cab-espesor','');
+    setVal('cab-diametro','');
+    setVal('cab-peso','');
+    setVal('cab-cantOrden','');
+    setVal('cab-cargaEstandar','');
+    setVal('cab-lineaOrden','');
+    setVal('cab-rotulado','');
+    cargarMaestros();
     irA('cabecera','Nueva Cabecera',l.NombreLinea);
   }
 }
