@@ -947,6 +947,51 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:#EEF2F7;color:var(--
     <div class="card"><div class="card-head az2">⏱ Detalle por Turno</div><div class="card-body">
       <div style="overflow-x:auto"><table class="rt" id="inf-tabla-turnos"></table></div>
     </div></div>
+
+    <!-- OEE -->
+    <div class="card" id="inf-oee-card" style="display:none">
+      <div class="card-head" style="background:#1A237E;color:#fff">📊 OEE — Efectividad Global del Equipo</div>
+      <div class="card-body">
+        <!-- Gauge OEE -->
+        <div style="text-align:center;margin-bottom:16px">
+          <div style="font-size:11px;font-weight:700;color:var(--gr3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px">OEE Global</div>
+          <div id="inf-oee-gauge" style="display:inline-flex;flex-direction:column;align-items:center">
+            <div id="inf-oee-val" style="font-size:56px;font-weight:800;color:#1A237E">—</div>
+            <div style="font-size:14px;color:var(--gr3)">% OEE = Disponibilidad × Rendimiento × Calidad</div>
+          </div>
+        </div>
+        <!-- Tres componentes -->
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-bottom:16px">
+          <div style="background:#E8F5E9;border-radius:var(--rad);padding:16px;text-align:center;border-top:4px solid #2E7D32">
+            <div style="font-size:28px;font-weight:800;color:#2E7D32" id="inf-disp-val">—</div>
+            <div style="font-size:11px;font-weight:700;color:#2E7D32;text-transform:uppercase;margin:4px 0">Disponibilidad</div>
+            <div style="font-size:11px;color:var(--gr3)" id="inf-disp-det">—</div>
+          </div>
+          <div style="background:#E3F2FD;border-radius:var(--rad);padding:16px;text-align:center;border-top:4px solid #1565C0">
+            <div style="font-size:28px;font-weight:800;color:#1565C0" id="inf-rend-val">—</div>
+            <div style="font-size:11px;font-weight:700;color:#1565C0;text-transform:uppercase;margin:4px 0">Rendimiento</div>
+            <div style="font-size:11px;color:var(--gr3)" id="inf-rend-det">—</div>
+          </div>
+          <div style="background:#FFF3E0;border-radius:var(--rad);padding:16px;text-align:center;border-top:4px solid #E65100">
+            <div style="font-size:28px;font-weight:800;color:#E65100" id="inf-cal-val">—</div>
+            <div style="font-size:11px;font-weight:700;color:#E65100;text-transform:uppercase;margin:4px 0">Calidad</div>
+            <div style="font-size:11px;color:var(--gr3)" id="inf-cal-det">—</div>
+          </div>
+        </div>
+        <!-- Barra visual OEE -->
+        <div style="background:var(--gr);border-radius:var(--rad2);overflow:hidden;height:20px;margin-bottom:6px">
+          <div id="inf-oee-bar" style="height:100%;background:#1A237E;transition:width .5s;border-radius:var(--rad2);display:flex;align-items:center;justify-content:center;color:#fff;font-size:11px;font-weight:700"></div>
+        </div>
+        <div style="font-size:11px;color:var(--gr3);text-align:center">
+          World Class OEE ≥ 85% &nbsp;|&nbsp; Bueno ≥ 70% &nbsp;|&nbsp; Regular ≥ 50%
+        </div>
+        <!-- Detalle tiempos -->
+        <div style="margin-top:14px">
+          <div class="sec-t">Detalle de tiempos</div>
+          <div class="info-grid" id="inf-oee-tiempos"></div>
+        </div>
+      </div>
+    </div>
   </div>
   <div id="inf-vacio" style="text-align:center;padding:40px;color:var(--gr3);display:none">
     <div style="font-size:48px;margin-bottom:12px">📭</div>
@@ -1621,6 +1666,8 @@ async function retomarTurno(){
       document.getElementById('reg-hora-num').textContent = horaActual;
       document.getElementById('tend-hora-num').textContent = horaActual;
       document.getElementById('btn-hora-num').textContent = horaActual;
+      _tubosAcumuladosOrden=0;
+      cargarAcumuladoOrden();
     }
 
   }catch(e){
@@ -1797,6 +1844,8 @@ function iniciarRegistro(){
   selHora(1, false);
   syncOrdenesAca();
   acaFilas=[];
+  _tubosAcumuladosOrden=0;
+  cargarAcumuladoOrden();
   // Check rotulado
   document.getElementById('reg-rotuladoOk').addEventListener('change',function(){
     document.getElementById('rotulado-txt').textContent=this.checked?'✓ Rotulado VERIFICADO':'Rotulado NO verificado';
@@ -2019,13 +2068,28 @@ async function guardarPosicionPesajeCorr(pos){
 }
 
 // Contador unidades
+var _tubosAcumuladosOrden = 0; // Total de turnos anteriores de la misma orden
+
+async function cargarAcumuladoOrden(){
+  if(!turnoActual.ordenFab) return;
+  try{
+    var r = await api({action:'getTotalProducido', ordenFab:turnoActual.ordenFab});
+    if(r.ok){
+      // Restar los tubos del turno actual (ya están en horasGuardadas)
+      var tubosEsteTurno = Object.values(horasGuardadas).reduce((s,h)=>s+(h.nroTubos||0),0);
+      _tubosAcumuladosOrden = Math.max(0, (r.totalTubos||0) - tubosEsteTurno);
+      actualizarContador();
+    }
+  }catch(e){}
+}
+
 function actualizarContador(){
   const cantOrden=turnoActual.cantidadOrden||0;
   if(!cantOrden){document.getElementById('reg-contador').style.display='none';return;}
   document.getElementById('reg-contador').style.display='flex';
   const tubosEnHoraActual=parseInt(val('reg-nroTubos'))||0;
-  const tubosGuardados=Object.values(horasGuardadas).reduce((s,h)=>s+(h.nroTubos||0),0);
-  const totalProd=tubosGuardados+tubosEnHoraActual;
+  const tubosEsteTurno=Object.values(horasGuardadas).reduce((s,h)=>s+(h.nroTubos||0),0);
+  const totalProd=_tubosAcumuladosOrden+tubosEsteTurno+tubosEnHoraActual;
   const pendiente=Math.max(0,cantOrden-totalProd);
   const pct=Math.min(100,(totalProd/cantOrden*100)).toFixed(0);
   document.getElementById('cnt-orden').textContent=cantOrden.toLocaleString();
@@ -2435,6 +2499,53 @@ function renderInforme(d){
     <tr class="tot"><td colspan="5">TOTALES</td>
       <td>${r.totalKgMezcla}</td><td>${r.totalTubos}</td><td>${r.totalPesoTubos}</td><td>${r.totalReproceso}</td><td></td>
     </tr></tbody>`;
+
+  // ── OEE ──
+  if(d.oee){
+    var o=d.oee;
+    var oeeNum=parseFloat(o.oee);
+    var oeeColor=oeeNum>=85?'#2E7D32':oeeNum>=70?'#1565C0':oeeNum>=50?'#E65100':'#C0392B';
+    document.getElementById('inf-oee-card').style.display='block';
+    document.getElementById('inf-oee-val').textContent=oeeNum.toFixed(1)+'%';
+    document.getElementById('inf-oee-val').style.color=oeeColor;
+    document.getElementById('inf-oee-bar').style.width=Math.min(100,oeeNum)+'%';
+    document.getElementById('inf-oee-bar').style.background=oeeColor;
+    document.getElementById('inf-oee-bar').textContent=oeeNum.toFixed(1)+'%';
+
+    // Disponibilidad
+    var dispNum=parseFloat(o.disponibilidad);
+    document.getElementById('inf-disp-val').textContent=dispNum.toFixed(1)+'%';
+    document.getElementById('inf-disp-det').textContent=
+      'Productivo: '+Math.round(o.tiempoProductivoMin)+' min / '+
+      'Muerto: '+Math.round(o.tiempoMuertoMin)+' min';
+
+    // Rendimiento
+    var rendNum=parseFloat(o.rendimiento);
+    document.getElementById('inf-rend-val').textContent=rendNum.toFixed(1)+'%';
+    document.getElementById('inf-rend-det').textContent=
+      'Real: '+d.resumen.totalPesoTubos+' kg / '+
+      'Teórico: '+o.kgTeoricos+' kg';
+
+    // Calidad
+    var calNum=parseFloat(o.calidad);
+    document.getElementById('inf-cal-val').textContent=calNum.toFixed(1)+'%';
+    document.getElementById('inf-cal-det').textContent=
+      'Buenas: '+o.unidadesBuenas+' und / '+
+      'Reproceso: '+o.unidadesReproceso+' und';
+
+    // Tiempos detalle
+    document.getElementById('inf-oee-tiempos').innerHTML=[
+      ['Tiempo Total Turno(s)', Math.round(o.tiempoTotalMin)+' min ('+Math.round(o.tiempoTotalMin/60)+' h)'],
+      ['Tiempo Muerto Total', Math.round(o.tiempoMuertoMin)+' min'],
+      ['Tiempo Productivo', Math.round(o.tiempoProductivoMin)+' min'],
+      ['Carga Estándar Output', (o.cargaEstandar||'No definida')+(o.cargaEstandar?' kg/h':'')],
+      ['Kg Teóricos', o.kgTeoricos+' kg'],
+      ['Kg Reales (tubos)', d.resumen.totalPesoTubos+' kg'],
+      ['Unidades Totales', d.resumen.totalTubos+' und'],
+      ['Unidades Buenas', o.unidadesBuenas+' und'],
+      ['Unidades Reproceso', o.unidadesReproceso+' und'],
+    ].map(([l,v])=>`<div class="info-item"><label>${l}</label><span style="font-size:13px">${v}</span></div>`).join('');
+  }
 }
 // ── TICKET SCRAP ──────────────────────────────────────────────
 function abrirTicketScrap(){
