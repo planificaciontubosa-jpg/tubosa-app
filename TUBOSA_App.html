@@ -2207,22 +2207,27 @@ async function guardarPosicionPesajeCorr(pos){
 // Contador unidades
 var _tubosAcumuladosOrden = 0; // Total de turnos anteriores de la misma orden
 
-var _acumuladoToken = 0; // Token para cancelar llamadas anteriores
+var _acumuladoToken = 0;
 
 async function cargarAcumuladoOrden(){
   if(!turnoActual.ordenFab) return;
-  var miToken = ++_acumuladoToken; // Capturar token actual
+  var ordenAlLlamar = String(turnoActual.ordenFab);
+  var lineaAlLlamar = String(turnoActual.id||turnoActual.lineaNombre||'');
+  var miToken = ++_acumuladoToken;
   try{
-    var r = await api({action:'getTotalProducido', ordenFab:turnoActual.ordenFab});
-    if(miToken !== _acumuladoToken) return; // Respuesta obsoleta, ignorar
-    console.log('getTotalProducido:', turnoActual.ordenFab, r);
+    var r = await api({action:'getTotalProducido', ordenFab:ordenAlLlamar});
+    // Si el token cambió o la línea/orden ya no coincide, ignorar respuesta obsoleta
+    if(miToken !== _acumuladoToken) return;
+    if(String(turnoActual.ordenFab) !== ordenAlLlamar) return;
+    if(String(turnoActual.id||turnoActual.lineaNombre||'') !== lineaAlLlamar) return;
     if(r.ok){
-      var tubosEsteTurno = Object.values(horasGuardadas).reduce((s,h)=>s+(h.nroTubos||0),0);
+      var tubosEsteTurno = Object.values(horasGuardadas).reduce(function(s,h){return s+(h.nroTubos||0);},0);
       _tubosAcumuladosOrden = Math.max(0, (r.totalTubos||0) - tubosEsteTurno);
-      console.log('acumulado:', _tubosAcumuladosOrden, 'esteTurno:', tubosEsteTurno, 'total:', r.totalTubos);
       actualizarContador();
+      actualizarContadorCorr();
+      actualizarContadorCoext();
     }
-  }catch(e){console.error('cargarAcumuladoOrden error:',e);}
+  }catch(e){}
 }
 
 function actualizarContador(){
