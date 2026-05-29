@@ -1803,6 +1803,7 @@ async function retomarTurno(){
       document.getElementById('reg-hora-num').textContent = horaActual;
       document.getElementById('tend-hora-num').textContent = horaActual;
       document.getElementById('btn-hora-num').textContent = horaActual;
+      _acumuladoToken++;
       _tubosAcumuladosOrden=0;
       cargarAcumuladoOrden();
     }
@@ -1981,6 +1982,7 @@ function iniciarRegistro(){
   selHora(1, false);
   syncOrdenesAca();
   acaFilas=[];
+  _acumuladoToken++;
   _tubosAcumuladosOrden=0;
   cargarAcumuladoOrden();
   // Check rotulado
@@ -2258,6 +2260,7 @@ function iniciarRegistroCorr(){
   limpiarEspesoresCorr();
   irA('registro-corr','Registro Corrugada — '+turnoActual.lineaNombre,'Turno '+turnoActual.turno);
   selHoraCorr(1, false);
+  _acumuladoToken++;
   _tubosAcumuladosOrden=0;
   cargarAcumuladoOrden();
 }
