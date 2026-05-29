@@ -1475,7 +1475,8 @@ async function cargarMaestros(){
     if(ro.ok && ro.data.length){
       window._todasOrdenes = ro.data;
       maestroOrdenes=ro.data.filter(function(o){return !o.Estado||o.Estado!=='Cerrada';});
-      // ordenes-list se actualiza al seleccionar línea en filtrarOrdenesLinea()
+      // Actualizar cabecera si hay una línea activa seleccionada
+      if(lineaActual && lineaActual.ID) filtrarOrdenesCabecera(lineaActual);
       // inf: todas las activas por defecto
       document.getElementById('ordenes-list-inf').innerHTML=maestroOrdenes.map(function(o){
         return '<option value="'+String(o.OrdenFab).trim()+'">'+o.OrdenFab+' — '+(o.Producto||'')+'</option>';
@@ -1503,15 +1504,14 @@ async function cargarMaestros(){
 }
 
 function filtrarOrdenesCabecera(linea){
-  // Mostrar solo órdenes activas de esa línea (o sin línea asignada)
+  var lnombre=String(linea.NombreLinea||'').trim().toLowerCase();
+  var lid=String(linea.ID||'').trim();
   var filtradas=maestroOrdenes.filter(function(o){
     if(!o.Linea||String(o.Linea).trim()==='') return true;
-    var l=String(o.Linea).trim();
-    var lid=String(linea.ID||'').trim();
-    var lnombre=String(linea.NombreLinea||'').trim().toLowerCase();
-    return l===lid || l.toLowerCase()===lnombre ||
-           l.toLowerCase()==='lin'+lid.padStart(2,'0') ||
-           l.toLowerCase()==='línea '+lid.padStart(2,'0');
+    var l=String(o.Linea).trim().toLowerCase();
+    return l===lnombre || l===lid ||
+           l==='lin'+lid.padStart(2,'0') ||
+           l==='línea '+lid.padStart(2,'0');
   });
   document.getElementById('ordenes-list').innerHTML=filtradas.map(function(o){
     return '<option value="'+String(o.OrdenFab).trim()+'">'+o.OrdenFab+' — '+(o.Producto||'')+'</option>';
@@ -2208,13 +2208,14 @@ async function cargarAcumuladoOrden(){
   if(!turnoActual.ordenFab) return;
   try{
     var r = await api({action:'getTotalProducido', ordenFab:turnoActual.ordenFab});
+    console.log('getTotalProducido:', turnoActual.ordenFab, r);
     if(r.ok){
-      // Restar los tubos del turno actual (ya están en horasGuardadas)
       var tubosEsteTurno = Object.values(horasGuardadas).reduce((s,h)=>s+(h.nroTubos||0),0);
       _tubosAcumuladosOrden = Math.max(0, (r.totalTubos||0) - tubosEsteTurno);
+      console.log('acumulado:', _tubosAcumuladosOrden, 'esteTurno:', tubosEsteTurno, 'total:', r.totalTubos);
       actualizarContador();
     }
-  }catch(e){}
+  }catch(e){console.error('cargarAcumuladoOrden error:',e);}
 }
 
 function actualizarContador(){
