@@ -1775,36 +1775,45 @@ async function retomarTurno(){
 
     // Iniciar registro SIN llamar selHora (para no limpiar el form)
     if(esCorrugada){
-      document.getElementById('corr-linea-nombre').textContent = turnoActual.lineaNombre;
+      var elCLN=document.getElementById('corr-linea-nombre'); if(elCLN) elCLN.textContent=turnoActual.lineaNombre;
       renderInfo('reg-info-corr');
       renderTabs('horas-tabs-corr', true);
       renderPesaje('pesaje-tbody-corr', 3);
       restorePesajeInputs();
+      _acumuladoToken++;
+      _tubosAcumuladosOrden=0;
       actualizarContadorCorr();
       limpiarEspesoresCorr();
       irA('registro-corr','Registro Corrugada — '+turnoActual.lineaNombre,'Turno '+turnoActual.turno+' · '+turnoActual.fecha);
-      document.getElementById('corr-hora-num').textContent = horaActual;
-      document.getElementById('corr-btn-hora').textContent = horaActual;
+      var elCH=document.getElementById('corr-hora-num'); if(elCH) elCH.textContent=horaActual;
+      var elCBH=document.getElementById('corr-btn-hora'); if(elCBH) elCBH.textContent=horaActual;
+      var elCH2=document.getElementById('corr-hora-num2'); if(elCH2) elCH2.textContent=horaActual;
+      cargarAcumuladoOrden();
     } else if(esCoextrusor){
       renderInfo('reg-info-coext');
       renderTabs('horas-tabs-coext', false, 'coext');
       renderPesaje('pesaje-tbody-coext', 6);
+      restorePesajeInputs();
+      _acumuladoToken++;
+      _tubosAcumuladosOrden=0;
       actualizarContadorCoext();
       irA('registro-coext','Línea 10 Coextrusor','Turno '+turnoActual.turno+' · '+turnoActual.fecha);
-      document.getElementById('coext-hora-num').textContent = horaActual;
-      document.getElementById('coext-btn-hora').textContent = horaActual;
+      var elXH=document.getElementById('coext-hora-num'); if(elXH) elXH.textContent=horaActual;
+      var elXBH=document.getElementById('coext-btn-hora'); if(elXBH) elXBH.textContent=horaActual;
+      cargarAcumuladoOrden();
     } else {
       renderInfo('reg-info');
       renderTabs('horas-tabs', false);
       renderPesaje('pesaje-tbody', 6);
       restorePesajeInputs();
+      _acumuladoToken++;
+      _tubosAcumuladosOrden=0;
       actualizarContador();
       irA('registro','Registro — '+turnoActual.lineaNombre,'Turno '+turnoActual.turno+' · '+turnoActual.fecha);
       var elRH=document.getElementById('reg-hora-num'); if(elRH) elRH.textContent=horaActual;
       var elTH=document.getElementById('tend-hora-num'); if(elTH) elTH.textContent=horaActual;
       var elBH=document.getElementById('btn-hora-num'); if(elBH) elBH.textContent=horaActual;
-      _acumuladoToken++;
-      _tubosAcumuladosOrden=0;
+      var elRH2=document.getElementById('reg-hora-num2'); if(elRH2) elRH2.textContent=horaActual;
       cargarAcumuladoOrden();
     }
 
