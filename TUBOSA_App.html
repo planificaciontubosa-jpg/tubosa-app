@@ -1504,12 +1504,19 @@ function filtrarOrdenesInforme(){
   var lineaId=document.getElementById('inf-linea').value;
   var ordenes=window._todasOrdenes||maestroOrdenes;
   var filtradas=lineaId?ordenes.filter(function(o){
-    return !o.Linea||String(o.Linea).trim()===String(lineaId);
+    if(!o.Linea||String(o.Linea).trim()==='') return true;
+    var l=String(o.Linea).trim();
+    // Comparar con ID numérico, nombre LIN07, o nombre "Línea 07"
+    return l===String(lineaId) ||
+           l.toLowerCase()==='lin'+String(lineaId).padStart(2,'0') ||
+           l.toLowerCase()==='línea '+String(lineaId).padStart(2,'0');
   }):ordenes;
   document.getElementById('ordenes-list-inf').innerHTML=filtradas.map(function(o){
     return '<option value="'+String(o.OrdenFab).trim()+'">'+o.OrdenFab+' — '+(o.Producto||'')+(o.Estado==='Cerrada'?' [Cerrada]':'')+'</option>';
   }).join('');
   document.getElementById('inf-orden').value='';
+  // Si no hay órdenes filtradas mostrar aviso
+  if(!filtradas.length) notify('No hay órdenes asignadas a esta línea','info',3000);
 }
 
 // Sincronizar datalist acampanado con maestro órdenes
