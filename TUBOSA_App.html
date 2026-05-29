@@ -1635,6 +1635,7 @@ async function selLinea(l){
   } else {
     turnoActual={};
     _tubosAcumuladosOrden=0;
+    _acumuladoToken++; // Cancelar cualquier llamada pendiente
     document.getElementById('cab-linea-nombre').textContent=l.NombreLinea;
     setVal('cab-linea',l.NombreLinea);
     setVal('cab-fecha',fmtFecha());
@@ -2206,10 +2207,14 @@ async function guardarPosicionPesajeCorr(pos){
 // Contador unidades
 var _tubosAcumuladosOrden = 0; // Total de turnos anteriores de la misma orden
 
+var _acumuladoToken = 0; // Token para cancelar llamadas anteriores
+
 async function cargarAcumuladoOrden(){
   if(!turnoActual.ordenFab) return;
+  var miToken = ++_acumuladoToken; // Capturar token actual
   try{
     var r = await api({action:'getTotalProducido', ordenFab:turnoActual.ordenFab});
+    if(miToken !== _acumuladoToken) return; // Respuesta obsoleta, ignorar
     console.log('getTotalProducido:', turnoActual.ordenFab, r);
     if(r.ok){
       var tubosEsteTurno = Object.values(horasGuardadas).reduce((s,h)=>s+(h.nroTubos||0),0);
