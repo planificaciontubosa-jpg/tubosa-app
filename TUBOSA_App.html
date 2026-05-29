@@ -2669,6 +2669,100 @@ function generarPDF(){
 
 
 
+// ── REGENERAR PDF DE TURNO CERRADO ────────────────────────────
+async function regenerarPDFTurno(turnoId, lineaNombre, turno, fecha, operario){
+  loader(true,'Cargando datos del turno...');
+  try{
+    // Cargar horas y pesajes del turno
+    const [resH, resP, resT] = await Promise.all([
+      api({action:'getHoras', turnoId:turnoId}),
+      api({action:'getPesaje', turnoId:turnoId}),
+      api({action:'getTurno',  turnoId:turnoId})
+    ]);
+    loader(false);
+
+    if(!resH.ok){notify('Error cargando horas','err');return;}
+
+    // Reconstruir horasGuardadas temporalmente
+    var horasTemp={};
+    (resH.data||[]).forEach(function(h){
+      var hora=parseInt(h.Hora);
+      horasTemp[hora]={
+        hora:hora, horaId:h.HoraID,
+        codigoMezcla:h.CodigoMezcla||'', mezcla:h.Mezcla||'',
+        consecutivoOperario:h.ConsecutivoMezcla||'',
+        cantidadKgMezcla:parseFloat(h.CantidadKgMezcla)||0,
+        devolucionKg:parseFloat(h.DevolucionKg)||0,
+        motivoDevolucion:h.MotivoDevolucion||'',
+        nroTubos:parseInt(h.NroTubos)||0,
+        pesoTotal:parseFloat(h.PesoTotal_kg)||0,
+        reprocesoKg:parseFloat(h.Reproceso_kg)||0,
+        motivoReproceso:h.MotivoReproceso||'',
+        rotuladoOk:h.RotuladoOk==='Sí',
+        pesoPromedio:parseFloat(h.PesoPromedio)||0,
+        sobrePeso:h.SobrePeso||'',
+        longitud:parseFloat(h.Longitud)||0,
+        observaciones:h.Observaciones||'',
+        espL1:h.EspesorL1||'', descL1:h.DescalibreL1||'',
+        diamL1:h.DiamExtL1||'', ovalL1:h.OvalizacionL1||'',
+        espL2:h.EspesorL2||'', descL2:h.DescalibreL2||'',
+        diamL2:h.DiamExtL2||'', ovalL2:h.OvalizacionL2||''
+      };
+    });
+
+    // Reconstruir pesajesGuardados temporalmente
+    var pesajesTemp={};
+    (resP.data||[]).forEach(function(p){
+      var pos=parseInt(p.Posicion)||parseInt(p.posicion);
+      if(pos) pesajesTemp[pos]={
+        pesoKg:parseFloat(p.Peso_kg)||0,
+        cargaLinea:parseFloat(p.CargaLinea)||0,
+        obs:p.Observaciones||''
+      };
+    });
+
+    // Datos del turno desde getTurno o usar los parámetros
+    var tData = resT.ok && resT.data ? resT.data : {};
+
+    // Guardar estado actual y sustituir temporalmente
+    var horasOrig=horasGuardadas, pesajesOrig=pesajesGuardados, turnoOrig=turnoActual;
+    horasGuardadas=horasTemp;
+    pesajesGuardados=pesajesTemp;
+    turnoActual={
+      id:turnoId,
+      lineaNombre:lineaNombre,
+      turno:turno,
+      fecha:fecha,
+      operario:operario,
+      coordinador:tData.Coordinador||'',
+      supervisor:tData.Supervisor||'',
+      ordenFab:tData.OrdenFab||'',
+      codigoSAP:tData.CodigoSAP||'',
+      producto:tData.Producto||'',
+      espesorMin:tData.EspesorMin||'',
+      diametro:tData.Diametro||'',
+      pesoEstandar:parseFloat(tData.PesoEstandar)||0,
+      cantidadOrden:parseInt(tData.CantidadOrden)||0,
+      rotulado:tData.Rotulado||'',
+      cargaEstandar:tData.CargaEstandar||''
+    };
+
+    // Determinar si es corrugada para el PDF
+    var esCorrugadaOrig=esCorrugada;
+    esCorrugada=[17,19,20].includes(parseInt(tData.Linea||''));
+
+    // Generar PDF
+    generarPDF();
+
+    // Restaurar estado original
+    horasGuardadas=horasOrig;
+    pesajesGuardados=pesajesOrig;
+    turnoActual=turnoOrig;
+    esCorrugada=esCorrugadaOrig;
+
+  }catch(e){loader(false);notify('Error: '+e.message,'err');}
+}
+
 // ── ADMIN ─────────────────────────────────────────────────────
 function adminTab(tab,el){
   ['usuarios','ordenes','mezclas','lineas'].forEach(t=>document.getElementById('tab-'+t).style.display=t===tab?'block':'none');
@@ -2888,15 +2982,16 @@ function renderInforme(d){
       <td>${m.usos}</td></tr>`;}).join('')}</tbody>`;
 
   document.getElementById('inf-tabla-turnos').innerHTML=`
-    <thead><tr><th>Fecha</th><th>Turno</th><th>Línea</th><th>Operario</th><th>Hrs</th><th>Kg Mezcla</th><th>Tubos</th><th>Kg Tubos</th><th>Reproceso</th><th>Estado</th></tr></thead>
+    <thead><tr><th>Fecha</th><th>Turno</th><th>Línea</th><th>Operario</th><th>Hrs</th><th>Kg Mezcla</th><th>Tubos</th><th>Kg Tubos</th><th>Reproceso</th><th>Estado</th><th>PDF</th></tr></thead>
     <tbody>${d.turnos.map(t=>`<tr>
       <td>${t.fecha}</td><td><strong>${t.turno}</strong></td><td>${t.linea}</td><td>${t.operario||'-'}</td>
       <td>${t.horas}/8</td><td>${t.kgMezcla.toFixed(1)}</td><td>${t.tubos}</td>
       <td>${t.pesoTubos.toFixed(1)}</td><td>${t.reproceso.toFixed(1)}</td>
       <td><span class="badge" style="background:${t.estado==='Cerrado'?'var(--vd2)':'var(--nr2)'};color:${t.estado==='Cerrado'?'var(--vd)':'var(--nr)'}">${t.estado}</span></td>
+      <td><button class="btn btn-sm" style="background:var(--az);color:#fff;padding:4px 8px;font-size:11px" onclick="regenerarPDFTurno('${t.turnoId}','${t.linea}','${t.turno}','${t.fecha}','${t.operario||''}')">📄</button></td>
     </tr>`).join('')}
     <tr class="tot"><td colspan="5">TOTALES</td>
-      <td>${r.totalKgMezcla}</td><td>${r.totalTubos}</td><td>${r.totalPesoTubos}</td><td>${r.totalReproceso}</td><td></td>
+      <td>${r.totalKgMezcla}</td><td>${r.totalTubos}</td><td>${r.totalPesoTubos}</td><td>${r.totalReproceso}</td><td></td><td></td>
     </tr></tbody>`;
 
   // ── OEE ──
