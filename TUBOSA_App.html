@@ -1475,9 +1475,11 @@ async function cargarMaestros(){
     if(ro.ok && ro.data.length){
       window._todasOrdenes = ro.data;
       maestroOrdenes=ro.data.filter(function(o){return !o.Estado||o.Estado!=='Cerrada';});
-      var opts=maestroOrdenes.map(function(o){return '<option value="'+String(o.OrdenFab).trim()+'">'+o.OrdenFab+' — '+(o.Producto||'')+'</option>';}).join('');
-      document.getElementById('ordenes-list').innerHTML=opts;
-      document.getElementById('ordenes-list-inf').innerHTML=opts;
+      // ordenes-list se actualiza al seleccionar línea en filtrarOrdenesLinea()
+      // inf: todas las activas por defecto
+      document.getElementById('ordenes-list-inf').innerHTML=maestroOrdenes.map(function(o){
+        return '<option value="'+String(o.OrdenFab).trim()+'">'+o.OrdenFab+' — '+(o.Producto||'')+'</option>';
+      }).join('');
     }
     if(rm.ok && rm.data.length){
       maestroMezclas=rm.data.filter(function(m){return !m.Activa||m.Activa!=='No';});
@@ -1498,6 +1500,22 @@ async function cargarMaestros(){
       }
     }
   }catch(e){console.error('Error cargando maestros:',e);}
+}
+
+function filtrarOrdenesCabecera(linea){
+  // Mostrar solo órdenes activas de esa línea (o sin línea asignada)
+  var filtradas=maestroOrdenes.filter(function(o){
+    if(!o.Linea||String(o.Linea).trim()==='') return true;
+    var l=String(o.Linea).trim();
+    var lid=String(linea.ID||'').trim();
+    var lnombre=String(linea.NombreLinea||'').trim().toLowerCase();
+    return l===lid || l.toLowerCase()===lnombre ||
+           l.toLowerCase()==='lin'+lid.padStart(2,'0') ||
+           l.toLowerCase()==='línea '+lid.padStart(2,'0');
+  });
+  document.getElementById('ordenes-list').innerHTML=filtradas.map(function(o){
+    return '<option value="'+String(o.OrdenFab).trim()+'">'+o.OrdenFab+' — '+(o.Producto||'')+'</option>';
+  }).join('');
 }
 
 function filtrarOrdenesInforme(){
@@ -1607,7 +1625,7 @@ async function cargarLineas(){
 // Variable global para turnos activos por línea
 let turnosActivosMap = {};
 
-function selLinea(l){
+async function selLinea(l){
   lineaActual=l;
   esCorrugada=l.Tipo==='Corrugada'||LINEAS_CORRUGADAS.includes(parseInt(l.ID));
   esCoextrusor=parseInt(l.ID)===LINEA_COEXTRUSOR;
@@ -1633,7 +1651,8 @@ function selLinea(l){
     setVal('cab-cargaEstandar','');
     setVal('cab-lineaOrden','');
     setVal('cab-rotulado','');
-    cargarMaestros();
+    await cargarMaestros();
+    filtrarOrdenesCabecera(l);
     irA('cabecera','Nueva Cabecera',l.NombreLinea);
   }
 }
