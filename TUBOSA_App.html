@@ -2406,12 +2406,11 @@ async function guardarTendCorr(){
 
 function actualizarContadorCorr(){
   const cantOrden=turnoActual.cantidadOrden||0;
-  const idSuf='-corr';
   if(!cantOrden){document.getElementById('reg-contador-corr').style.display='none';return;}
   document.getElementById('reg-contador-corr').style.display='flex';
   const tubosEn=parseInt(val('corr-nroTubos'))||0;
-  const tubosGuard=Object.values(horasGuardadas).reduce((s,h)=>s+(h.nroTubos||0),0);
-  const total=tubosGuard+tubosEn;
+  const tubosEsteTurno=Object.values(horasGuardadas).reduce((s,h)=>s+(h.nroTubos||0),0);
+  const total=_tubosAcumuladosOrden+tubosEsteTurno+tubosEn;
   const pend=Math.max(0,cantOrden-total);
   const pct=Math.min(100,(total/cantOrden*100)).toFixed(0);
   document.getElementById('cnt-orden-corr').textContent=cantOrden.toLocaleString();
@@ -3416,8 +3415,8 @@ function actualizarContadorCoext(){
   if(!cantOrden){ document.getElementById('reg-contador-coext').style.display='none'; return; }
   document.getElementById('reg-contador-coext').style.display='flex';
   var tubosEn = parseInt(val('coext-nroTubos'))||0;
-  var tubosGuard = Object.values(horasGuardadas).reduce(function(s,h){ return s+(h.nroTubos||0); }, 0);
-  var total = tubosGuard + tubosEn;
+  var tubosEsteTurno = Object.values(horasGuardadas).reduce(function(s,h){ return s+(h.nroTubos||0); }, 0);
+  var total = _tubosAcumuladosOrden + tubosEsteTurno + tubosEn;
   var pend = Math.max(0, cantOrden - total);
   var pct = Math.min(100, (total/cantOrden*100)).toFixed(0);
   document.getElementById('cnt-orden-coext').textContent = cantOrden.toLocaleString();
