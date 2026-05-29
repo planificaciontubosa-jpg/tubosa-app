@@ -2438,130 +2438,236 @@ function generarPDF(){
   const doc=new jsPDF({orientation:'portrait',unit:'mm',format:'a4'});
   const AZ=[31,56,100],VD=[30,107,60],NR=[197,90,17],PU=[83,58,183];
   const ml=10,t=turnoActual;
-  const horas=Object.values(horasGuardadas);
+  const horas=Object.values(horasGuardadas).sort(function(a,b){return a.hora-b.hora;});
 
-  // ── ENCABEZADO ──
-  doc.setFillColor(...AZ);doc.rect(0,0,210,28,'F');
+  function addFooter(){
+    var pages=doc.getNumberOfPages();
+    for(var i=1;i<=pages;i++){
+      doc.setPage(i);
+      doc.setDrawColor(AZ[0],AZ[1],AZ[2]);doc.setLineWidth(0.4);doc.line(ml,287,200,287);
+      doc.setTextColor(150,150,150);doc.setFontSize(7.5);doc.setFont('helvetica','normal');
+      doc.text('TUBOSA S.A. · Turno '+t.turno+' · '+t.lineaNombre+' · '+t.fecha,ml,291);
+      doc.text('Página '+i+' de '+pages,200,291,{align:'right'});
+    }
+  }
+
+  // ENCABEZADO
+  doc.setFillColor(AZ[0],AZ[1],AZ[2]);doc.rect(0,0,210,28,'F');
   doc.setTextColor(255,255,255);doc.setFontSize(16);doc.setFont('helvetica','bold');
   doc.text('TUBOSA S.A.',ml,11);
   doc.setFontSize(10);doc.setFont('helvetica','normal');
   doc.text('Control de Líneas de Producción — Informe de Turno',ml,18);
   doc.setFontSize(9);doc.text('Generado: '+fmtFecha()+' '+new Date().toLocaleTimeString('es-CO',{hour:'2-digit',minute:'2-digit'}),200,24,{align:'right'});
 
-  // ── DATOS DEL TURNO ──
-  let y=34;
-  doc.setTextColor(...AZ);doc.setFontSize(11);doc.setFont('helvetica','bold');
+  // DATOS DEL TURNO
+  var y=34;
+  doc.setTextColor(AZ[0],AZ[1],AZ[2]);doc.setFontSize(10);doc.setFont('helvetica','bold');
   doc.text('DATOS DEL TURNO',ml,y);y+=4;
   doc.autoTable({startY:y,margin:{left:ml,right:ml},
     body:[
       ['Línea',t.lineaNombre,'Turno',t.turno],
-      ['Fecha',t.fecha,'Orden Fabricación',t.ordenFab],
+      ['Fecha',t.fecha,'Orden Fab.',t.ordenFab],
       ['Operario',t.operario||'-','Código SAP',t.codigoSAP||'-'],
       ['Coordinador',t.coordinador||'-','Producto',t.producto||'-'],
       ['Supervisor',t.supervisor||'-','Espesor Mín.',(t.espesorMin||'-')+' mm'],
       ['Rotulado',t.rotulado||'-','Diámetro',(t.diametro||'-')+' mm'],
       ['Cant. Orden',(t.cantidadOrden||0)+' und','Peso Estándar',(t.pesoEstandar||'-')+' kg/m'],
-      ['Carga Estándar Output',(t.cargaEstandar||'-'),'Horas Registradas',horas.length+'/8'],
+      ['Carga Estándar Output',(t.cargaEstandar||'-')+' kg/h','Horas Registradas',horas.length+'/8'],
     ],
-    theme:'grid',styles:{fontSize:9,cellPadding:2.5},
-    columnStyles:{0:{fontStyle:'bold',fillColor:[214,228,247],cellWidth:38},1:{cellWidth:52},2:{fontStyle:'bold',fillColor:[214,228,247],cellWidth:38},3:{cellWidth:62}}});
-  y=doc.lastAutoTable.finalY+6;
+    theme:'grid',styles:{fontSize:8.5,cellPadding:2},
+    columnStyles:{0:{fontStyle:'bold',fillColor:[214,228,247],cellWidth:36},1:{cellWidth:54},2:{fontStyle:'bold',fillColor:[214,228,247],cellWidth:36},3:{cellWidth:64}}});
+  y=doc.lastAutoTable.finalY+5;
 
-  // ── BALANCE DE UNIDADES ──
-  const totalTubos=horas.reduce((s,h)=>s+(h.nroTubos||0),0);
-  const pendientes=t.cantidadOrden>0?Math.max(0,t.cantidadOrden-totalTubos):0;
-  const pctAvance=t.cantidadOrden>0?(totalTubos/t.cantidadOrden*100).toFixed(1):0;
-  doc.setTextColor(...VD);doc.setFontSize(11);doc.setFont('helvetica','bold');
+  // BALANCE DE UNIDADES
+  var totalTubos=horas.reduce(function(s,h){return s+(h.nroTubos||0);},0);
+  var pendientes=t.cantidadOrden>0?Math.max(0,t.cantidadOrden-totalTubos):0;
+  var pctAvance=t.cantidadOrden>0?(totalTubos/t.cantidadOrden*100).toFixed(1):0;
+  doc.setTextColor(VD[0],VD[1],VD[2]);doc.setFontSize(10);doc.setFont('helvetica','bold');
   doc.text('BALANCE DE UNIDADES',ml,y);y+=4;
   doc.autoTable({startY:y,margin:{left:ml,right:ml},
     body:[
       ['Unidades Programadas',(t.cantidadOrden||0)+' und','Avance',pctAvance+'%'],
       ['Unidades Producidas (turno)',totalTubos+' und','Pendientes',pendientes+' und'],
     ],
-    theme:'grid',styles:{fontSize:9,cellPadding:2.5},
+    theme:'grid',styles:{fontSize:8.5,cellPadding:2},
     columnStyles:{0:{fontStyle:'bold',fillColor:[214,240,224],cellWidth:60},1:{cellWidth:30},2:{fontStyle:'bold',fillColor:[214,240,224],cellWidth:40},3:{cellWidth:60}}});
-  y=doc.lastAutoTable.finalY+6;
+  y=doc.lastAutoTable.finalY+5;
 
-  // ── REGISTRO HORA A HORA ──
-  if(y>220){doc.addPage();y=15;}
-  doc.setTextColor(...AZ);doc.setFontSize(11);doc.setFont('helvetica','bold');
+  // REGISTRO HORA A HORA
+  if(y>200){doc.addPage();y=15;}
+  doc.setTextColor(AZ[0],AZ[1],AZ[2]);doc.setFontSize(10);doc.setFont('helvetica','bold');
   doc.text('REGISTRO HORA A HORA',ml,y);y+=4;
-  doc.autoTable({startY:y,margin:{left:ml,right:ml},
-    head:[['Hora','Cód.Mezcla','Consec.','Kg Mezcla','Tubos','Peso Total kg','Peso Prom.','Sobre Peso%','Longitud','Reproceso','Rotulado']],
-    body:[...horas.map(h=>['H'+h.hora,h.codigoMezcla||'-',h.consecutivoOperario||'-',
-      (h.cantidadKgMezcla||0).toFixed(1),h.nroTubos||0,
-      (h.pesoTotal||0).toFixed(1),(h.pesoPromedio||0).toFixed(3),
-      (h.sobrePeso||0).toFixed(2)+'%',(h.longitud||0).toFixed(1),
-      (h.reprocesoKg||0).toFixed(1),h.rotuladoOk?'✓':'—']),
-      ['TOTAL','','',
-        horas.reduce((s,h)=>s+(h.cantidadKgMezcla||0),0).toFixed(1),
-        horas.reduce((s,h)=>s+(h.nroTubos||0),0),
-        horas.reduce((s,h)=>s+(h.pesoTotal||0),0).toFixed(1),
-        '—','—','—',
-        horas.reduce((s,h)=>s+(h.reprocesoKg||0),0).toFixed(1),'']],
-    theme:'striped',styles:{fontSize:7,cellPadding:1.5},
-    headStyles:{fillColor:AZ,textColor:255,fontStyle:'bold',fontSize:7},
-    didParseCell:(d)=>{if(d.row.index===horas.length){d.cell.styles.fontStyle='bold';d.cell.styles.fillColor=[214,228,247];}}});
-  y=doc.lastAutoTable.finalY+6;
 
-  // ── PESAJE Y RENDIMIENTO ──
-  const pesajesArr=Object.values(pesajesGuardados);
+  var totKgMezcla=horas.reduce(function(s,h){return s+(parseFloat(h.cantidadKgMezcla)||0);},0);
+  var totDev=horas.reduce(function(s,h){return s+(parseFloat(h.devolucionKg)||0);},0);
+  var totRealMezcla=totKgMezcla-totDev;
+  var totTubos=horas.reduce(function(s,h){return s+(parseInt(h.nroTubos)||0);},0);
+  var totPesoTubos=horas.reduce(function(s,h){return s+(parseFloat(h.pesoTotal)||0);},0);
+  var totReproceso=horas.reduce(function(s,h){return s+(parseFloat(h.reprocesoKg)||0);},0);
+  var horasCon=horas.filter(function(h){return h.pesoPromedio>0;});
+  var promPesoProm=horasCon.length?(horasCon.reduce(function(s,h){return s+(parseFloat(h.pesoPromedio)||0);},0)/horasCon.length).toFixed(3):'—';
+  var horasSP=horas.filter(function(h){return h.sobrePeso!==''&&parseFloat(h.sobrePeso)!==0;});
+  var promSP=horasSP.length?(horasSP.reduce(function(s,h){return s+(parseFloat(h.sobrePeso)||0);},0)/horasSP.length).toFixed(2):'—';
+  var horasLon=horas.filter(function(h){return parseFloat(h.longitud)>0;});
+  var promLon=horasLon.length?(horasLon.reduce(function(s,h){return s+(parseFloat(h.longitud)||0);},0)/horasLon.length).toFixed(1):'—';
+
+  doc.autoTable({startY:y,margin:{left:ml,right:ml},
+    head:[['H','Cód.Mezcla','Consec.','Kg Mezcla','Dev.kg','Tubos','Peso kg','P.Prom.','SP%','Long.','Repro.','Rot.']],
+    body:horas.map(function(h){return ['H'+h.hora,
+      h.codigoMezcla||'-', h.consecutivoOperario||'-',
+      (h.cantidadKgMezcla||0).toFixed(1),
+      (parseFloat(h.devolucionKg)||0)>0?(parseFloat(h.devolucionKg)).toFixed(1):'—',
+      h.nroTubos||0,
+      (h.pesoTotal||0).toFixed(1),
+      (parseFloat(h.pesoPromedio)||0)>0?(parseFloat(h.pesoPromedio)).toFixed(3):'—',
+      h.sobrePeso!==''&&parseFloat(h.sobrePeso)!==0?(parseFloat(h.sobrePeso)).toFixed(2)+'%':'—',
+      (parseFloat(h.longitud)||0)>0?(parseFloat(h.longitud)).toFixed(1):'—',
+      (parseFloat(h.reprocesoKg)||0)>0?(parseFloat(h.reprocesoKg)).toFixed(1):'—',
+      h.rotuladoOk?'✓':'—'
+    ];}).concat([
+      ['TOT','','',totKgMezcla.toFixed(1),totDev>0?totDev.toFixed(1):'—',totTubos,totPesoTubos.toFixed(1),promPesoProm,promSP!='—'?promSP+'%':'—',promLon,totReproceso>0?totReproceso.toFixed(1):'—',''],
+      ['','Total Real Mezcla →',totRealMezcla.toFixed(1)+' kg','','','','','Prom.','Prom.','Prom.','',''],
+    ]),
+    theme:'striped',styles:{fontSize:6.5,cellPadding:1.2},
+    headStyles:{fillColor:AZ,textColor:255,fontStyle:'bold',fontSize:6.5},
+    didParseCell:function(data){
+      var n=horas.length;
+      if(data.row.index===n||data.row.index===n+1){
+        data.cell.styles.fontStyle='bold';
+        data.cell.styles.fillColor=data.row.index===n?[214,228,247]:[230,240,255];
+        data.cell.styles.fontSize=7;
+      }
+    }});
+  y=doc.lastAutoTable.finalY+5;
+
+  // PESAJE Y CARGA DE LÍNEA
+  var pesajesArr=Object.entries(pesajesGuardados);
   if(pesajesArr.length>0){
     if(y>240){doc.addPage();y=15;}
-    doc.setTextColor(...NR);doc.setFontSize(11);doc.setFont('helvetica','bold');
+    doc.setTextColor(NR[0],NR[1],NR[2]);doc.setFontSize(10);doc.setFont('helvetica','bold');
     doc.text('PESAJE Y CARGA DE LÍNEA',ml,y);y+=4;
+    var promPeso=(pesajesArr.reduce(function(s,e){return s+(parseFloat(e[1].pesoKg)||0);},0)/pesajesArr.length).toFixed(3);
+    var promCarga=(pesajesArr.reduce(function(s,e){return s+(parseFloat(e[1].cargaLinea)||0);},0)/pesajesArr.length).toFixed(1);
     doc.autoTable({startY:y,margin:{left:ml,right:ml},
-      head:[['Posición','Peso (kg)','Carga de Línea','Observación']],
-      body:Object.entries(pesajesGuardados).map(([pos,p])=>[
-        'Posición '+pos,(p.pesoKg||0).toFixed(3),(p.cargaLinea||0),p.obs||'-'
+      head:[['Posición','Peso (kg)','Carga Línea (kg/h)','Observación']],
+      body:pesajesArr.map(function(e){return ['Posición '+e[0],(parseFloat(e[1].pesoKg)||0).toFixed(3),(parseFloat(e[1].cargaLinea)||0)||'—',e[1].obs||'-'];}).concat([
+        ['PROMEDIOS',promPeso,promCarga,'']
       ]),
-      theme:'grid',styles:{fontSize:9,cellPadding:2},
-      headStyles:{fillColor:NR,textColor:255,fontStyle:'bold'}});
-    y=doc.lastAutoTable.finalY+6;
+      theme:'grid',styles:{fontSize:8.5,cellPadding:2},
+      headStyles:{fillColor:NR,textColor:255,fontStyle:'bold'},
+      didParseCell:function(data){
+        if(data.row.index===pesajesArr.length){
+          data.cell.styles.fontStyle='bold';
+          data.cell.styles.fillColor=[252,228,214];
+        }
+      }});
+    y=doc.lastAutoTable.finalY+5;
   }
 
-  // ── TENDENCIAS (tabla) ──
-  const horaCon=horas.filter(h=>h.espL1||h.espL2);
-  if(horaCon.length>0){
-    if(y>220){doc.addPage();y=15;}
-    doc.setTextColor(...PU);doc.setFontSize(11);doc.setFont('helvetica','bold');
-    doc.text('TENDENCIAS',ml,y);y+=4;
-    doc.autoTable({startY:y,margin:{left:ml,right:ml},
-      head:[['Hora','Esp.L1(mm)','Desc.L1(%)','Diám.L1(mm)','Oval.L1','Esp.L2(mm)','Desc.L2(%)','Diám.L2(mm)','Oval.L2']],
-      body:horaCon.map(h=>['H'+h.hora,h.espL1||'-',h.descL1||'-',h.diamL1||'-',h.ovalL1||'-',h.espL2||'-',h.descL2||'-',h.diamL2||'-',h.ovalL2||'-']),
-      theme:'striped',styles:{fontSize:8,cellPadding:2},
-      headStyles:{fillColor:PU,textColor:255,fontStyle:'bold',fontSize:7}});
-    y=doc.lastAutoTable.finalY+6;
+  // TENDENCIAS HORA A HORA (líneas normales)
+  if(!esCorrugada){
+    var horasTend=horas.filter(function(h){return h.espL1||h.espL2||h.descL1||h.descL2;});
+    if(horasTend.length>0){
+      if(y>210){doc.addPage();y=15;}
+      doc.setTextColor(PU[0],PU[1],PU[2]);doc.setFontSize(10);doc.setFont('helvetica','bold');
+      doc.text('TENDENCIAS HORA A HORA',ml,y);y+=4;
+      doc.autoTable({startY:y,margin:{left:ml,right:ml},
+        head:[['Hora','Esp.L1','Desc.L1%','Diám.L1','Oval.L1','Esp.L2','Desc.L2%','Diám.L2','Oval.L2']],
+        body:horasTend.map(function(h){return ['H'+h.hora,h.espL1||'—',h.descL1||'—',h.diamL1||'—',h.ovalL1||'—',h.espL2||'—',h.descL2||'—',h.diamL2||'—',h.ovalL2||'—'];}),
+        theme:'striped',styles:{fontSize:8,cellPadding:2},
+        headStyles:{fillColor:PU,textColor:255,fontStyle:'bold',fontSize:7.5}});
+      y=doc.lastAutoTable.finalY+5;
+    }
   }
 
-  // ── OBSERVACIONES ──
-  const obsHoras=horas.filter(h=>h.observaciones);
+  // MEDICIÓN ESPESORES CORRUGADA (diagrama visual)
+  if(esCorrugada){
+    var tArr=flt('tc-arr-ext'),tAri=flt('tc-arr-int'),tArV=flt('tc-arr-val');
+    var tAbE=flt('tc-aba-ext'),tAbI=flt('tc-aba-int'),tAbV=flt('tc-aba-val');
+    var tIzE=flt('tc-izq-ext'),tIzI=flt('tc-izq-int'),tIzV=flt('tc-izq-val');
+    var tDeE=flt('tc-der-ext'),tDeI=flt('tc-der-int'),tDeV=flt('tc-der-val');
+    var pExtEl=document.getElementById('prom-ext');
+    var pIntEl=document.getElementById('prom-int');
+    var pValEl=document.getElementById('prom-val');
+    var promE=pExtEl?parseFloat(pExtEl.textContent)||0:0;
+    var promI=pIntEl?parseFloat(pIntEl.textContent)||0:0;
+    var promV=pValEl?parseFloat(pValEl.textContent)||0:0;
+
+    if(tArr||tAbE||tIzE||tDeE){
+      if(y>180){doc.addPage();y=15;}
+      doc.setTextColor(PU[0],PU[1],PU[2]);doc.setFontSize(10);doc.setFont('helvetica','bold');
+      doc.text('MEDICIÓN DE ESPESORES — CORRUGADA',ml,y);y+=8;
+
+      var cx=105,cy=y+38,rT=14,bW=34,bH=22;
+
+      function drawPos(px,py,label,ext,int_,val_){
+        doc.setFillColor(248,248,248);doc.rect(px,py,bW,bH,'F');
+        doc.setDrawColor(150,150,180);doc.setLineWidth(0.3);doc.rect(px,py,bW,bH,'S');
+        doc.setFont('helvetica','bold');doc.setFontSize(7);doc.setTextColor(PU[0],PU[1],PU[2]);
+        doc.text(label,px+bW/2,py+5,{align:'center'});
+        var rows=[['EXTERNO',ext],['INTERNO',int_],['VALLE',val_]];
+        rows.forEach(function(r,i){
+          var ry=py+9+i*4;
+          doc.setFont('helvetica','bold');doc.setFontSize(6.5);doc.setTextColor(80,80,80);
+          doc.text(r[0]+':',px+2,ry);
+          doc.setFont('helvetica','normal');doc.setTextColor(0);
+          doc.text(r[1]>0?r[1].toFixed(2):'—',px+bW-2,ry,{align:'right'});
+        });
+      }
+
+      // 4 posiciones
+      drawPos(cx-bW/2, cy-rT*0.7-bH-3, 'ARRIBA', tArr,tAri,tArV);
+      drawPos(cx-bW/2, cy+rT*0.7+3, 'ABAJO', tAbE,tAbI,tAbV);
+      drawPos(cx-rT-bW-5, cy-bH/2, 'VACÍO', tIzE,tIzI,tIzV);
+      drawPos(cx+rT+5, cy-bH/2, 'OPERARIO', tDeE,tDeI,tDeV);
+
+      // Tubo central
+      doc.setDrawColor(0);doc.setLineWidth(1.8);doc.ellipse(cx,cy,rT,rT*0.65,'S');
+      doc.setFont('helvetica','bold');doc.setFontSize(8);doc.setTextColor(0);
+      doc.text('TUBO',cx,cy+1,{align:'center'});
+
+      // Conectores
+      doc.setDrawColor(120);doc.setLineWidth(0.5);
+      doc.line(cx,cy-rT*0.7,cx,cy-rT*0.7-3);
+      doc.line(cx,cy+rT*0.7,cx,cy+rT*0.7+3);
+      doc.line(cx-rT,cy,cx-rT-5,cy);
+      doc.line(cx+rT,cy,cx+rT+5,cy);
+
+      y=cy+rT*0.7+bH+10;
+
+      // Promedios
+      doc.setTextColor(PU[0],PU[1],PU[2]);doc.setFontSize(9);doc.setFont('helvetica','bold');
+      doc.text('Promedios de Espesor:',ml,y);y+=4;
+      doc.autoTable({startY:y,margin:{left:ml,right:ml},
+        head:[['ESPESOR DE PARED EXTERIOR PROMEDIO','ESPESOR DE PARED INTERNO PROMEDIO','ESPESOR DE PARED VALLE PROMEDIO']],
+        body:[[promE>0?promE.toFixed(2)+' mm':'—',promI>0?promI.toFixed(2)+' mm':'—',promV>0?promV.toFixed(2)+' mm':'—']],
+        theme:'grid',styles:{fontSize:9,cellPadding:3,halign:'center'},
+        headStyles:{fillColor:PU,textColor:255,fontStyle:'bold',fontSize:8,halign:'center'}});
+      y=doc.lastAutoTable.finalY+5;
+    }
+  }
+
+  // OBSERVACIONES
+  var obsHoras=horas.filter(function(h){return h.observaciones;});
   if(obsHoras.length){
     if(y>250){doc.addPage();y=15;}
-    doc.setTextColor(...PU);doc.setFontSize(11);doc.setFont('helvetica','bold');
+    doc.setTextColor(PU[0],PU[1],PU[2]);doc.setFontSize(10);doc.setFont('helvetica','bold');
     doc.text('OBSERVACIONES',ml,y);y+=4;
     doc.autoTable({startY:y,margin:{left:ml,right:ml},
       head:[['Hora','Observación']],
-      body:obsHoras.map(h=>['H'+h.hora,h.observaciones]),
+      body:obsHoras.map(function(h){return ['H'+h.hora,h.observaciones];}),
       theme:'grid',styles:{fontSize:8,cellPadding:2},
       headStyles:{fillColor:PU,textColor:255},
-      columnStyles:{0:{cellWidth:20}}});
+      columnStyles:{0:{cellWidth:18}}});
   }
 
-  // ── PIE DE PÁGINA ──
-  const pages=doc.getNumberOfPages();
-  for(let i=1;i<=pages;i++){
-    doc.setPage(i);
-    doc.setDrawColor(...AZ);doc.setLineWidth(0.5);doc.line(ml,287,200,287);
-    doc.setTextColor(150,150,150);doc.setFontSize(8);doc.setFont('helvetica','normal');
-    doc.text('TUBOSA S.A. · Turno '+t.turno+' · '+t.lineaNombre+' · '+t.fecha,ml,292);
-    doc.text('Página '+i+' de '+pages,200,292,{align:'right'});
-  }
-
+  addFooter();
   doc.save('TUBOSA_Turno'+t.turno+'_'+t.lineaNombre.replace(/\s/g,'')+'_'+t.fecha.replace(/\//g,'-')+'.pdf');
   notify('PDF descargado ✓','ok',5000);
-  setTimeout(()=>irA('lineas','Líneas de Producción',''),2000);
+  setTimeout(function(){irA('lineas','Líneas de Producción','');},2000);
 }
+
+
 
 // ── ADMIN ─────────────────────────────────────────────────────
 function adminTab(tab,el){
