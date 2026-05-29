@@ -243,7 +243,7 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:#EEF2F7;color:var(--
         <div class="fila fila-3">
           <div class="campo"><label>Nombre</label><input type="text" id="nu-nombre" placeholder="Nombre completo"></div>
           <div class="campo"><label>Rol</label>
-            <select id="nu-rol"><option value="operario">Operario</option><option value="coordinador">Coordinador</option><option value="supervisor">Supervisor</option><option value="jefe">Jefe</option><option value="marcadora">Marcadora</option><option value="admin">Administrador</option></select>
+            <select id="nu-rol"><option value="operario">Operario</option><option value="coordinador">Coordinador</option><option value="supervisor">Supervisor</option><option value="jefe">Jefe</option><option value="gerente">Gerente</option><option value="marcadora">Marcadora</option><option value="admin">Administrador</option></select>
           </div>
           <div class="campo"><label>PIN (4 dígitos)</label><input type="text" id="nu-pin" placeholder="XXXX" maxlength="4"></div>
         </div>
@@ -317,6 +317,7 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:#EEF2F7;color:var(--
       <button class="btn btn-gr btn-sm" onclick="cargarLineas()">🔄</button>
       <button class="btn btn-az btn-sm" id="btn-admin" onclick="irA('admin','Administración','Maestros y Usuarios')" style="display:none">⚙ Admin</button>
       <button class="btn btn-az btn-sm" onclick="irA('informes','Informes','Balance por Orden')">📊 Informes</button>
+      <button class="btn btn-sm" id="btn-dashboard" style="background:#1A237E;color:#fff;display:none" onclick="cargarDashboard()">📈 Dashboard</button>
       <button class="btn btn-sm" style="background:#25D366;color:#fff" onclick="abrirReporteWA()" id="btn-reporte-wa">💬 Reporte Turno</button>
     </div>
   </div>
@@ -940,12 +941,77 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:#EEF2F7;color:var(--
   </div></div>
 </div>
 
+<!-- DASHBOARD -->
+<div class="vista" id="v-dashboard">
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;flex-wrap:wrap;gap:8px">
+    <div>
+      <div style="font-size:18px;font-weight:700;color:#1A237E">📊 Dashboard de Planta</div>
+      <div class="ts" id="dash-fecha-lbl">Cargando...</div>
+    </div>
+    <button class="btn btn-gr btn-sm" onclick="cargarDashboard()">🔄 Actualizar</button>
+  </div>
+
+  <!-- BLOQUE 1: KPIs GENERALES -->
+  <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px;margin-bottom:14px" id="dash-kpis"></div>
+
+  <!-- BLOQUE 2: POR LÍNEA ACTIVA -->
+  <div class="card">
+    <div class="card-head" style="background:#1A237E;color:#fff">🏭 Líneas en Producción — Hoy</div>
+    <div class="card-body" style="padding:10px">
+      <div id="dash-lineas-empty" style="text-align:center;padding:20px;color:var(--gr3);display:none">No hay líneas activas en este momento</div>
+      <div style="overflow-x:auto">
+        <table class="rt" id="dash-tabla-lineas" style="font-size:12px">
+          <thead><tr>
+            <th>Línea</th><th>Referencia</th><th>Kg/h Real</th><th>Kg/h Std</th>
+            <th>OEE%</th><th>Scrap%</th><th>Und. Prod.</th><th>Und. Falt.</th>
+            <th>Kg Prod.</th><th>Kg Falt.</th><th>Estimado fin</th>
+          </tr></thead>
+          <tbody id="dash-tbody-lineas"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- BLOQUE 3: POR SUPERVISOR/TURNO -->
+  <div class="card">
+    <div class="card-head vd">👁 Por Supervisor / Turno — Hoy</div>
+    <div class="card-body" style="padding:10px">
+      <div style="overflow-x:auto">
+        <table class="rt" id="dash-tabla-sup" style="font-size:12px">
+          <thead><tr><th>Supervisor</th><th>Turno</th><th>Kg Producidos</th><th>Kg Scrap</th><th>% Scrap</th><th>Estado</th></tr></thead>
+          <tbody id="dash-tbody-sup"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- BLOQUE 4: TOP SCRAP POR LÍNEA (MES) -->
+  <div class="card">
+    <div class="card-head nr">♻ Top Scrap por Línea — Mes</div>
+    <div class="card-body" style="padding:10px">
+      <div style="overflow-x:auto">
+        <table class="rt" id="dash-tabla-scrap" style="font-size:12px">
+          <thead><tr><th>Línea</th><th>Kg Scrap Mes</th><th>Principal Motivo</th><th>Nivel</th></tr></thead>
+          <tbody id="dash-tbody-scrap"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
 <!-- INFORMES -->
 <div class="vista" id="v-informes">
   <div class="card"><div class="card-head az">📊 Balance por Orden de Fabricación</div><div class="card-body">
-    <div class="fila fila-2">
-      <div class="campo"><label>Orden de Fabricación</label>
-        <input type="text" id="inf-orden" placeholder="Escribe el número de orden..." list="ordenes-list-inf">
+    <div class="fila fila-3">
+      <div class="campo">
+        <label>1. Seleccionar Línea</label>
+        <select id="inf-linea" onchange="filtrarOrdenesInforme()">
+          <option value="">Todas las líneas</option>
+        </select>
+      </div>
+      <div class="campo">
+        <label>2. Orden de Fabricación</label>
+        <input type="text" id="inf-orden" placeholder="Escribe o selecciona..." list="ordenes-list-inf">
         <datalist id="ordenes-list-inf"></datalist>
       </div>
       <div style="display:flex;align-items:flex-end;padding-bottom:2px">
@@ -1281,7 +1347,7 @@ function irA(vista,titulo='',sub='') {
   document.getElementById('v-'+vista)?.classList.add('activa');
   document.getElementById('topbar-titulo').textContent=titulo||'TUBOSA';
   document.getElementById('topbar-sub').textContent=sub||'Control de Producción';
-  const noBack=['lineas','admin','informes'];
+  const noBack=['lineas','admin','informes','dashboard'];
   document.getElementById('btn-back').classList.toggle('show',!noBack.includes(vista));
 }
 function volverAtras(){
@@ -1338,13 +1404,16 @@ async function loginOk(){
       rolActual=res.rol; nombreActual=res.nombre||'';
       document.getElementById('v-login').style.display='none';
       document.getElementById('topbar').style.display='flex';
-      var badges={admin:'⚙ Admin',coordinador:'📋 Coordinador',supervisor:'👁 Supervisor',jefe:'🏭 Jefe',operario:'👷 Operario',marcadora:'🖊 Marcadora'};
+      var badges={admin:'⚙ Admin',coordinador:'📋 Coordinador',supervisor:'👁 Supervisor',jefe:'🏭 Jefe',gerente:'📈 Gerente',operario:'👷 Operario',marcadora:'🖊 Marcadora'};
       document.getElementById('rol-badge').textContent=badges[rolActual]||rolActual;
       document.getElementById('user-nombre').textContent=nombreActual;
       document.getElementById('btn-admin').style.display=rolActual==='admin'?'inline-flex':'none';
+      var btnDash=document.getElementById('btn-dashboard');
+      if(btnDash) btnDash.style.display=['coordinador','jefe','gerente'].includes(rolActual)?'inline-flex':'none';
       await cargarMaestros();
-      // Marcadora va directo a su pantalla
-      if(rolActual==='marcadora'){
+      if(rolActual==='gerente'){
+        await cargarDashboard();
+      } else if(rolActual==='marcadora'){
         await abrirMarcadora();
       } else {
         await cargarLineas();
@@ -1402,21 +1471,13 @@ async function desactivarUsuario(id,nombre){
 // ── MAESTROS ─────────────────────────────────────────────────
 async function cargarMaestros(){
   try{
-    const [ro,rm]=await Promise.all([api({action:'getOrdenes'}),api({action:'getMezclas'})]);
+    const [ro,rm,rl]=await Promise.all([api({action:'getOrdenes'}),api({action:'getMezclas'}),api({action:'getLineas'})]);
     if(ro.ok && ro.data.length){
-      window._todasOrdenes = ro.data; // Todas incluyendo cerradas (para acampanado)
+      window._todasOrdenes = ro.data;
       maestroOrdenes=ro.data.filter(function(o){return !o.Estado||o.Estado!=='Cerrada';});
-      // Filtrar por línea si hay una activa
-      var ordenesLinea = lineaActual.ID ?
-        maestroOrdenes.filter(function(o){
-          if(!o.Linea||String(o.Linea).trim()==='') return true;
-          return String(o.Linea).trim().toLowerCase()===lineaActual.NombreLinea.toLowerCase()||
-                 String(o.Linea).trim()===String(lineaActual.ID);
-        }) : maestroOrdenes;
-      var opts=ordenesLinea.map(function(o){return '<option value="'+o.OrdenFab+'">'+o.OrdenFab+' — '+(o.Producto||'')+'</option>';}).join('');
+      var opts=maestroOrdenes.map(function(o){return '<option value="'+String(o.OrdenFab).trim()+'">'+o.OrdenFab+' — '+(o.Producto||'')+'</option>';}).join('');
       document.getElementById('ordenes-list').innerHTML=opts;
-      var optsAll=maestroOrdenes.map(function(o){return '<option value="'+o.OrdenFab+'">'+o.OrdenFab+' — '+(o.Producto||'')+'</option>';}).join('');
-      document.getElementById('ordenes-list-inf').innerHTML=optsAll;
+      document.getElementById('ordenes-list-inf').innerHTML=opts;
     }
     if(rm.ok && rm.data.length){
       maestroMezclas=rm.data.filter(function(m){return !m.Activa||m.Activa!=='No';});
@@ -1426,7 +1487,29 @@ async function cargarMaestros(){
       var coextList=document.getElementById('mezclas-list-coext');
       if(coextList) coextList.innerHTML=opts2;
     }
+    // Poblar selector de líneas en informes
+    if(rl.ok && rl.data.length){
+      var selLinea=document.getElementById('inf-linea');
+      if(selLinea){
+        selLinea.innerHTML='<option value="">Todas las líneas</option>'+
+          rl.data.filter(function(l){return l.Activa!=='No';}).map(function(l){
+            return '<option value="'+l.ID+'">'+l.NombreLinea+'</option>';
+          }).join('');
+      }
+    }
   }catch(e){console.error('Error cargando maestros:',e);}
+}
+
+function filtrarOrdenesInforme(){
+  var lineaId=document.getElementById('inf-linea').value;
+  var ordenes=window._todasOrdenes||maestroOrdenes;
+  var filtradas=lineaId?ordenes.filter(function(o){
+    return !o.Linea||String(o.Linea).trim()===String(lineaId);
+  }):ordenes;
+  document.getElementById('ordenes-list-inf').innerHTML=filtradas.map(function(o){
+    return '<option value="'+String(o.OrdenFab).trim()+'">'+o.OrdenFab+' — '+(o.Producto||'')+(o.Estado==='Cerrada'?' [Cerrada]':'')+'</option>';
+  }).join('');
+  document.getElementById('inf-orden').value='';
 }
 
 // Sincronizar datalist acampanado con maestro órdenes
@@ -2515,6 +2598,107 @@ async function verMaestro(tipo){
   }catch(e){loader(false);notify('Error','err');}
 }
 
+// ── DASHBOARD ─────────────────────────────────────────────────
+async function cargarDashboard(){
+  loader(true,'Cargando dashboard...');
+  irA('dashboard','Dashboard de Planta','Resumen del mes');
+  try{
+    var r = await api({action:'getDashboard', fecha:fmtFecha()});
+    loader(false);
+    if(!r.ok){notify(r.msg||'Error','err');return;}
+    renderDashboard(r);
+  }catch(e){loader(false);notify('Error: '+e.message,'err');}
+}
+
+function renderDashboard(d){
+  var k=d.kpis;
+  document.getElementById('dash-fecha-lbl').textContent='Fecha: '+d.fecha+' | Mes: '+d.mes;
+
+  // OEE color
+  var oeeN=parseFloat(k.oeeMes);
+  var oeeColor=oeeN>=85?'var(--vd)':oeeN>=70?'#1565C0':oeeN>=50?'var(--nr)':'var(--rd)';
+
+  // Scrap color
+  var scN=parseFloat(k.pctScrapHoy);
+  var scColor=scN<8?'var(--vd)':scN<=10?'#F57F17':'var(--rd)';
+  var scBg=scN<8?'var(--vd2)':scN<=10?'#FFF9C4':'var(--rd2)';
+
+  // Cumplimiento
+  var cumN=parseFloat(k.pctCumplimientoHoy);
+  var cumColor=cumN>=90?'var(--vd)':cumN>=70?'var(--nr)':'var(--rd)';
+
+  document.getElementById('dash-kpis').innerHTML=[
+    {cls:'',color:'#1A237E',val:oeeN.toFixed(1)+'%',lbl:'OEE Mes',sub:k.dispMes+'% Disp · '+k.rendMes+'% Rend · '+k.calMes+'% Cal',bg:'#E8EAF6'},
+    {cls:'',color:'var(--vd)',val:k.lineasActivas,lbl:'Líneas Activas',sub:'de '+k.totalLineas+' · '+k.lineasInactivas+' inactivas',bg:'var(--vd2)'},
+    {cls:'',color:cumColor,val:k.pctCumplimientoHoy+'%',lbl:'Cumplimiento Hoy',sub:'Meta: '+k.kgEsperadosHoy+' kg · Real: '+k.kgEntregadosHoy+' kg',bg:'var(--gr)'},
+    {cls:'',color:scColor,val:k.pctScrapHoy+'%',lbl:'Scrap Hoy',sub:'Meta ≤8% · Mes: '+k.pctScrapMes+'%',bg:scBg},
+    {cls:'',color:'var(--nr)',val:k.tiempoMuertoHoyHoras+'h',lbl:'Tiempo Muerto Hoy',sub:'en minutos: '+(parseFloat(k.tiempoMuertoHoyHoras)*60).toFixed(0)+' min',bg:'var(--nr2)'},
+    {cls:'',color:'var(--az)',val:k.kgTubosMes+' kg',lbl:'Kg Producidos Mes',sub:'Scrap mes: '+k.kgScrapMes+' kg',bg:'var(--az3)'},
+  ].map(function(c){
+    return '<div style="background:'+c.bg+';border-radius:var(--rad);padding:14px;border-top:3px solid '+c.color+'">'+
+      '<div style="font-size:24px;font-weight:800;color:'+c.color+'">'+c.val+'</div>'+
+      '<div style="font-size:10px;font-weight:700;color:var(--gr3);text-transform:uppercase;margin:3px 0">'+c.lbl+'</div>'+
+      '<div style="font-size:10px;color:var(--gr3)">'+c.sub+'</div>'+
+    '</div>';
+  }).join('');
+
+  // Tabla líneas
+  var tbody=document.getElementById('dash-tbody-lineas');
+  var empty=document.getElementById('dash-lineas-empty');
+  if(!d.porLinea.length){
+    tbody.innerHTML='';
+    if(empty) empty.style.display='block';
+  } else {
+    if(empty) empty.style.display='none';
+    tbody.innerHTML=d.porLinea.map(function(l){
+      var oeeN=parseFloat(l.oeeLinea);
+      var oeeC=oeeN>=85?'var(--vd)':oeeN>=70?'#1565C0':oeeN>=50?'var(--nr)':'var(--rd)';
+      var scN=parseFloat(l.pctScrap);
+      var scC=scN<8?'var(--vd)':scN<=10?'#F57F17':'var(--rd)';
+      return '<tr>'+
+        '<td><strong>'+l.linea+'</strong><br><span style="font-size:10px;color:var(--gr3)">'+l.producto+'</span></td>'+
+        '<td style="font-size:10px">'+l.orden+'</td>'+
+        '<td><strong style="color:var(--az)">'+l.kghPromedio+'</strong></td>'+
+        '<td style="color:var(--gr3)">'+l.kgEstandar+'</td>'+
+        '<td><strong style="color:'+oeeC+'">'+l.oeeLinea+'%</strong></td>'+
+        '<td><strong style="color:'+scC+'">'+l.pctScrap+'%</strong></td>'+
+        '<td>'+l.tubosOrden.toLocaleString()+'</td>'+
+        '<td style="color:'+( parseInt(l.tubosFaltantes)>0?'var(--rd)':'var(--vd)')+'">'+l.tubosFaltantes.toLocaleString()+'</td>'+
+        '<td>'+l.kgOrden+' kg</td>'+
+        '<td style="color:'+(parseFloat(l.kgFaltantes)>0?'var(--rd)':'var(--vd)')+'">'+l.kgFaltantes+' kg</td>'+
+        '<td><strong>'+l.estimado+'</strong></td>'+
+      '</tr>';
+    }).join('');
+  }
+
+  // Tabla supervisores
+  document.getElementById('dash-tbody-sup').innerHTML=d.supervisores.map(function(s){
+    var scN=parseFloat(s.pctScrap);
+    var scC=scN<8?'var(--vd)':scN<=10?'#F57F17':'var(--rd)';
+    var scBg=scN<8?'var(--vd2)':scN<=10?'#FFF9C4':'var(--rd2)';
+    return '<tr>'+
+      '<td><strong>'+s.supervisor+'</strong></td>'+
+      '<td>Turno '+s.turno+'</td>'+
+      '<td>'+s.kg+' kg</td>'+
+      '<td>'+s.scrap+' kg</td>'+
+      '<td><span style="background:'+scBg+';color:'+scC+';padding:2px 8px;border-radius:10px;font-weight:700;font-size:12px">'+s.pctScrap+'%</span></td>'+
+      '<td><span style="background:'+(scN<8?'var(--vd2)':'var(--rd2)')+';color:'+(scN<8?'var(--vd)':'var(--rd)')+';padding:2px 8px;border-radius:10px;font-size:11px">'+(scN<8?'✓ OK':'⚠ Revisar')+'</span></td>'+
+    '</tr>';
+  }).join('') || '<tr><td colspan="6" style="text-align:center;color:var(--gr3);padding:16px">Sin datos hoy</td></tr>';
+
+  // Tabla top scrap
+  document.getElementById('dash-tbody-scrap').innerHTML=d.topScrap.map(function(s,i){
+    var scN=parseFloat(s.scrap);
+    var nivel=i<2?'🔴 Alto':i<4?'🟡 Medio':'🟢 Bajo';
+    return '<tr>'+
+      '<td><strong>'+s.linea+'</strong></td>'+
+      '<td><strong style="color:var(--rd)">'+s.scrap+' kg</strong></td>'+
+      '<td style="font-size:11px">'+s.topMotivo+'</td>'+
+      '<td>'+nivel+'</td>'+
+    '</tr>';
+  }).join('') || '<tr><td colspan="4" style="text-align:center;color:var(--vd);padding:16px">✓ Sin scrap registrado este mes</td></tr>';
+}
+
 // ── INFORMES ──────────────────────────────────────────────────
 async function cargarInforme(){
   const orden=document.getElementById('inf-orden').value.trim();
@@ -2544,6 +2728,13 @@ function renderInforme(d){
   ].map(([l,v])=>`<div class="info-item"><label>${l}</label><span style="font-size:13px">${v||'-'}</span></div>`).join('');
 
   const pctR=parseFloat(r.rendimiento),pctS=parseFloat(r.pctScrap),dT=r.difTubos;
+  // Calcular Kg/h promedio desde pesajes si vienen en d
+  var kghProm = '—';
+  if(d.pesajes && d.pesajes.length){
+    var cargas = d.pesajes.map(function(p){return parseFloat(p.CargaLinea)||0;}).filter(function(v){return v>0;});
+    if(cargas.length) kghProm = (cargas.reduce(function(a,b){return a+b;},0)/cargas.length).toFixed(1)+' kg/h';
+  }
+
   document.getElementById('inf-kpis').innerHTML=[
     {cls:'az',val:r.totalKgMezcla+' kg',lbl:'Kg Mezcla Entrada',sub:'Total consumido'},
     {cls:'vd',val:r.totalPesoTubos+' kg',lbl:'Kg Tubos Producidos',sub:r.totalTubos+' tubos'},
@@ -2551,6 +2742,7 @@ function renderInforme(d){
     {cls:pctR>=95?'vd':pctR>=85?'nr':'rd',val:pctR+'%',lbl:'Rendimiento',sub:'kg tubos/kg mezcla'},
     {cls:'az2',val:r.tubosEsperados,lbl:'Tubos Esperados',sub:'Según peso std.'},
     {cls:dT>=0?'vd':'rd',val:(dT>=0?'+':'')+dT,lbl:'Diferencia Tubos',sub:'Real vs esperado'},
+    {cls:'az',val:kghProm,lbl:'Kg/h Promedio',sub:'Desde registros de pesaje'},
     ...(d.cantidadOrden?[{cls:parseFloat(r.pctAvance)>=100?'vd':parseFloat(r.pctAvance)>=70?'az2':'nr',val:r.pctAvance+'%',lbl:'Avance Orden',sub:r.totalTubos+' de '+d.cantidadOrden+' und'},{cls:parseInt(r.pendientes)<=0?'vd':'rd',val:parseInt(r.pendientes)<=0?'✓ Completa':r.pendientes+' und',lbl:'Pendientes',sub:parseInt(r.pendientes)<=0?'Orden completada':'Por producir'}]:[])
   ].map(k=>`<div class="kpi ${k.cls}"><div class="kpi-val">${k.val}</div><div class="kpi-lbl">${k.lbl}</div><div class="kpi-sub">${k.sub}</div></div>`).join('');
 
