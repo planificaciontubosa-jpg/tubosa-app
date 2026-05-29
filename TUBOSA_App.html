@@ -1800,9 +1800,9 @@ async function retomarTurno(){
       restorePesajeInputs();
       actualizarContador();
       irA('registro','Registro — '+turnoActual.lineaNombre,'Turno '+turnoActual.turno+' · '+turnoActual.fecha);
-      document.getElementById('reg-hora-num').textContent = horaActual;
-      document.getElementById('tend-hora-num').textContent = horaActual;
-      document.getElementById('btn-hora-num').textContent = horaActual;
+      var elRH=document.getElementById('reg-hora-num'); if(elRH) elRH.textContent=horaActual;
+      var elTH=document.getElementById('tend-hora-num'); if(elTH) elTH.textContent=horaActual;
+      var elBH=document.getElementById('btn-hora-num'); if(elBH) elBH.textContent=horaActual;
       _acumuladoToken++;
       _tubosAcumuladosOrden=0;
       cargarAcumuladoOrden();
