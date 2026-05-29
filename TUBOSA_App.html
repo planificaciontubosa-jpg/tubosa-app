@@ -1633,6 +1633,8 @@ async function selLinea(l){
   if(turnoActivo){
     mostrarModalRetomar(turnoActivo);
   } else {
+    turnoActual={};
+    _tubosAcumuladosOrden=0;
     document.getElementById('cab-linea-nombre').textContent=l.NombreLinea;
     setVal('cab-linea',l.NombreLinea);
     setVal('cab-fecha',fmtFecha());
