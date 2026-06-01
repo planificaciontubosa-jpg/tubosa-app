@@ -830,12 +830,17 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:#EEF2F7;color:var(--
     <div class="ts"><span class="badge" style="background:var(--vd2);color:var(--vd)">✓ Guardada</span> &nbsp;<span class="badge" style="background:var(--az3);color:var(--az)">Activa</span></div>
   </div></div>
 
-  <!-- Datos hora coextrusor -->
-  <div class="card">
-    <div class="card-head az">📦 Hora <span id="coext-hora-num">1</span> — Datos de Producción</div>
-    <div class="card-body">
+  <!-- Banner edición coextrusor -->
+  <div id="coext-edit-banner" style="display:none;background:var(--nr);color:#fff;border-radius:var(--rad2);padding:10px 14px;margin-bottom:10px;align-items:center;justify-content:space-between">
+    <span>✏ <strong>Modo edición</strong> — Hora <span id="coext-edit-hora-lbl">1</span> ya guardada. Modifica lo que necesites y guarda.</span>
+    <button class="btn btn-gr btn-sm" onclick="cancelarEdicionCoext()">Cancelar</button>
+  </div>
 
-      <!-- BLOQUE EXT80 -->
+  <!-- BLOQUE 1 — MEZCLAS COEXTRUSOR -->
+  <div class="card">
+    <div class="card-head" style="background:#533AB7;color:#fff">🧪 Bloque 1 — Mezclas · Hora <span id="coext-hora-num">1</span></div>
+    <div class="card-body">
+      <!-- EXT80 Relleno -->
       <div style="background:#F3E5F5;border-radius:var(--rad2);padding:12px;margin-bottom:12px;border-left:4px solid #6A0DAD">
         <div style="font-size:11px;font-weight:700;color:#6A0DAD;text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px">🔵 Extrusora 80 — Relleno</div>
         <div class="fila fila-4">
@@ -849,9 +854,8 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:#EEF2F7;color:var(--
           <div class="campo"><label>Motivo Devolución EXT80</label><input type="text" id="coext-motivoDev80" placeholder="Describir si aplica"></div>
         </div>
       </div>
-
-      <!-- BLOQUE EXT65 -->
-      <div style="background:#E8F5E9;border-radius:var(--rad2);padding:12px;margin-bottom:12px;border-left:4px solid #1E6B3C">
+      <!-- EXT65 Capa -->
+      <div style="background:#E8F5E9;border-radius:var(--rad2);padding:12px;border-left:4px solid #1E6B3C">
         <div style="font-size:11px;font-weight:700;color:#1E6B3C;text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px">🟢 Extrusora 65 — Capa</div>
         <div class="fila fila-4">
           <div class="campo"><label>Código Mezcla EXT65</label><input type="text" id="coext-codMezcla65" placeholder="MZ-002" list="mezclas-list-coext" oninput="buscarMezclaCoext('65')"></div>
@@ -864,10 +868,14 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:#EEF2F7;color:var(--
           <div class="campo"><label>Motivo Devolución EXT65</label><input type="text" id="coext-motivoDev65" placeholder="Describir si aplica"></div>
         </div>
       </div>
-
       <datalist id="mezclas-list-coext"></datalist>
+    </div>
+  </div>
 
-      <!-- Datos producción comunes -->
+  <!-- BLOQUE 2 — PRODUCCIÓN COEXTRUSOR -->
+  <div class="card">
+    <div class="card-head az">📦 Bloque 2 — Producción · Hora <span id="coext-hora-num2">1</span></div>
+    <div class="card-body">
       <div class="fila fila-3">
         <div class="campo"><label>Nro. Tubos (Und)</label><input type="number" id="coext-nroTubos" placeholder="0" oninput="actualizarContadorCoext()"></div>
         <div class="campo"><label>Peso Total (kg)</label><input type="number" id="coext-pesoTotal" placeholder="0.0" step="0.01"></div>
@@ -878,26 +886,25 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:#EEF2F7;color:var(--
         <div class="campo"><label>Sobre Peso (%)</label><input type="text" id="coext-sobrePeso" readonly class="auto" placeholder="Auto"></div>
         <div class="campo"><label>Longitud (m)</label><input type="number" id="coext-longitud" placeholder="0.0" step="0.1"></div>
       </div>
-      <div class="fila fila-2">
-        <div class="campo"><label>Motivo Reproceso</label><input type="text" id="coext-motivoRep" placeholder="Describir si aplica"></div>
-        <div style="background:var(--rd2);border:1px solid #e8a8a8;border-radius:var(--rad2);padding:10px 14px;display:flex;align-items:center;justify-content:space-between;gap:8px">
-          <div style="font-size:12px;color:var(--rd);font-weight:600">🔴 Ticket Scrap</div>
-          <button class="btn btn-rd btn-sm" onclick="abrirTicketScrap()">🖨 Generar</button>
+      <div class="campo"><label>Motivo Reproceso</label><input type="text" id="coext-motivoRep" placeholder="Describir si aplica"></div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px">
+        <div style="flex:1;background:var(--rd2);border:1px solid #e8a8a8;border-radius:var(--rad2);padding:8px 12px;display:flex;align-items:center;justify-content:space-between;gap:8px">
+          <div style="font-size:11px;color:var(--rd);font-weight:600">🔴 Ticket Scrap</div>
+          <button class="btn btn-rd btn-sm" style="padding:5px 10px" onclick="abrirTicketScrap()">Generar</button>
         </div>
-      </div>
-      <!-- Rotulado -->
-      <div style="background:var(--az3);border-radius:var(--rad2);padding:10px 14px;margin-top:4px">
-        <div style="font-size:11px;font-weight:700;color:var(--az);text-transform:uppercase;margin-bottom:6px">✔ Verificación de Rotulado</div>
-        <div class="check-toggle">
-          <input type="checkbox" id="coext-rotuladoOk">
-          <span id="coext-rotulado-txt" style="color:var(--gr3)">Rotulado NO verificado</span>
+        <div style="flex:1;background:var(--az3);border:1px solid #9FBFE0;border-radius:var(--rad2);padding:8px 12px;display:flex;align-items:center;justify-content:space-between;gap:8px">
+          <div style="font-size:11px;color:var(--az);font-weight:600">✔ Rotulado</div>
+          <div class="check-toggle" style="margin:0">
+            <input type="checkbox" id="coext-rotuladoOk">
+            <span id="coext-rotulado-txt" style="color:var(--gr3);font-size:12px">No verificado</span>
+          </div>
         </div>
       </div>
     </div>
   </div>
 
-  <!-- Tendencias -->
-  <div class="card"><div class="card-head az2">📈 Tendencias — Hora <span id="coext-tend-hora">1</span></div><div class="card-body">
+  <!-- BLOQUE 3 — TENDENCIAS COEXTRUSOR -->
+  <div class="card"><div class="card-head az2">📈 Bloque 3 — Tendencias · Hora <span id="coext-tend-hora">1</span></div><div class="card-body">
     <div class="fila fila-2">
       <div>
         <div class="sec-t">Lado 1</div>
@@ -930,7 +937,7 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:#EEF2F7;color:var(--
   </div></div>
 
   <div class="btn-group">
-    <button class="btn btn-vd" onclick="guardarHoraCoext()">✔ Guardar Hora <span id="coext-btn-hora">1</span></button>
+    <button class="btn btn-vd" id="coext-btn-guardar" onclick="guardarHoraCoext()">✔ Guardar Hora <span id="coext-btn-hora">1</span></button>
     <button class="btn btn-az" onclick="irResumen()">Ver Resumen</button>
     <button class="btn btn-gr" onclick="limpiarFormCoext()">🗑 Limpiar</button>
     <button class="btn btn-rd" onclick="abrirModalTM()" style="margin-left:auto">🔴 Tiempo Muerto</button>
@@ -3886,14 +3893,19 @@ function iniciarRegistroCoext(){
   });
 }
 
+var modoEdicionCoext = false;
+
 function selHoraCoext(h, esEdicion){
   horaActual = h;
-  document.getElementById('coext-hora-num').textContent = h;
-  document.getElementById('coext-tend-hora').textContent = h;
-  document.getElementById('coext-btn-hora').textContent = h;
-  renderTabs('horas-tabs-coext', false, 'coext');
+  ['coext-hora-num','coext-hora-num2','coext-tend-hora','coext-btn-hora'].forEach(function(id){
+    var el=document.getElementById(id); if(el) el.textContent=h;
+  });
+  renderTabs('horas-tabs-coext',false,'coext');
 
+  var banner=document.getElementById('coext-edit-banner');
+  var btnG=document.getElementById('coext-btn-guardar');
   if(esEdicion && horasGuardadas[h]){
+    modoEdicionCoext=true;
     var d=horasGuardadas[h];
     setVal('coext-codMezcla80',d.codMezcla80||'');
     setVal('coext-mezcla80',d.mezcla80||'');
@@ -3922,9 +3934,23 @@ function selHoraCoext(h, esEdicion){
     setVal('coext-diamL1',d.diamL1||''); setVal('coext-ovalL1',d.ovalL1||'');
     setVal('coext-espL2',d.espL2||''); setVal('coext-descL2',d.descL2||'');
     setVal('coext-diamL2',d.diamL2||''); setVal('coext-ovalL2',d.ovalL2||'');
+    if(banner){banner.style.display='flex';document.getElementById('coext-edit-hora-lbl').textContent=h;}
+    if(btnG) btnG.textContent='💾 Actualizar Hora '+h;
   } else {
+    modoEdicionCoext=false;
     limpiarFormCoext();
+    if(banner) banner.style.display='none';
+    if(btnG) btnG.textContent='✔ Guardar Hora '+h;
   }
+}
+
+function cancelarEdicionCoext(){
+  modoEdicionCoext=false;
+  limpiarFormCoext();
+  var banner=document.getElementById('coext-edit-banner');
+  if(banner) banner.style.display='none';
+  var btnG=document.getElementById('coext-btn-guardar');
+  if(btnG) btnG.textContent='✔ Guardar Hora '+horaActual;
 }
 
 function limpiarFormCoext(){
@@ -3969,19 +3995,19 @@ function actualizarContadorCoext(){
 }
 
 async function guardarHoraCoext(){
-  loader(true, 'Guardando hora '+horaActual+'...');
+  loader(true,(modoEdicionCoext?'Actualizando':'Guardando')+' hora '+horaActual+'...');
   try{
+    var horaIdExistente = modoEdicionCoext && horasGuardadas[horaActual] ? horasGuardadas[horaActual].horaId : null;
     var hd = {
-      action:'guardarHoraCoext', turnoId:turnoActual.id, hora:horaActual,
-      // EXT80
+      action: horaIdExistente ? 'actualizarHoraCoext' : 'guardarHoraCoext',
+      horaId: horaIdExistente,
+      turnoId:turnoActual.id, hora:horaActual,
       codigoMezcla80:val('coext-codMezcla80'), mezcla80:val('coext-mezcla80'),
       consecutivo80:val('coext-consec80'), cantidadKg80:flt('coext-kg80'),
       devolucion80:flt('coext-dev80'), motivoDev80:val('coext-motivoDev80'),
-      // EXT65
       codigoMezcla65:val('coext-codMezcla65'), mezcla65:val('coext-mezcla65'),
       consecutivo65:val('coext-consec65'), cantidadKg65:flt('coext-kg65'),
       devolucion65:flt('coext-dev65'), motivoDev65:val('coext-motivoDev65'),
-      // Comunes
       nroTubos:parseInt(val('coext-nroTubos'))||0,
       pesoTotal:flt('coext-pesoTotal'), reprocesoKg:flt('coext-reproceso'),
       motivoReproceso:val('coext-motivoRep'),
@@ -3992,32 +4018,45 @@ async function guardarHoraCoext(){
     var r = await api(hd);
     if(!r.ok){ loader(false); notify(r.msg||'Error','err'); return; }
     horasGuardadas[horaActual] = {
-      hora:horaActual, horaId:r.horaId,
+      hora:horaActual, horaId:r.horaId||horaIdExistente,
+      _tipo:'coext',
+      codMezcla80:val('coext-codMezcla80'), mezcla80:val('coext-mezcla80'),
+      consec80:val('coext-consec80'), kg80:flt('coext-kg80'),
+      dev80:flt('coext-dev80'), motivoDev80:val('coext-motivoDev80'),
+      codMezcla65:val('coext-codMezcla65'), mezcla65:val('coext-mezcla65'),
+      consec65:val('coext-consec65'), kg65:flt('coext-kg65'),
+      dev65:flt('coext-dev65'), motivoDev65:val('coext-motivoDev65'),
       codigoMezcla: val('coext-codMezcla80')+' / '+val('coext-codMezcla65'),
       mezcla: val('coext-mezcla80')+' / '+val('coext-mezcla65'),
       cantidadKgMezcla: flt('coext-kg80') + flt('coext-kg65'),
       nroTubos: parseInt(val('coext-nroTubos'))||0,
-      pesoTotal: flt('coext-pesoTotal'),
-      reprocesoKg: flt('coext-reproceso'),
+      pesoTotal: flt('coext-pesoTotal'), reprocesoKg: flt('coext-reproceso'),
+      motivoReproceso: val('coext-motivoRep'),
       rotuladoOk: document.getElementById('coext-rotuladoOk').checked,
-      pesoPromedio: flt('coext-pesoPromedio'),
-      sobrePeso: flt('coext-sobrePeso'),
-      longitud: flt('coext-longitud'),
-      observaciones: val('coext-observaciones')
+      pesoPromedio: flt('coext-pesoPromedio'), sobrePeso: val('coext-sobrePeso'),
+      longitud: flt('coext-longitud'), observaciones: val('coext-observaciones'),
+      espL1: val('coext-espL1'), descL1: val('coext-descL1'),
+      diamL1: val('coext-diamL1'), ovalL1: val('coext-ovalL1'),
+      espL2: val('coext-espL2'), descL2: val('coext-descL2'),
+      diamL2: val('coext-diamL2'), ovalL2: val('coext-ovalL2')
     };
-    // Tendencias
     if(val('coext-espL1')||val('coext-espL2')){
-      await api({action:'guardarTendencia', horaId:r.horaId, turnoId:turnoActual.id, hora:horaActual,
+      await api({action:'guardarTendencia', horaId:r.horaId||horaIdExistente, turnoId:turnoActual.id, hora:horaActual,
         espesorL1:flt('coext-espL1'), descalibreL1:flt('coext-descL1'),
         diamExtL1:flt('coext-diamL1'), ovalizacionL1:flt('coext-ovalL1'),
         espesorL2:flt('coext-espL2'), descalibreL2:flt('coext-descL2'),
         diamExtL2:flt('coext-diamL2'), ovalizacionL2:flt('coext-ovalL2')});
     }
     loader(false);
+    modoEdicionCoext=false;
+    var banner=document.getElementById('coext-edit-banner');
+    if(banner) banner.style.display='none';
+    var btnG=document.getElementById('coext-btn-guardar');
+    if(btnG) btnG.textContent='✔ Guardar Hora '+horaActual;
     renderTabs('horas-tabs-coext', false, 'coext');
     actualizarContadorCoext();
-    notify('Hora '+horaActual+' guardada ✓','ok');
-    if(horaActual < 8) selHoraCoext(horaActual+1);
+    notify((horaIdExistente?'Hora '+horaActual+' actualizada ✓':'Hora '+horaActual+' guardada ✓'),'ok');
+    if(!horaIdExistente && horaActual < 8) selHoraCoext(horaActual+1, false);
   }catch(e){ loader(false); notify('Error: '+e.message,'err'); }
 }
 
