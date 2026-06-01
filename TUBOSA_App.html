@@ -222,6 +222,7 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:#EEF2F7;color:var(--
     <span id="user-nombre" style="font-size:12px;opacity:.8"></span>
     <span class="badge" id="rol-badge" style="background:rgba(255,255,255,.2);color:#fff"></span>
     <span id="auto-refresh-lbl" style="font-size:10px;opacity:.55;display:none"></span>
+    <button class="btn-logout" style="background:rgba(255,255,255,.15)" onclick="irInicio()">🏠 Inicio</button>
     <button class="btn-logout" onclick="logout()">Salir</button>
   </div>
 </div>
@@ -1499,6 +1500,12 @@ async function loginOk(){
     }else{document.getElementById('pin-err').textContent='❌ PIN incorrecto';pinActual='';upPin();}
   }catch(e){loader(false);document.getElementById('pin-err').textContent='❌ '+e.message;document.getElementById('url-box').style.display='block';}
 }
+function irInicio(){
+  if(rolActual==='gerente') cargarDashboard();
+  else if(rolActual==='marcadora') abrirMarcadora();
+  else { cargarLineas(); irA('lineas','Líneas de Producción','Selecciona una línea'); }
+}
+
 function logout(){detenerAutoRefresh();pinActual='';rolActual='';document.getElementById('v-login').style.display='block';document.getElementById('topbar').style.display='none';document.querySelectorAll('.vista').forEach(v=>v.classList.remove('activa'));upPin();}
 
 // ── USUARIOS ─────────────────────────────────────────────────
