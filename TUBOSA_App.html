@@ -1558,12 +1558,11 @@ async function cargarMaestros(){
     if(ro.ok && ro.data.length){
       window._todasOrdenes = ro.data;
       maestroOrdenes=ro.data.filter(function(o){return !o.Estado||o.Estado!=='Cerrada';});
-      // Actualizar cabecera si hay una línea activa seleccionada
       if(lineaActual && lineaActual.ID) filtrarOrdenesCabecera(lineaActual);
-      // inf: todas las activas por defecto
       document.getElementById('ordenes-list-inf').innerHTML=maestroOrdenes.map(function(o){
         return '<option value="'+String(o.OrdenFab).trim()+'">'+o.OrdenFab+' — '+(o.Producto||'')+'</option>';
       }).join('');
+      syncOrdenesAca();
     }
     if(rm.ok && rm.data.length){
       maestroMezclas=rm.data.filter(function(m){return !m.Activa||m.Activa!=='No';});
