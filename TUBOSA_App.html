@@ -319,6 +319,7 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:#EEF2F7;color:var(--
       <button class="btn btn-gr btn-sm" onclick="cargarLineas()">🔄</button>
       <button class="btn btn-az btn-sm" id="btn-admin" onclick="irA('admin','Administración','Maestros y Usuarios')" style="display:none">⚙ Admin</button>
       <button class="btn btn-az btn-sm" onclick="irA('informes','Informes','Balance por Orden')">📊 Informes</button>
+      <button class="btn btn-sm" id="btn-inf-sup" style="background:#533AB7;color:#fff;display:none" onclick="abrirInformeSupervisor()">📋 Informe Turno</button>
       <button class="btn btn-sm" id="btn-dashboard" style="background:#1A237E;color:#fff;display:none" onclick="cargarDashboard()">📈 Dashboard</button>
       <button class="btn btn-sm" id="btn-tiempos" style="background:#C0392B;color:#fff;display:none" onclick="abrirTiemposMuertos()">⏱ Tiempos Muertos</button>
       <button class="btn btn-sm" style="background:#25D366;color:#fff" onclick="abrirReporteWA()" id="btn-reporte-wa">💬 Reporte Turno</button>
@@ -944,6 +945,54 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:#EEF2F7;color:var(--
   </div></div>
 </div>
 
+<!-- INFORME SUPERVISOR -->
+<div class="vista" id="v-inf-supervisor">
+  <div class="card">
+    <div class="card-head" style="background:#533AB7;color:#fff">📋 Informe de Turno — Supervisor Saliente</div>
+    <div class="card-body">
+      <div class="fila fila-3">
+        <div class="campo"><label>Fecha</label><input type="date" id="is-fecha"></div>
+        <div class="campo"><label>Turno</label>
+          <select id="is-turno">
+            <option value="">Todos</option>
+            <option value="A">Turno A</option>
+            <option value="B">Turno B</option>
+            <option value="C">Turno C</option>
+          </select>
+        </div>
+        <div style="display:flex;align-items:flex-end;gap:8px">
+          <button class="btn btn-sm" style="background:#533AB7;color:#fff;flex:1;justify-content:center" onclick="cargarInformeSupervisor()">🔍 Consultar</button>
+          <button class="btn btn-gr btn-sm" id="is-btn-pdf" style="display:none" onclick="generarPDFSupervisor()">📄 PDF</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- KPIs -->
+  <div id="is-kpis" style="display:none;display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:10px;margin-bottom:14px"></div>
+
+  <!-- Líneas activas -->
+  <div class="card" id="is-card-lineas" style="display:none">
+    <div class="card-head" style="background:#533AB7;color:#fff">🏭 Líneas en Producción</div>
+    <div class="card-body" style="padding:10px" id="is-lineas-body"></div>
+  </div>
+
+  <!-- Líneas inactivas -->
+  <div class="card" id="is-card-inactivas" style="display:none">
+    <div class="card-head az2">⏸ Estado de Líneas Inactivas</div>
+    <div class="card-body" style="padding:10px">
+      <div style="overflow-x:auto">
+        <table class="rt" style="font-size:12px">
+          <thead><tr><th>Línea</th><th>Tipo</th><th>Estado</th></tr></thead>
+          <tbody id="is-tbody-inactivas"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <div id="is-empty" style="text-align:center;padding:40px;color:var(--gr3)">Selecciona fecha y turno para consultar</div>
+</div>
+
 <!-- GESTIÓN TIEMPOS MUERTOS -->
 <div class="vista" id="v-tiempos">
   <div class="card">
@@ -1416,7 +1465,7 @@ function irA(vista,titulo='',sub='') {
   document.getElementById('v-'+vista)?.classList.add('activa');
   document.getElementById('topbar-titulo').textContent=titulo||'TUBOSA';
   document.getElementById('topbar-sub').textContent=sub||'Control de Producción';
-  const noBack=['lineas','admin','informes','dashboard','tiempos'];
+  const noBack=['lineas','admin','informes','dashboard','tiempos','inf-supervisor'];
   document.getElementById('btn-back').classList.toggle('show',!noBack.includes(vista));
 }
 function volverAtras(){
@@ -1481,6 +1530,8 @@ async function loginOk(){
       if(btnDash) btnDash.style.display=['coordinador','jefe','gerente'].includes(rolActual)?'inline-flex':'none';
       var btnTM=document.getElementById('btn-tiempos');
       if(btnTM) btnTM.style.display=['coordinador','jefe','admin'].includes(rolActual)?'inline-flex':'none';
+      var btnIS=document.getElementById('btn-inf-sup');
+      if(btnIS) btnIS.style.display=['supervisor','coordinador','jefe','admin'].includes(rolActual)?'inline-flex':'none';
       // Auto-refresh para coordinador, jefe y gerente
       if(['coordinador','jefe','gerente'].includes(rolActual)){
         var lbl=document.getElementById('auto-refresh-lbl');
@@ -2926,6 +2977,226 @@ async function verMaestro(tipo){
     const keys=Object.keys(res.data[0]);
     tabla.innerHTML=`<thead><tr>${keys.map(k=>`<th>${k}</th>`).join('')}</tr></thead><tbody>${res.data.slice(0,50).map(r=>`<tr>${keys.map(k=>`<td>${r[k]||''}</td>`).join('')}</tr>`).join('')}</tbody>`;
   }catch(e){loader(false);notify('Error','err');}
+}
+
+// ── INFORME SUPERVISOR ────────────────────────────────────────
+var _datosSupervisor = null;
+
+function abrirInformeSupervisor(){
+  irA('inf-supervisor','Informe de Turno','Supervisor Saliente');
+  var hoy=new Date();
+  document.getElementById('is-fecha').value=hoy.toISOString().split('T')[0];
+  document.getElementById('is-kpis').style.display='none';
+  document.getElementById('is-card-lineas').style.display='none';
+  document.getElementById('is-card-inactivas').style.display='none';
+  document.getElementById('is-btn-pdf').style.display='none';
+  document.getElementById('is-empty').style.display='block';
+}
+
+async function cargarInformeSupervisor(){
+  var fechaVal=document.getElementById('is-fecha').value;
+  var turnoVal=document.getElementById('is-turno').value;
+  if(!fechaVal){notify('Selecciona una fecha','err');return;}
+  // Convertir fecha de yyyy-MM-dd a dd/MM/yyyy
+  var p=fechaVal.split('-');
+  var fechaFmt=p[2]+'/'+p[1]+'/'+p[0];
+  loader(true,'Cargando informe...');
+  try{
+    var r=await api({action:'getInformeSupervisor',fecha:fechaFmt,turno:turnoVal});
+    loader(false);
+    if(!r.ok){notify(r.msg||'Error','err');return;}
+    _datosSupervisor=r;
+    renderInformeSupervisor(r);
+  }catch(e){loader(false);notify('Error: '+e.message,'err');}
+}
+
+function renderInformeSupervisor(d){
+  var empty=document.getElementById('is-empty');
+  if(!d.porLinea.length && !d.lineasInactivas.length){
+    empty.style.display='block';
+    empty.textContent='Sin registros para esta fecha y turno';
+    return;
+  }
+  empty.style.display='none';
+  document.getElementById('is-btn-pdf').style.display='inline-flex';
+
+  var t=d.totales;
+  var scN=parseFloat(t.pctScrap);
+  var scC=scN<8?'var(--vd)':scN<=10?'#F57F17':'var(--rd)';
+  var scBg=scN<8?'var(--vd2)':scN<=10?'#FFF9C4':'var(--rd2)';
+
+  // KPIs
+  document.getElementById('is-kpis').style.display='grid';
+  document.getElementById('is-kpis').innerHTML=[
+    {val:t.lineasActivas,lbl:'Líneas Activas',bg:'#EDE7F6',c:'#533AB7'},
+    {val:t.kgTubos+' kg',lbl:'Kg Producidos',bg:'var(--vd2)',c:'var(--vd)'},
+    {val:t.tubos+' und',lbl:'Tubos Producidos',bg:'var(--az3)',c:'var(--az)'},
+    {val:t.kgMezcla+' kg',lbl:'Kg Mezcla',bg:'var(--gr)',c:'var(--gr3)'},
+    {val:t.reproceso+' kg',lbl:'Reproceso/Scrap',bg:'var(--rd2)',c:'var(--rd)'},
+    {val:scN+'%',lbl:'% Scrap',bg:scBg,c:scC},
+    {val:t.tmHoras+' h',lbl:'Tiempo Muerto',bg:'var(--nr2)',c:'var(--nr)'},
+  ].map(function(k){
+    return '<div style="background:'+k.bg+';border-radius:var(--rad);padding:12px;text-align:center;border-top:3px solid '+k.c+'">'+
+      '<div style="font-size:22px;font-weight:800;color:'+k.c+'">'+k.val+'</div>'+
+      '<div style="font-size:10px;color:var(--gr3);text-transform:uppercase;margin-top:3px">'+k.lbl+'</div>'+
+    '</div>';
+  }).join('');
+
+  // Líneas activas
+  var body=document.getElementById('is-lineas-body');
+  if(d.porLinea.length){
+    document.getElementById('is-card-lineas').style.display='block';
+    body.innerHTML=d.porLinea.map(function(l){
+      var scL=parseFloat(l.pctScrap);
+      var scLC=scL<8?'var(--vd)':scL<=10?'#F57F17':'var(--rd)';
+      // Tabla horas
+      var horasHTML='';
+      if(l.horas && l.horas.length){
+        horasHTML='<div style="overflow-x:auto;margin-top:8px"><table class="pt" style="font-size:11px">'+
+          '<thead><tr><th>H</th><th>Cód.Mezcla</th><th>Consec.</th><th>Kg Mez.</th><th>Dev.</th><th>Tubos</th><th>Peso kg</th><th>Repro.</th><th>SP%</th><th>Obs.</th></tr></thead><tbody>'+
+          l.horas.map(function(h){return '<tr><td>H'+h.hora+'</td><td>'+( h.codigoMezcla||'—')+'</td><td>—</td><td>'+(h.kgMezcla||0).toFixed(1)+'</td><td>'+(h.devolucion>0?h.devolucion.toFixed(1):'—')+'</td><td>'+(h.tubos||0)+'</td><td>'+(h.pesoTotal||0).toFixed(1)+'</td><td>'+(h.reproceso>0?h.reproceso.toFixed(1):'—')+'</td><td>'+(h.sobrePeso?parseFloat(h.sobrePeso).toFixed(1)+'%':'—')+'</td><td style="font-size:10px;max-width:120px">'+(h.observaciones||'—')+'</td></tr>';}).join('')+
+          '</tbody></table></div>';
+      }
+      // Tiempos muertos
+      var tmHTML='';
+      if(l.tiemposMuertos && l.tiemposMuertos.length){
+        tmHTML='<div style="margin-top:8px"><div style="font-size:11px;font-weight:700;color:var(--rd);margin-bottom:4px">⏱ Tiempos Muertos ('+l.tmMin+' min)</div>'+
+          l.tiemposMuertos.map(function(tm){return '<div style="font-size:11px;background:var(--rd2);border-radius:4px;padding:4px 8px;margin-bottom:3px">'+tm.horaInicio+' → '+tm.horaFin+' ('+tm.duracion+' min) — '+tm.motivo+'</div>';}).join('')+'</div>';
+      }
+      return '<div style="border:1px solid var(--gr2);border-radius:var(--rad2);padding:12px;margin-bottom:10px;border-left:4px solid #533AB7">'+
+        '<div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:8px;margin-bottom:8px">'+
+          '<div>'+
+            '<div style="font-size:14px;font-weight:700;color:#533AB7">'+l.linea+' — Turno '+l.turno+'</div>'+
+            '<div style="font-size:11px;color:var(--gr3)">'+l.producto+' · Orden: '+l.ordenFab+'</div>'+
+            '<div style="font-size:11px;color:var(--gr3)">Operario: '+l.operario+' · Supervisor: '+l.supervisor+'</div>'+
+          '</div>'+
+          '<div style="display:flex;gap:8px;flex-wrap:wrap">'+
+            '<div style="background:#EDE7F6;border-radius:4px;padding:4px 10px;font-size:12px;font-weight:700;color:#533AB7">'+l.kgTubos+' kg</div>'+
+            '<div style="background:'+(scL<8?'var(--vd2)':'var(--rd2)')+';border-radius:4px;padding:4px 10px;font-size:12px;font-weight:700;color:'+scLC+'">Scrap: '+l.pctScrap+'%</div>'+
+            '<div style="background:var(--az3);border-radius:4px;padding:4px 10px;font-size:12px;font-weight:700;color:var(--az)">'+l.tubos+' tubos</div>'+
+            (parseFloat(l.tmMin)>0?'<div style="background:var(--rd2);border-radius:4px;padding:4px 10px;font-size:12px;font-weight:700;color:var(--rd)">⏱ '+l.tmHoras+'h</div>':'')+'</div>'+
+        '</div>'+
+        '<div style="font-size:11px;color:var(--gr3);margin-bottom:4px">Mezclas: '+l.mezclas.map(function(m){return m.codigo+' ('+m.kg.toFixed(1)+' kg)';}).join(', ')+'</div>'+
+        horasHTML+tmHTML+
+      '</div>';
+    }).join('');
+  } else {
+    document.getElementById('is-card-lineas').style.display='none';
+  }
+
+  // Líneas inactivas
+  if(d.lineasInactivas.length){
+    document.getElementById('is-card-inactivas').style.display='block';
+    var estadoColores={'Fuera de servicio':'var(--rd)','No existe':'var(--gr3)','Desarmada para despacho':'var(--nr)','Sin programa':'var(--az2)','Activa':'var(--vd)'};
+    document.getElementById('is-tbody-inactivas').innerHTML=d.lineasInactivas.map(function(l){
+      var c=estadoColores[l.estado]||'var(--gr3)';
+      return '<tr><td><strong>'+l.linea+'</strong></td><td>'+l.tipo+'</td>'+
+        '<td><span style="color:'+c+';font-weight:700">'+l.estado+'</span></td></tr>';
+    }).join('');
+  } else {
+    document.getElementById('is-card-inactivas').style.display='none';
+  }
+}
+
+async function generarPDFSupervisor(){
+  if(!_datosSupervisor){notify('Consulta primero el informe','err');return;}
+  const {jsPDF}=window.jspdf;
+  const doc=new jsPDF({orientation:'portrait',unit:'mm',format:'a4'});
+  const PU=[83,58,183],AZ=[31,56,100],VD=[30,107,60],NR=[197,90,17],RD=[192,57,43];
+  const ml=10;
+  const d=_datosSupervisor;
+  const t=d.totales;
+
+  // Encabezado
+  doc.setFillColor(PU[0],PU[1],PU[2]);doc.rect(0,0,210,28,'F');
+  doc.setTextColor(255,255,255);doc.setFontSize(16);doc.setFont('helvetica','bold');
+  doc.text('TUBOSA S.A.',ml,11);
+  doc.setFontSize(10);doc.setFont('helvetica','normal');
+  doc.text('Informe de Turno — Supervisor Saliente',ml,18);
+  doc.setFontSize(9);
+  doc.text('Fecha: '+d.fecha+'  Turno: '+(d.turno||'Todos')+'   Generado: '+fmtFecha()+' '+new Date().toLocaleTimeString('es-CO',{hour:'2-digit',minute:'2-digit'}),ml,25);
+
+  var y=34;
+
+  // KPIs generales
+  doc.setTextColor(PU[0],PU[1],PU[2]);doc.setFontSize(10);doc.setFont('helvetica','bold');
+  doc.text('RESUMEN GENERAL',ml,y);y+=4;
+  doc.autoTable({startY:y,margin:{left:ml,right:ml},
+    body:[
+      ['Líneas Activas',t.lineasActivas,'Tubos Producidos',t.tubos+' und'],
+      ['Kg Producidos',t.kgTubos+' kg','Reproceso/Scrap',t.reproceso+' kg ('+t.pctScrap+'%)'],
+      ['Kg Mezcla Total',t.kgMezcla+' kg','Tiempo Muerto',t.tmHoras+' h ('+t.tmMin+' min)'],
+    ],
+    theme:'grid',styles:{fontSize:8.5,cellPadding:2},
+    columnStyles:{0:{fontStyle:'bold',fillColor:[237,231,246],cellWidth:50},1:{cellWidth:40},2:{fontStyle:'bold',fillColor:[237,231,246],cellWidth:50},3:{cellWidth:50}}});
+  y=doc.lastAutoTable.finalY+6;
+
+  // Por cada línea activa
+  d.porLinea.forEach(function(l){
+    if(y>240){doc.addPage();y=15;}
+    doc.setTextColor(PU[0],PU[1],PU[2]);doc.setFontSize(10);doc.setFont('helvetica','bold');
+    doc.text(l.linea+' — Turno '+l.turno,ml,y);y+=4;
+    doc.autoTable({startY:y,margin:{left:ml,right:ml},
+      body:[
+        ['Operario',l.operario,'Supervisor',l.supervisor],
+        ['Orden',l.ordenFab,'Producto',l.producto],
+        ['Kg Producidos',l.kgTubos+' kg','Tubos',l.tubos+' und'],
+        ['Kg Mezcla',l.kgMezcla+' kg','Kg Real Mezcla',l.kgRealMezcla+' kg'],
+        ['Reproceso',l.reproceso+' kg','% Scrap',l.pctScrap+'%'],
+        ['Tiempo Muerto',l.tmHoras+'h ('+l.tmMin+' min)','Horas Registradas',l.horasRegistradas+'/8'],
+        ['Mezclas usadas',l.mezclas.map(function(m){return m.codigo+': '+m.kg.toFixed(1)+'kg';}).join(' | '),'',''],
+      ],
+      theme:'grid',styles:{fontSize:8,cellPadding:1.8},
+      columnStyles:{0:{fontStyle:'bold',fillColor:[237,231,246],cellWidth:38},1:{cellWidth:52},2:{fontStyle:'bold',fillColor:[237,231,246],cellWidth:38},3:{cellWidth:62}}});
+    y=doc.lastAutoTable.finalY+2;
+
+    // Horas
+    if(l.horas && l.horas.length){
+      doc.autoTable({startY:y,margin:{left:ml,right:ml},
+        head:[['H','Cód.Mezcla','Kg Mez.','Dev.','Tubos','Peso kg','Repro.','SP%','Observación']],
+        body:l.horas.map(function(h){return ['H'+h.hora,h.codigoMezcla||'—',(h.kgMezcla||0).toFixed(1),h.devolucion>0?h.devolucion.toFixed(1):'—',h.tubos||0,(h.pesoTotal||0).toFixed(1),h.reproceso>0?h.reproceso.toFixed(1):'—',h.sobrePeso?parseFloat(h.sobrePeso).toFixed(1)+'%':'—',h.observaciones||'—'];}),
+        theme:'striped',styles:{fontSize:7,cellPadding:1.2},
+        headStyles:{fillColor:PU,textColor:255,fontSize:7}});
+      y=doc.lastAutoTable.finalY+2;
+    }
+
+    // Tiempos muertos de la línea
+    if(l.tiemposMuertos && l.tiemposMuertos.length){
+      doc.autoTable({startY:y,margin:{left:ml,right:ml},
+        head:[['Hora Inicio','Hora Fin','Duración (min)','Motivo','Estado']],
+        body:l.tiemposMuertos.map(function(tm){return [tm.horaInicio,tm.horaFin,tm.duracion,tm.motivo,tm.estado];}),
+        theme:'grid',styles:{fontSize:7.5,cellPadding:1.5},
+        headStyles:{fillColor:RD,textColor:255,fontSize:7}});
+      y=doc.lastAutoTable.finalY+2;
+    }
+    y+=4;
+  });
+
+  // Líneas inactivas
+  if(d.lineasInactivas.length){
+    if(y>240){doc.addPage();y=15;}
+    doc.setTextColor(AZ[0],AZ[1],AZ[2]);doc.setFontSize(10);doc.setFont('helvetica','bold');
+    doc.text('ESTADO DE LÍNEAS INACTIVAS',ml,y);y+=4;
+    doc.autoTable({startY:y,margin:{left:ml,right:ml},
+      head:[['Línea','Tipo','Estado']],
+      body:d.lineasInactivas.map(function(l){return [l.linea,l.tipo,l.estado];}),
+      theme:'striped',styles:{fontSize:9,cellPadding:2},
+      headStyles:{fillColor:AZ,textColor:255}});
+    y=doc.lastAutoTable.finalY+4;
+  }
+
+  // Pie de página
+  var pages=doc.getNumberOfPages();
+  for(var i=1;i<=pages;i++){
+    doc.setPage(i);
+    doc.setDrawColor(PU[0],PU[1],PU[2]);doc.setLineWidth(0.4);doc.line(ml,287,200,287);
+    doc.setTextColor(150,150,150);doc.setFontSize(7.5);doc.setFont('helvetica','normal');
+    doc.text('TUBOSA S.A. · Informe Turno '+( d.turno||'General')+' · '+d.fecha,ml,291);
+    doc.text('Página '+i+' de '+pages,200,291,{align:'right'});
+  }
+
+  doc.save('Informe_Supervisor_Turno'+(d.turno||'')+'_'+d.fecha.replace(/\//g,'-')+'.pdf');
+  notify('PDF descargado ✓','ok',4000);
 }
 
 // ── GESTIÓN TIEMPOS MUERTOS ───────────────────────────────────
