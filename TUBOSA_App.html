@@ -221,6 +221,7 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:#EEF2F7;color:var(--
   <div style="display:flex;align-items:center;gap:8px">
     <span id="user-nombre" style="font-size:12px;opacity:.8"></span>
     <span class="badge" id="rol-badge" style="background:rgba(255,255,255,.2);color:#fff"></span>
+    <span id="auto-refresh-lbl" style="font-size:10px;opacity:.55;display:none"></span>
     <button class="btn-logout" onclick="logout()">Salir</button>
   </div>
 </div>
@@ -318,6 +319,7 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:#EEF2F7;color:var(--
       <button class="btn btn-az btn-sm" id="btn-admin" onclick="irA('admin','Administración','Maestros y Usuarios')" style="display:none">⚙ Admin</button>
       <button class="btn btn-az btn-sm" onclick="irA('informes','Informes','Balance por Orden')">📊 Informes</button>
       <button class="btn btn-sm" id="btn-dashboard" style="background:#1A237E;color:#fff;display:none" onclick="cargarDashboard()">📈 Dashboard</button>
+      <button class="btn btn-sm" id="btn-tiempos" style="background:#C0392B;color:#fff;display:none" onclick="abrirTiemposMuertos()">⏱ Tiempos Muertos</button>
       <button class="btn btn-sm" style="background:#25D366;color:#fff" onclick="abrirReporteWA()" id="btn-reporte-wa">💬 Reporte Turno</button>
     </div>
   </div>
@@ -941,6 +943,72 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:#EEF2F7;color:var(--
   </div></div>
 </div>
 
+<!-- GESTIÓN TIEMPOS MUERTOS -->
+<div class="vista" id="v-tiempos">
+  <div class="card">
+    <div class="card-head" style="background:#C0392B;color:#fff">⏱ Gestión de Tiempos Muertos</div>
+    <div class="card-body">
+      <div class="fila fila-3" style="margin-bottom:10px">
+        <div class="campo"><label>Fecha Desde</label><input type="date" id="tm-desde"></div>
+        <div class="campo"><label>Fecha Hasta</label><input type="date" id="tm-hasta"></div>
+        <div style="display:flex;align-items:flex-end">
+          <button class="btn btn-rd" onclick="cargarTiemposMuertos()" style="width:100%;justify-content:center">🔍 Consultar</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Resumen -->
+  <div id="tm-resumen" style="display:none;display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:10px;margin-bottom:14px" id="tm-kpis"></div>
+
+  <!-- Tabla -->
+  <div class="card">
+    <div class="card-head az">📋 Registros</div>
+    <div class="card-body" style="padding:10px">
+      <div id="tm-empty" style="text-align:center;padding:30px;color:var(--gr3)">Selecciona un rango de fechas y consulta</div>
+      <div style="overflow-x:auto;display:none" id="tm-tabla-wrap">
+        <table class="rt" style="font-size:12px">
+          <thead><tr>
+            <th>Línea</th><th>Fecha</th><th>Turno</th><th>Hora Inicio</th><th>Hora Fin</th>
+            <th>Duración (min)</th><th>Motivo</th><th>Estado</th><th>Acciones</th>
+          </tr></thead>
+          <tbody id="tm-tbody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL EDITAR TIEMPO MUERTO -->
+<div id="modal-edit-tm" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:999;align-items:center;justify-content:center">
+  <div style="background:#fff;border-radius:var(--rad);width:min(480px,94vw);box-shadow:0 20px 60px rgba(0,0,0,.3)">
+    <div style="background:#C0392B;border-radius:var(--rad) var(--rad) 0 0;padding:14px 20px;display:flex;justify-content:space-between;align-items:center">
+      <div style="color:#fff;font-size:14px;font-weight:700">✏ Editar Tiempo Muerto</div>
+      <button onclick="cerrarEditTM()" style="background:none;border:none;color:#fff;font-size:20px;cursor:pointer">✕</button>
+    </div>
+    <div style="padding:16px">
+      <input type="hidden" id="edit-tm-id">
+      <div class="fila fila-2">
+        <div class="campo"><label>Hora Inicio</label><input type="time" id="edit-tm-inicio"></div>
+        <div class="campo"><label>Hora Fin</label><input type="time" id="edit-tm-fin"></div>
+      </div>
+      <div class="campo"><label>Duración (minutos)</label><input type="number" id="edit-tm-duracion" placeholder="0" readonly class="auto"></div>
+      <div class="campo"><label>Motivo</label><input type="text" id="edit-tm-motivo" placeholder="Describir motivo"></div>
+      <div class="campo">
+        <label>Estado</label>
+        <select id="edit-tm-estado">
+          <option value="Activo">Activo</option>
+          <option value="Cerrado">Cerrado</option>
+        </select>
+      </div>
+      <div style="display:flex;gap:8px;margin-top:12px">
+        <button class="btn btn-rd" onclick="guardarEditTM()" style="flex:1;justify-content:center">💾 Guardar Cambios</button>
+        <button class="btn btn-gr" onclick="cerrarEditTM()">Cancelar</button>
+      </div>
+    </div>
+  </div>
+</div>
+
 <!-- DASHBOARD -->
 <div class="vista" id="v-dashboard">
   <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;flex-wrap:wrap;gap:8px">
@@ -1347,7 +1415,7 @@ function irA(vista,titulo='',sub='') {
   document.getElementById('v-'+vista)?.classList.add('activa');
   document.getElementById('topbar-titulo').textContent=titulo||'TUBOSA';
   document.getElementById('topbar-sub').textContent=sub||'Control de Producción';
-  const noBack=['lineas','admin','informes','dashboard'];
+  const noBack=['lineas','admin','informes','dashboard','tiempos'];
   document.getElementById('btn-back').classList.toggle('show',!noBack.includes(vista));
 }
 function volverAtras(){
@@ -1410,6 +1478,14 @@ async function loginOk(){
       document.getElementById('btn-admin').style.display=rolActual==='admin'?'inline-flex':'none';
       var btnDash=document.getElementById('btn-dashboard');
       if(btnDash) btnDash.style.display=['coordinador','jefe','gerente'].includes(rolActual)?'inline-flex':'none';
+      var btnTM=document.getElementById('btn-tiempos');
+      if(btnTM) btnTM.style.display=['coordinador','jefe','admin'].includes(rolActual)?'inline-flex':'none';
+      // Auto-refresh para coordinador, jefe y gerente
+      if(['coordinador','jefe','gerente'].includes(rolActual)){
+        var lbl=document.getElementById('auto-refresh-lbl');
+        if(lbl) lbl.style.display='inline';
+        iniciarAutoRefresh();
+      }
       await cargarMaestros();
       if(rolActual==='gerente'){
         await cargarDashboard();
@@ -1423,7 +1499,7 @@ async function loginOk(){
     }else{document.getElementById('pin-err').textContent='❌ PIN incorrecto';pinActual='';upPin();}
   }catch(e){loader(false);document.getElementById('pin-err').textContent='❌ '+e.message;document.getElementById('url-box').style.display='block';}
 }
-function logout(){pinActual='';rolActual='';document.getElementById('v-login').style.display='block';document.getElementById('topbar').style.display='none';document.querySelectorAll('.vista').forEach(v=>v.classList.remove('activa'));upPin();}
+function logout(){detenerAutoRefresh();pinActual='';rolActual='';document.getElementById('v-login').style.display='block';document.getElementById('topbar').style.display='none';document.querySelectorAll('.vista').forEach(v=>v.classList.remove('activa'));upPin();}
 
 // ── USUARIOS ─────────────────────────────────────────────────
 async function cargarUsuarios(){
@@ -2844,6 +2920,175 @@ async function verMaestro(tipo){
     const keys=Object.keys(res.data[0]);
     tabla.innerHTML=`<thead><tr>${keys.map(k=>`<th>${k}</th>`).join('')}</tr></thead><tbody>${res.data.slice(0,50).map(r=>`<tr>${keys.map(k=>`<td>${r[k]||''}</td>`).join('')}</tr>`).join('')}</tbody>`;
   }catch(e){loader(false);notify('Error','err');}
+}
+
+// ── GESTIÓN TIEMPOS MUERTOS ───────────────────────────────────
+var _tmDatos = [];
+
+function abrirTiemposMuertos(){
+  irA('tiempos','Tiempos Muertos','Gestión y corrección');
+  // Setear fechas por defecto: desde inicio del mes hasta hoy
+  var hoy=new Date();
+  var primerDia=new Date(hoy.getFullYear(),hoy.getMonth(),1);
+  document.getElementById('tm-hasta').value=hoy.toISOString().split('T')[0];
+  document.getElementById('tm-desde').value=primerDia.toISOString().split('T')[0];
+}
+
+function fmtDateInput(d){
+  // Convierte Date a dd/MM/yyyy
+  var dia=String(d.getDate()).padStart(2,'0');
+  var mes=String(d.getMonth()+1).padStart(2,'0');
+  return dia+'/'+mes+'/'+d.getFullYear();
+}
+
+async function cargarTiemposMuertos(){
+  var desde=document.getElementById('tm-desde').value;
+  var hasta=document.getElementById('tm-hasta').value;
+  if(!desde||!hasta){notify('Selecciona el rango de fechas','err');return;}
+  loader(true,'Cargando tiempos muertos...');
+  try{
+    var r=await api({action:'getTiemposMuertos',
+      fechaDesde:fmtDateInput(new Date(desde+'T00:00:00')),
+      fechaHasta:fmtDateInput(new Date(hasta+'T00:00:00'))
+    });
+    loader(false);
+    if(!r.ok){notify(r.msg||'Error','err');return;}
+    _tmDatos=r.data||[];
+    renderTablaTM();
+  }catch(e){loader(false);notify('Error: '+e.message,'err');}
+}
+
+function renderTablaTM(){
+  var tbody=document.getElementById('tm-tbody');
+  var empty=document.getElementById('tm-empty');
+  var wrap=document.getElementById('tm-tabla-wrap');
+  if(!_tmDatos.length){
+    empty.style.display='block'; wrap.style.display='none'; return;
+  }
+  empty.style.display='none'; wrap.style.display='block';
+
+  var totalMin=_tmDatos.reduce(function(s,t){return s+(parseFloat(t.DuracionMin)||0);},0);
+  var activos=_tmDatos.filter(function(t){return String(t.Estado).trim()==='Activo';}).length;
+
+  tbody.innerHTML=_tmDatos.map(function(t,i){
+    var esActivo=String(t.Estado).trim()==='Activo';
+    var dur=parseFloat(t.DuracionMin)||0;
+    return '<tr>'+
+      '<td><strong>'+( t.LineaNombre||t.Linea||'—')+'</strong></td>'+
+      '<td>'+( t.Fecha||'—')+'</td>'+
+      '<td>'+(t.Turno||'—')+'</td>'+
+      '<td>'+(t.HoraInicio||'—')+'</td>'+
+      '<td>'+(t.HoraFin||'—')+'</td>'+
+      '<td><strong>'+(dur>0?dur.toFixed(0):' —')+'</strong></td>'+
+      '<td style="font-size:11px;max-width:160px">'+(t.Motivo||'—')+'</td>'+
+      '<td><span style="background:'+(esActivo?'var(--rd2)':'var(--vd2)')+';color:'+(esActivo?'var(--rd)':'var(--vd)')+
+        ';padding:2px 8px;border-radius:10px;font-size:11px;font-weight:700">'+(t.Estado||'—')+'</span></td>'+
+      '<td><button class="btn btn-sm" style="background:var(--az);color:#fff;padding:4px 10px;font-size:11px" onclick="abrirEditTM('+i+')">✏ Editar</button></td>'+
+    '</tr>';
+  }).join('');
+
+  // Resumen KPIs
+  document.getElementById('tm-resumen').innerHTML=[
+    {val:_tmDatos.length,lbl:'Total registros',bg:'var(--az3)',c:'var(--az)'},
+    {val:activos,lbl:'Activos',bg:'var(--rd2)',c:'var(--rd)'},
+    {val:(_tmDatos.length-activos),lbl:'Cerrados',bg:'var(--vd2)',c:'var(--vd)'},
+    {val:totalMin.toFixed(0)+' min',lbl:'Total tiempo muerto',bg:'var(--nr2)',c:'var(--nr)'},
+    {val:(totalMin/60).toFixed(1)+' h',lbl:'En horas',bg:'var(--gr)',c:'var(--az)'},
+  ].map(function(k){
+    return '<div style="background:'+k.bg+';border-radius:var(--rad);padding:12px;text-align:center;border-top:3px solid '+k.c+'">'+
+      '<div style="font-size:22px;font-weight:800;color:'+k.c+'">'+k.val+'</div>'+
+      '<div style="font-size:10px;color:var(--gr3);text-transform:uppercase;margin-top:3px">'+k.lbl+'</div>'+
+    '</div>';
+  }).join('');
+  document.getElementById('tm-resumen').style.display='grid';
+}
+
+function abrirEditTM(idx){
+  var t=_tmDatos[idx];
+  document.getElementById('edit-tm-id').value=t.TiempoMuertoID||idx;
+  document.getElementById('edit-tm-inicio').value=t.HoraInicio||'';
+  document.getElementById('edit-tm-fin').value=t.HoraFin||'';
+  document.getElementById('edit-tm-duracion').value=t.DuracionMin||'';
+  document.getElementById('edit-tm-motivo').value=t.Motivo||'';
+  document.getElementById('edit-tm-estado').value=t.Estado||'Cerrado';
+  document.getElementById('modal-edit-tm').style.display='flex';
+  // Calcular duración automática al cambiar horas
+  ['edit-tm-inicio','edit-tm-fin'].forEach(function(id){
+    document.getElementById(id).oninput=function(){
+      var ini=document.getElementById('edit-tm-inicio').value;
+      var fin=document.getElementById('edit-tm-fin').value;
+      if(ini&&fin){
+        var diff=(new Date('2000-01-01T'+fin)-new Date('2000-01-01T'+ini))/60000;
+        if(diff>0) document.getElementById('edit-tm-duracion').value=diff.toFixed(0);
+      }
+    };
+  });
+  // Guardar referencia al índice
+  document.getElementById('edit-tm-id').dataset.idx=idx;
+}
+
+function cerrarEditTM(){
+  document.getElementById('modal-edit-tm').style.display='none';
+}
+
+async function guardarEditTM(){
+  var idx=parseInt(document.getElementById('edit-tm-id').dataset.idx);
+  var tmId=document.getElementById('edit-tm-id').value;
+  var inicio=document.getElementById('edit-tm-inicio').value;
+  var fin=document.getElementById('edit-tm-fin').value;
+  var dur=document.getElementById('edit-tm-duracion').value;
+  var motivo=document.getElementById('edit-tm-motivo').value;
+  var estado=document.getElementById('edit-tm-estado').value;
+  loader(true,'Guardando...');
+  try{
+    var r=await api({action:'editarTiempoMuerto',
+      tiempoMuertoId:tmId, horaInicio:inicio, horaFin:fin,
+      duracionMin:parseFloat(dur)||0, motivo:motivo, estado:estado
+    });
+    loader(false);
+    if(r.ok){
+      // Actualizar datos locales
+      _tmDatos[idx]={..._tmDatos[idx],HoraInicio:inicio,HoraFin:fin,
+        DuracionMin:parseFloat(dur)||0,Motivo:motivo,Estado:estado};
+      renderTablaTM();
+      cerrarEditTM();
+      notify('Tiempo muerto actualizado ✓','ok');
+    }else notify(r.msg||'Error','err');
+  }catch(e){loader(false);notify('Error: '+e.message,'err');}
+}
+
+// ── AUTO-REFRESH ──────────────────────────────────────────────
+var _autoRefreshInterval = null;
+var _autoRefreshCountdown = null;
+var _autoRefreshMinutos = 60; // cada 60 minutos
+
+function iniciarAutoRefresh(){
+  detenerAutoRefresh();
+  var segundosRestantes = _autoRefreshMinutos * 60;
+
+  _autoRefreshCountdown = setInterval(function(){
+    segundosRestantes--;
+    var min = Math.floor(segundosRestantes / 60);
+    var seg = segundosRestantes % 60;
+    var el = document.getElementById('auto-refresh-lbl');
+    if(el) el.textContent = 'Actualiza en ' + min + ':' + String(seg).padStart(2,'0');
+    if(segundosRestantes <= 0){
+      segundosRestantes = _autoRefreshMinutos * 60;
+      var vistaActiva = document.querySelector('.vista.activa');
+      if(vistaActiva){
+        var id = vistaActiva.id;
+        if(id === 'v-dashboard') cargarDashboard();
+        else if(id === 'v-lineas') cargarLineas();
+      }
+    }
+  }, 1000);
+}
+
+function detenerAutoRefresh(){
+  if(_autoRefreshInterval) clearInterval(_autoRefreshInterval);
+  if(_autoRefreshCountdown) clearInterval(_autoRefreshCountdown);
+  _autoRefreshInterval = null;
+  _autoRefreshCountdown = null;
 }
 
 // ── DASHBOARD ─────────────────────────────────────────────────
