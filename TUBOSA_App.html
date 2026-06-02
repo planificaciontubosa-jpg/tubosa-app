@@ -322,6 +322,7 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:#EEF2F7;color:var(--
       <button class="btn btn-sm" id="btn-inf-sup" style="background:#533AB7;color:#fff;display:none" onclick="abrirInformeSupervisor()">📋 Informe Turno</button>
       <button class="btn btn-sm" id="btn-dashboard" style="background:#1A237E;color:#fff;display:none" onclick="cargarDashboard()">📈 Dashboard</button>
       <button class="btn btn-sm" id="btn-tiempos" style="background:#C0392B;color:#fff;display:none" onclick="abrirTiemposMuertos()">⏱ Tiempos Muertos</button>
+      <button class="btn btn-sm" id="btn-dig-turno" style="background:#795548;color:#fff;display:none" onclick="abrirDigitacionTurno()">📝 Digitalizar Turno</button>
       <button class="btn btn-sm" style="background:#25D366;color:#fff" onclick="abrirReporteWA()" id="btn-reporte-wa">💬 Reporte Turno</button>
     </div>
   </div>
@@ -1000,6 +1001,81 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:#EEF2F7;color:var(--
   <div id="is-empty" style="text-align:center;padding:40px;color:var(--gr3)">Selecciona fecha y turno para consultar</div>
 </div>
 
+<!-- DIGITALIZAR TURNO ANTERIOR -->
+<div class="vista" id="v-dig-turno">
+  <div class="card">
+    <div class="card-head" style="background:#795548;color:#fff">📝 Digitalizar Turno Anterior</div>
+    <div class="card-body">
+      <p class="ts" style="margin-bottom:12px">Usa esta pantalla para registrar turnos que quedaron en papel. Crea primero la cabecera y luego ingresa las horas.</p>
+
+      <!-- PASO 1: Cabecera -->
+      <div id="dig-paso1">
+        <div class="sec-t">Paso 1 — Cabecera del turno</div>
+        <div class="fila fila-3">
+          <div class="campo"><label>Línea</label>
+            <select id="dig-linea" onchange="dig_onLinea()">
+              <option value="">Seleccionar...</option>
+            </select>
+          </div>
+          <div class="campo"><label>Fecha</label><input type="date" id="dig-fecha"></div>
+          <div class="campo"><label>Turno</label>
+            <select id="dig-turno">
+              <option value="A">Turno A</option>
+              <option value="B">Turno B</option>
+              <option value="C">Turno C</option>
+            </select>
+          </div>
+        </div>
+        <div class="fila fila-3">
+          <div class="campo"><label>Operario</label><input type="text" id="dig-operario" placeholder="Nombre operario"></div>
+          <div class="campo"><label>Coordinador</label>
+            <select id="dig-coordinador">
+              <option value="">Seleccionar...</option>
+              <option>John A Donneys</option>
+              <option>Ricardo Cañizalez</option>
+              <option>Daniel Gutierrez</option>
+            </select>
+          </div>
+          <div class="campo"><label>Supervisor</label>
+            <select id="dig-supervisor">
+              <option value="">Seleccionar...</option>
+              <option>Andres Rivera</option>
+              <option>Carlos Garzon</option>
+              <option>Hernando Lopez</option>
+              <option>Jonathan Castañeda</option>
+            </select>
+          </div>
+        </div>
+        <div class="fila fila-2">
+          <div class="campo"><label>Orden de Fabricación</label>
+            <input type="text" id="dig-orden" list="ordenes-list-dig" oninput="dig_onOrden(this.value)">
+            <datalist id="ordenes-list-dig"></datalist>
+          </div>
+          <div class="campo"><label>Rotulado</label><input type="text" id="dig-rotulado" placeholder="Descripción rotulado"></div>
+        </div>
+        <div class="fila fila-4" id="dig-orden-info" style="display:none">
+          <div class="campo"><label>Código SAP</label><input type="text" id="dig-codigoSAP" readonly class="auto"></div>
+          <div class="campo"><label>Producto</label><input type="text" id="dig-producto" readonly class="auto"></div>
+          <div class="campo"><label>Peso Estándar</label><input type="text" id="dig-pesoEst" readonly class="auto"></div>
+          <div class="campo"><label>Carga Estándar</label><input type="text" id="dig-cargaEst" readonly class="auto"></div>
+        </div>
+        <button class="btn btn-sm" style="background:#795548;color:#fff;margin-top:8px" onclick="dig_crearCabecera()">Crear Cabecera y Continuar →</button>
+      </div>
+
+      <!-- PASO 2: Horas -->
+      <div id="dig-paso2" style="display:none">
+        <div style="background:#795548;color:#fff;border-radius:var(--rad2);padding:10px 14px;margin-bottom:12px;font-size:13px">
+          ✓ Cabecera creada — <span id="dig-info-cab"></span>
+        </div>
+        <div class="sec-t">Paso 2 — Ingresa las horas registradas</div>
+        <div id="dig-horas-container"></div>
+        <button class="btn btn-vd" onclick="dig_guardarTodo()" style="margin-top:12px;width:100%;justify-content:center">💾 Guardar Todo el Turno</button>
+        <button class="btn btn-gr btn-sm" onclick="dig_reset()" style="margin-top:8px">← Nuevo turno</button>
+      </div>
+    </div>
+  </div>
+</div>
+
 <!-- GESTIÓN TIEMPOS MUERTOS -->
 <div class="vista" id="v-tiempos">
   <div class="card">
@@ -1008,8 +1084,9 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:#EEF2F7;color:var(--
       <div class="fila fila-3" style="margin-bottom:10px">
         <div class="campo"><label>Fecha Desde</label><input type="date" id="tm-desde"></div>
         <div class="campo"><label>Fecha Hasta</label><input type="date" id="tm-hasta"></div>
-        <div style="display:flex;align-items:flex-end">
-          <button class="btn btn-rd" onclick="cargarTiemposMuertos()" style="width:100%;justify-content:center">🔍 Consultar</button>
+        <div style="display:flex;align-items:flex-end;gap:8px">
+          <button class="btn btn-rd" onclick="cargarTiemposMuertos()" style="flex:1;justify-content:center">🔍 Consultar</button>
+          <button class="btn btn-vd" onclick="abrirCrearTM()" style="flex:1;justify-content:center">+ Crear</button>
         </div>
       </div>
     </div>
@@ -1036,6 +1113,58 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:#EEF2F7;color:var(--
   </div>
 </div>
 
+<!-- MODAL CREAR TIEMPO MUERTO -->
+<div id="modal-crear-tm" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:999;align-items:center;justify-content:center;overflow-y:auto;padding:16px">
+  <div style="background:#fff;border-radius:var(--rad);width:min(520px,95vw);box-shadow:0 20px 60px rgba(0,0,0,.3);margin:auto">
+    <div style="background:#C0392B;border-radius:var(--rad) var(--rad) 0 0;padding:14px 20px;display:flex;justify-content:space-between;align-items:center">
+      <div style="color:#fff;font-size:14px;font-weight:700">+ Registrar Tiempo Muerto</div>
+      <button onclick="cerrarCrearTM()" style="background:none;border:none;color:#fff;font-size:20px;cursor:pointer">✕</button>
+    </div>
+    <div style="padding:16px">
+      <div class="fila fila-2">
+        <div class="campo"><label>Línea</label>
+          <select id="crear-tm-linea" onchange="buscarTurnoActivo()">
+            <option value="">Seleccionar línea...</option>
+          </select>
+        </div>
+        <div class="campo"><label>Turno ID (auto si hay turno activo)</label>
+          <input type="text" id="crear-tm-turno-id" placeholder="Se detecta automáticamente" class="auto" readonly>
+        </div>
+      </div>
+      <div id="crear-tm-turno-info" style="display:none;background:var(--vd2);border-radius:var(--rad2);padding:8px 12px;margin-bottom:10px;font-size:12px;color:var(--vd)"></div>
+      <div id="crear-tm-sin-turno" style="display:none;background:var(--nr2);border-radius:var(--rad2);padding:8px 12px;margin-bottom:10px;font-size:12px;color:var(--nr)">
+        ⚠ No hay turno activo en esta línea. El tiempo muerto quedará sin turno asignado.
+      </div>
+      <div class="fila fila-2">
+        <div class="campo"><label>Fecha</label><input type="date" id="crear-tm-fecha"></div>
+        <div class="campo"><label>Turno</label>
+          <select id="crear-tm-turno">
+            <option value="A">Turno A</option>
+            <option value="B">Turno B</option>
+            <option value="C">Turno C</option>
+          </select>
+        </div>
+      </div>
+      <div class="fila fila-2">
+        <div class="campo"><label>Hora Inicio</label><input type="time" id="crear-tm-inicio"></div>
+        <div class="campo"><label>Hora Fin</label><input type="time" id="crear-tm-fin" oninput="calcDurCrear()"></div>
+      </div>
+      <div class="campo"><label>Duración (minutos)</label><input type="number" id="crear-tm-duracion" placeholder="0" readonly class="auto"></div>
+      <div class="campo"><label>Motivo</label><input type="text" id="crear-tm-motivo" placeholder="Describir motivo del tiempo muerto"></div>
+      <div class="campo"><label>Estado</label>
+        <select id="crear-tm-estado">
+          <option value="Cerrado">Cerrado</option>
+          <option value="Activo">Activo</option>
+        </select>
+      </div>
+      <div style="display:flex;gap:8px;margin-top:12px">
+        <button class="btn btn-rd" onclick="guardarCrearTM()" style="flex:1;justify-content:center">💾 Registrar</button>
+        <button class="btn btn-gr" onclick="cerrarCrearTM()">Cancelar</button>
+      </div>
+    </div>
+  </div>
+</div>
+
 <!-- MODAL EDITAR TIEMPO MUERTO -->
 <div id="modal-edit-tm" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:999;align-items:center;justify-content:center">
   <div style="background:#fff;border-radius:var(--rad);width:min(480px,94vw);box-shadow:0 20px 60px rgba(0,0,0,.3)">
@@ -1046,13 +1175,22 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:#EEF2F7;color:var(--
     <div style="padding:16px">
       <input type="hidden" id="edit-tm-id">
       <div class="fila fila-2">
+        <div class="campo"><label>Fecha</label><input type="date" id="edit-tm-fecha"></div>
+        <div class="campo"><label>Turno</label>
+          <select id="edit-tm-turno">
+            <option value="A">Turno A</option>
+            <option value="B">Turno B</option>
+            <option value="C">Turno C</option>
+          </select>
+        </div>
+      </div>
+      <div class="fila fila-2">
         <div class="campo"><label>Hora Inicio</label><input type="time" id="edit-tm-inicio"></div>
         <div class="campo"><label>Hora Fin</label><input type="time" id="edit-tm-fin"></div>
       </div>
       <div class="campo"><label>Duración (minutos)</label><input type="number" id="edit-tm-duracion" placeholder="0" readonly class="auto"></div>
       <div class="campo"><label>Motivo</label><input type="text" id="edit-tm-motivo" placeholder="Describir motivo"></div>
-      <div class="campo">
-        <label>Estado</label>
+      <div class="campo"><label>Estado</label>
         <select id="edit-tm-estado">
           <option value="Activo">Activo</option>
           <option value="Cerrado">Cerrado</option>
@@ -1472,7 +1610,7 @@ function irA(vista,titulo='',sub='') {
   document.getElementById('v-'+vista)?.classList.add('activa');
   document.getElementById('topbar-titulo').textContent=titulo||'TUBOSA';
   document.getElementById('topbar-sub').textContent=sub||'Control de Producción';
-  const noBack=['lineas','admin','informes','dashboard','tiempos','inf-supervisor'];
+  const noBack=['lineas','admin','informes','dashboard','tiempos','inf-supervisor','dig-turno'];
   document.getElementById('btn-back').classList.toggle('show',!noBack.includes(vista));
 }
 function volverAtras(){
@@ -1539,6 +1677,8 @@ async function loginOk(){
       if(btnTM) btnTM.style.display=['coordinador','jefe','admin'].includes(rolActual)?'inline-flex':'none';
       var btnIS=document.getElementById('btn-inf-sup');
       if(btnIS) btnIS.style.display=['supervisor','coordinador','jefe','admin'].includes(rolActual)?'inline-flex':'none';
+      var btnDig=document.getElementById('btn-dig-turno');
+      if(btnDig) btnDig.style.display=['coordinador','admin'].includes(rolActual)?'inline-flex':'none';
       // Auto-refresh para coordinador, jefe y gerente
       if(['coordinador','jefe','gerente'].includes(rolActual)){
         var lbl=document.getElementById('auto-refresh-lbl');
@@ -3206,12 +3346,168 @@ async function generarPDFSupervisor(){
   notify('PDF descargado ✓','ok',4000);
 }
 
+// ── DIGITALIZAR TURNO ANTERIOR ────────────────────────────────
+var _digTurnoId = null;
+
+async function abrirDigitacionTurno(){
+  irA('dig-turno','Digitalizar Turno Anterior','Solo coordinador y admin');
+  // Poblar líneas
+  if(!window._lineasCache || !window._lineasCache.length){
+    var r=await api({action:'getLineas'});
+    if(r.ok) window._lineasCache=r.data.filter(function(l){return l.Activa!=='No';});
+  }
+  var selL=document.getElementById('dig-linea');
+  selL.innerHTML='<option value="">Seleccionar...</option>'+
+    (window._lineasCache||[]).map(function(l){return '<option value="'+l.ID+'">'+l.NombreLinea+'</option>';}).join('');
+
+  // Poblar órdenes
+  var todas=window._todasOrdenes||maestroOrdenes;
+  document.getElementById('ordenes-list-dig').innerHTML=todas.map(function(o){
+    return '<option value="'+o.OrdenFab+'">'+o.OrdenFab+' — '+(o.Producto||'')+'</option>';
+  }).join('');
+
+  // Fecha de hoy por defecto
+  document.getElementById('dig-fecha').value=new Date().toISOString().split('T')[0];
+  dig_reset();
+}
+
+function dig_onLinea(){}
+
+function dig_onOrden(v){
+  var todas=window._todasOrdenes||maestroOrdenes;
+  var o=todas.find(function(o){return String(o.OrdenFab).trim()===String(v).trim();});
+  if(o){
+    setVal('dig-codigoSAP',o.CodigoSAP||'');
+    setVal('dig-producto',o.Producto||'');
+    setVal('dig-pesoEst',o.PesoEstandar_kgm||'');
+    setVal('dig-cargaEst',o.CargaEstandar_output||'');
+    document.getElementById('dig-orden-info').style.display='grid';
+  } else {
+    document.getElementById('dig-orden-info').style.display='none';
+  }
+}
+
+async function dig_crearCabecera(){
+  var lineaId=val('dig-linea');
+  var fecha=val('dig-fecha');
+  var turno=val('dig-turno');
+  var operario=val('dig-operario');
+  var orden=val('dig-orden');
+  if(!lineaId||!fecha||!turno||!operario||!orden){notify('Completa todos los campos obligatorios','err');return;}
+  var p=fecha.split('-');
+  var fechaFmt=p[2]+'/'+p[1]+'/'+p[0];
+  var lineaObj=(window._lineasCache||[]).find(function(l){return String(l.ID)===lineaId;});
+  loader(true,'Creando cabecera...');
+  try{
+    var r=await api({action:'crearTurno',
+      linea:lineaId, lineaNombre:lineaObj?lineaObj.NombreLinea:lineaId,
+      fecha:fechaFmt, turno:turno, operario:operario,
+      coordinador:val('dig-coordinador'), supervisor:val('dig-supervisor'),
+      ordenFab:orden, codigoSAP:val('dig-codigoSAP'), producto:val('dig-producto'),
+      pesoEstandar:val('dig-pesoEst'), cargaEstandar:val('dig-cargaEst'),
+      cantidadOrden:0, rotulado:val('dig-rotulado'),
+      esTurnoAnterior:true
+    });
+    loader(false);
+    if(!r.ok){notify(r.msg||'Error','err');return;}
+    _digTurnoId=r.turnoId;
+    document.getElementById('dig-info-cab').textContent=
+      (lineaObj?lineaObj.NombreLinea:lineaId)+' · Turno '+turno+' · '+fechaFmt+' · '+orden;
+    renderDigHoras();
+    document.getElementById('dig-paso1').style.display='none';
+    document.getElementById('dig-paso2').style.display='block';
+    notify('Cabecera creada ✓ — ahora ingresa las horas','ok');
+  }catch(e){loader(false);notify('Error: '+e.message,'err');}
+}
+
+function renderDigHoras(){
+  var cont=document.getElementById('dig-horas-container');
+  cont.innerHTML=Array.from({length:8},function(_,i){
+    var h=i+1;
+    return '<details style="border:1px solid var(--gr2);border-radius:var(--rad2);margin-bottom:8px">'+
+      '<summary style="padding:10px 14px;cursor:pointer;font-weight:700;color:var(--az);background:var(--az3);border-radius:var(--rad2)">Hora '+h+'</summary>'+
+      '<div style="padding:12px">'+
+        '<div class="fila fila-3">'+
+          '<div class="campo"><label>Código Mezcla</label><input type="text" id="dh-codMezcla-'+h+'" list="mezclas-list" placeholder="MZ-001" oninput="buscarMezcla(this.value)" data-hora="'+h+'"></div>'+
+          '<div class="campo"><label>Mezcla</label><input type="text" id="dh-mezcla-'+h+'" placeholder="Auto"></div>'+
+          '<div class="campo"><label>Consecutivo</label><input type="text" id="dh-consec-'+h+'" placeholder="001"></div>'+
+        '</div>'+
+        '<div class="fila fila-3">'+
+          '<div class="campo"><label>Kg Mezcla</label><input type="number" id="dh-kgMezcla-'+h+'" placeholder="0.0" step="0.01"></div>'+
+          '<div class="campo"><label>Devolución kg</label><input type="number" id="dh-dev-'+h+'" placeholder="0.0" step="0.01"></div>'+
+          '<div class="campo"><label>Motivo Dev.</label><input type="text" id="dh-motivoDev-'+h+'" placeholder=""></div>'+
+        '</div>'+
+        '<div class="fila fila-3">'+
+          '<div class="campo"><label>Nro. Tubos</label><input type="number" id="dh-tubos-'+h+'" placeholder="0"></div>'+
+          '<div class="campo"><label>Peso Total kg</label><input type="number" id="dh-pesoTotal-'+h+'" placeholder="0.0" step="0.01"></div>'+
+          '<div class="campo"><label>Reproceso kg</label><input type="number" id="dh-reproceso-'+h+'" placeholder="0.0" step="0.01"></div>'+
+        '</div>'+
+        '<div class="fila fila-3">'+
+          '<div class="campo"><label>Peso Promedio</label><input type="number" id="dh-pesoProm-'+h+'" placeholder="0.000" step="0.001"></div>'+
+          '<div class="campo"><label>Longitud m</label><input type="number" id="dh-longitud-'+h+'" placeholder="0.0" step="0.1"></div>'+
+          '<div class="campo"><label>Observaciones</label><input type="text" id="dh-obs-'+h+'" placeholder=""></div>'+
+        '</div>'+
+      '</div>'+
+    '</details>';
+  }).join('');
+}
+
+async function dig_guardarTodo(){
+  if(!_digTurnoId){notify('Crea primero la cabecera','err');return;}
+  var horas=[];
+  for(var h=1;h<=8;h++){
+    var tubos=parseInt(val('dh-tubos-'+h))||0;
+    var kgMezcla=flt('dh-kgMezcla-'+h);
+    if(tubos>0||kgMezcla>0){
+      horas.push({hora:h,
+        codigoMezcla:val('dh-codMezcla-'+h), mezcla:val('dh-mezcla-'+h),
+        cantidadKgMezcla:kgMezcla, consecutivoOperario:val('dh-consec-'+h),
+        devolucionKg:flt('dh-dev-'+h), motivoDevolucion:val('dh-motivoDev-'+h),
+        nroTubos:tubos, pesoTotal:flt('dh-pesoTotal-'+h),
+        reprocesoKg:flt('dh-reproceso-'+h), pesoPromedio:flt('dh-pesoProm-'+h),
+        longitud:flt('dh-longitud-'+h), observaciones:val('dh-obs-'+h),
+        sobrePeso:0, rotuladoOk:false, motivoReproceso:''
+      });
+    }
+  }
+  if(!horas.length){notify('Ingresa al menos una hora con datos','err');return;}
+  loader(true,'Guardando '+horas.length+' horas...');
+  try{
+    var errores=0;
+    for(var i=0;i<horas.length;i++){
+      var r=await api({action:'guardarHora', turnoId:_digTurnoId, ...horas[i]});
+      if(!r.ok) errores++;
+    }
+    // Cerrar el turno
+    await api({action:'cerrarTurno', turnoId:_digTurnoId});
+    loader(false);
+    if(errores===0){
+      notify('Turno digitalizado y cerrado ✓ ('+horas.length+' horas)','ok',5000);
+      dig_reset();
+      document.getElementById('dig-paso1').style.display='block';
+      document.getElementById('dig-paso2').style.display='none';
+    } else {
+      notify('Guardado con '+errores+' errores — revisa los datos','err');
+    }
+  }catch(e){loader(false);notify('Error: '+e.message,'err');}
+}
+
+function dig_reset(){
+  _digTurnoId=null;
+  document.getElementById('dig-paso1').style.display='block';
+  document.getElementById('dig-paso2').style.display='none';
+  document.getElementById('dig-orden-info').style.display='none';
+  ['dig-linea','dig-turno','dig-operario','dig-coordinador','dig-supervisor','dig-orden','dig-rotulado'].forEach(function(id){
+    var el=document.getElementById(id); if(el) el.value='';
+  });
+}
+
 // ── GESTIÓN TIEMPOS MUERTOS ───────────────────────────────────
 var _tmDatos = [];
+var _turnosActivosCache = [];
 
 function abrirTiemposMuertos(){
   irA('tiempos','Tiempos Muertos','Gestión y corrección');
-  // Setear fechas por defecto: desde inicio del mes hasta hoy
   var hoy=new Date();
   var primerDia=new Date(hoy.getFullYear(),hoy.getMonth(),1);
   document.getElementById('tm-hasta').value=hoy.toISOString().split('T')[0];
@@ -3219,10 +3515,119 @@ function abrirTiemposMuertos(){
 }
 
 function fmtDateInput(d){
-  // Convierte Date a dd/MM/yyyy
   var dia=String(d.getDate()).padStart(2,'0');
   var mes=String(d.getMonth()+1).padStart(2,'0');
   return dia+'/'+mes+'/'+d.getFullYear();
+}
+
+// Poblar selector de líneas en crear TM
+function poblarLineasCrearTM(){
+  var sel=document.getElementById('crear-tm-linea');
+  if(!sel) return;
+  sel.innerHTML='<option value="">Seleccionar línea...</option>'+
+    (window._lineasCache||[]).map(function(l){
+      return '<option value="'+l.ID+'">'+l.NombreLinea+'</option>';
+    }).join('');
+}
+
+async function abrirCrearTM(){
+  // Cargar líneas si no están en cache
+  if(!window._lineasCache || !window._lineasCache.length){
+    var r=await api({action:'getLineas'});
+    if(r.ok) window._lineasCache=r.data;
+  }
+  // Cargar turnos activos para autodetección
+  var rt=await api({action:'getTurnosActivos'});
+  _turnosActivosCache = rt.ok ? rt.data : [];
+
+  poblarLineasCrearTM();
+  var hoy=new Date();
+  document.getElementById('crear-tm-fecha').value=hoy.toISOString().split('T')[0];
+  document.getElementById('crear-tm-inicio').value='';
+  document.getElementById('crear-tm-fin').value='';
+  document.getElementById('crear-tm-duracion').value='';
+  document.getElementById('crear-tm-motivo').value='';
+  document.getElementById('crear-tm-estado').value='Cerrado';
+  document.getElementById('crear-tm-turno-id').value='';
+  document.getElementById('crear-tm-turno-info').style.display='none';
+  document.getElementById('crear-tm-sin-turno').style.display='none';
+  document.getElementById('modal-crear-tm').style.display='flex';
+}
+
+function cerrarCrearTM(){
+  document.getElementById('modal-crear-tm').style.display='none';
+}
+
+function calcDurCrear(){
+  var ini=document.getElementById('crear-tm-inicio').value;
+  var fin=document.getElementById('crear-tm-fin').value;
+  if(ini&&fin){
+    var diff=(new Date('2000-01-01T'+fin)-new Date('2000-01-01T'+ini))/60000;
+    if(diff>0) document.getElementById('crear-tm-duracion').value=diff.toFixed(0);
+  }
+}
+
+function buscarTurnoActivo(){
+  var lineaId=document.getElementById('crear-tm-linea').value;
+  var info=document.getElementById('crear-tm-turno-info');
+  var sinTurno=document.getElementById('crear-tm-sin-turno');
+  var tidEl=document.getElementById('crear-tm-turno-id');
+  if(!lineaId){ info.style.display='none'; sinTurno.style.display='none'; tidEl.value=''; return; }
+  // Buscar turno activo en cache
+  var turnoActivo=_turnosActivosCache.find(function(t){
+    return String(t.LineaID||t.Linea||'')===String(lineaId)||
+           String(t.LineaNombre||'').toLowerCase()===String(lineaId).toLowerCase();
+  });
+  if(turnoActivo){
+    tidEl.value=turnoActivo.TurnoID||turnoActivo.turnoId||'';
+    info.style.display='block';
+    info.textContent='✓ Turno activo encontrado: '+( turnoActivo.TurnoID||'')+' — Turno '+( turnoActivo.Turno||'')+' · '+( turnoActivo.Operario||'');
+    sinTurno.style.display='none';
+    // Pre-llenar turno
+    document.getElementById('crear-tm-turno').value=turnoActivo.Turno||'A';
+  } else {
+    tidEl.value='';
+    info.style.display='none';
+    sinTurno.style.display='block';
+  }
+}
+
+async function guardarCrearTM(){
+  var lineaId=document.getElementById('crear-tm-linea').value;
+  var ini=document.getElementById('crear-tm-inicio').value;
+  var motivo=document.getElementById('crear-tm-motivo').value.trim();
+  if(!lineaId){notify('Selecciona una línea','err');return;}
+  if(!ini){notify('Ingresa la hora de inicio','err');return;}
+  if(!motivo){notify('Ingresa el motivo','err');return;}
+
+  var fechaVal=document.getElementById('crear-tm-fecha').value;
+  var p=fechaVal.split('-');
+  var fechaFmt=p[2]+'/'+p[1]+'/'+p[0];
+  var turno=document.getElementById('crear-tm-turno').value;
+  var fin=document.getElementById('crear-tm-fin').value;
+  var dur=document.getElementById('crear-tm-duracion').value;
+  var estado=document.getElementById('crear-tm-estado').value;
+  var turnoId=document.getElementById('crear-tm-turno-id').value;
+  var lineaNombre=(window._lineasCache||[]).find(function(l){return String(l.ID)===String(lineaId);});
+
+  loader(true,'Registrando tiempo muerto...');
+  try{
+    var r=await api({action:'crearTiempoMuerto',
+      lineaId:lineaId,
+      lineaNombre:lineaNombre?lineaNombre.NombreLinea:lineaId,
+      turnoId:turnoId||'',
+      fecha:fechaFmt, turno:turno,
+      horaInicio:ini, horaFin:fin||'',
+      duracionMin:parseFloat(dur)||0,
+      motivo:motivo, estado:estado
+    });
+    loader(false);
+    if(r.ok){
+      cerrarCrearTM();
+      notify('Tiempo muerto registrado ✓','ok');
+      cargarTiemposMuertos(); // Refrescar lista
+    } else notify(r.msg||'Error','err');
+  }catch(e){loader(false);notify('Error: '+e.message,'err');}
 }
 
 async function cargarTiemposMuertos(){
@@ -3290,6 +3695,14 @@ function renderTablaTM(){
 function abrirEditTM(idx){
   var t=_tmDatos[idx];
   document.getElementById('edit-tm-id').value=t.TiempoMuertoID||idx;
+  // Convertir fecha dd/MM/yyyy a yyyy-MM-dd para input date
+  var fechaStr=String(t.Fecha||'');
+  if(fechaStr && fechaStr.includes('/')){
+    var fp=fechaStr.split('/');
+    if(fp.length===3) fechaStr=fp[2]+'-'+fp[1]+'-'+fp[0];
+  }
+  document.getElementById('edit-tm-fecha').value=fechaStr;
+  document.getElementById('edit-tm-turno').value=t.Turno||'A';
   document.getElementById('edit-tm-inicio').value=t.HoraInicio||'';
   document.getElementById('edit-tm-fin').value=t.HoraFin||'';
   document.getElementById('edit-tm-duracion').value=t.DuracionMin||'';
@@ -3307,7 +3720,6 @@ function abrirEditTM(idx){
       }
     };
   });
-  // Guardar referencia al índice
   document.getElementById('edit-tm-id').dataset.idx=idx;
 }
 
@@ -3318,6 +3730,13 @@ function cerrarEditTM(){
 async function guardarEditTM(){
   var idx=parseInt(document.getElementById('edit-tm-id').dataset.idx);
   var tmId=document.getElementById('edit-tm-id').value;
+  var fechaVal=document.getElementById('edit-tm-fecha').value;
+  var fechaFmt=fechaVal;
+  if(fechaVal && fechaVal.includes('-')){
+    var fp=fechaVal.split('-');
+    fechaFmt=fp[2]+'/'+fp[1]+'/'+fp[0];
+  }
+  var turno=document.getElementById('edit-tm-turno').value;
   var inicio=document.getElementById('edit-tm-inicio').value;
   var fin=document.getElementById('edit-tm-fin').value;
   var dur=document.getElementById('edit-tm-duracion').value;
@@ -3326,14 +3745,16 @@ async function guardarEditTM(){
   loader(true,'Guardando...');
   try{
     var r=await api({action:'editarTiempoMuerto',
-      tiempoMuertoId:tmId, horaInicio:inicio, horaFin:fin,
+      tiempoMuertoId:tmId, fecha:fechaFmt, turno:turno,
+      horaInicio:inicio, horaFin:fin,
       duracionMin:parseFloat(dur)||0, motivo:motivo, estado:estado
     });
     loader(false);
     if(r.ok){
-      // Actualizar datos locales
-      _tmDatos[idx]={..._tmDatos[idx],HoraInicio:inicio,HoraFin:fin,
-        DuracionMin:parseFloat(dur)||0,Motivo:motivo,Estado:estado};
+      _tmDatos[idx]={..._tmDatos[idx],
+        Fecha:fechaFmt, Turno:turno,
+        HoraInicio:inicio, HoraFin:fin,
+        DuracionMin:parseFloat(dur)||0, Motivo:motivo, Estado:estado};
       renderTablaTM();
       cerrarEditTM();
       notify('Tiempo muerto actualizado ✓','ok');
