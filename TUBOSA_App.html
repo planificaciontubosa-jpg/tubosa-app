@@ -3427,29 +3427,87 @@ function renderDigHoras(){
     return '<details style="border:1px solid var(--gr2);border-radius:var(--rad2);margin-bottom:8px">'+
       '<summary style="padding:10px 14px;cursor:pointer;font-weight:700;color:var(--az);background:var(--az3);border-radius:var(--rad2)">Hora '+h+'</summary>'+
       '<div style="padding:12px">'+
-        '<div class="fila fila-3">'+
-          '<div class="campo"><label>Código Mezcla</label><input type="text" id="dh-codMezcla-'+h+'" list="mezclas-list" placeholder="MZ-001" oninput="buscarMezcla(this.value)" data-hora="'+h+'"></div>'+
-          '<div class="campo"><label>Mezcla</label><input type="text" id="dh-mezcla-'+h+'" placeholder="Auto"></div>'+
-          '<div class="campo"><label>Consecutivo</label><input type="text" id="dh-consec-'+h+'" placeholder="001"></div>'+
+        // Bloque 1 Mezcla
+        '<div style="background:#EDE7F6;border-radius:var(--rad2);padding:10px;margin-bottom:10px;border-left:3px solid #533AB7">'+
+          '<div style="font-size:11px;font-weight:700;color:#533AB7;margin-bottom:8px;text-transform:uppercase">🧪 Mezcla</div>'+
+          '<div class="fila fila-3">'+
+            '<div class="campo"><label>Código Mezcla</label><input type="text" id="dh-codMezcla-'+h+'" list="mezclas-list" placeholder="MZ-001" oninput="dig_buscarMezcla(this,'+h+')"></div>'+
+            '<div class="campo"><label>Mezcla</label><input type="text" id="dh-mezcla-'+h+'" placeholder="Auto"></div>'+
+            '<div class="campo"><label>Consecutivo</label><input type="text" id="dh-consec-'+h+'" placeholder="001"></div>'+
+          '</div>'+
+          '<div class="fila fila-3">'+
+            '<div class="campo"><label>Kg Mezcla</label><input type="number" id="dh-kgMezcla-'+h+'" placeholder="0.0" step="0.01"></div>'+
+            '<div class="campo"><label>Devolución kg</label><input type="number" id="dh-dev-'+h+'" placeholder="0.0" step="0.01"></div>'+
+            '<div class="campo"><label>Motivo Devolución</label><input type="text" id="dh-motivoDev-'+h+'" placeholder=""></div>'+
+          '</div>'+
         '</div>'+
-        '<div class="fila fila-3">'+
-          '<div class="campo"><label>Kg Mezcla</label><input type="number" id="dh-kgMezcla-'+h+'" placeholder="0.0" step="0.01"></div>'+
-          '<div class="campo"><label>Devolución kg</label><input type="number" id="dh-dev-'+h+'" placeholder="0.0" step="0.01"></div>'+
-          '<div class="campo"><label>Motivo Dev.</label><input type="text" id="dh-motivoDev-'+h+'" placeholder=""></div>'+
-        '</div>'+
-        '<div class="fila fila-3">'+
-          '<div class="campo"><label>Nro. Tubos</label><input type="number" id="dh-tubos-'+h+'" placeholder="0"></div>'+
-          '<div class="campo"><label>Peso Total kg</label><input type="number" id="dh-pesoTotal-'+h+'" placeholder="0.0" step="0.01"></div>'+
-          '<div class="campo"><label>Reproceso kg</label><input type="number" id="dh-reproceso-'+h+'" placeholder="0.0" step="0.01"></div>'+
-        '</div>'+
-        '<div class="fila fila-3">'+
-          '<div class="campo"><label>Peso Promedio</label><input type="number" id="dh-pesoProm-'+h+'" placeholder="0.000" step="0.001"></div>'+
-          '<div class="campo"><label>Longitud m</label><input type="number" id="dh-longitud-'+h+'" placeholder="0.0" step="0.1"></div>'+
+        // Bloque 2 Producción
+        '<div style="background:var(--az3);border-radius:var(--rad2);padding:10px;margin-bottom:10px;border-left:3px solid var(--az)">'+
+          '<div style="font-size:11px;font-weight:700;color:var(--az);margin-bottom:8px;text-transform:uppercase">📦 Producción</div>'+
+          '<div class="fila fila-3">'+
+            '<div class="campo"><label>Nro. Tubos</label><input type="number" id="dh-tubos-'+h+'" placeholder="0"></div>'+
+            '<div class="campo"><label>Peso Total kg</label><input type="number" id="dh-pesoTotal-'+h+'" placeholder="0.0" step="0.01"></div>'+
+            '<div class="campo"><label>Reproceso kg</label><input type="number" id="dh-reproceso-'+h+'" placeholder="0.0" step="0.01"></div>'+
+          '</div>'+
+          '<div class="fila fila-3">'+
+            '<div class="campo"><label>Peso Promedio kg</label><input type="number" id="dh-pesoProm-'+h+'" placeholder="0.000" step="0.001"></div>'+
+            '<div class="campo"><label>Sobre Peso %</label><input type="number" id="dh-sobrePeso-'+h+'" placeholder="0.00" step="0.01"></div>'+
+            '<div class="campo"><label>Longitud m</label><input type="number" id="dh-longitud-'+h+'" placeholder="0.0" step="0.1"></div>'+
+          '</div>'+
           '<div class="campo"><label>Observaciones</label><input type="text" id="dh-obs-'+h+'" placeholder=""></div>'+
+        '</div>'+
+        // Bloque 3 Tendencias
+        '<div style="background:var(--gr);border-radius:var(--rad2);padding:10px;border-left:3px solid var(--az2)">'+
+          '<div style="font-size:11px;font-weight:700;color:var(--az2);margin-bottom:8px;text-transform:uppercase">📈 Tendencias</div>'+
+          '<div class="fila fila-2">'+
+            '<div>'+
+              '<div class="sec-t">Lado 1</div>'+
+              '<div class="fila fila-2">'+
+                '<div class="campo"><label>Espesor (mm)</label><input type="number" id="dh-espL1-'+h+'" placeholder="0.00" step="0.01"></div>'+
+                '<div class="campo"><label>Descalibre %</label><input type="number" id="dh-descL1-'+h+'" placeholder="0.0" step="0.1"></div>'+
+              '</div>'+
+              '<div class="fila fila-2">'+
+                '<div class="campo"><label>Diám. Ext. mm</label><input type="number" id="dh-diamL1-'+h+'" placeholder="0.0" step="0.01"></div>'+
+                '<div class="campo"><label>Ovalización</label><input type="number" id="dh-ovalL1-'+h+'" placeholder="0.0" step="0.01"></div>'+
+              '</div>'+
+            '</div>'+
+            '<div>'+
+              '<div class="sec-t">Lado 2</div>'+
+              '<div class="fila fila-2">'+
+                '<div class="campo"><label>Espesor (mm)</label><input type="number" id="dh-espL2-'+h+'" placeholder="0.00" step="0.01"></div>'+
+                '<div class="campo"><label>Descalibre %</label><input type="number" id="dh-descL2-'+h+'" placeholder="0.0" step="0.1"></div>'+
+              '</div>'+
+              '<div class="fila fila-2">'+
+                '<div class="campo"><label>Diám. Ext. mm</label><input type="number" id="dh-diamL2-'+h+'" placeholder="0.0" step="0.01"></div>'+
+                '<div class="campo"><label>Ovalización</label><input type="number" id="dh-ovalL2-'+h+'" placeholder="0.0" step="0.01"></div>'+
+              '</div>'+
+            '</div>'+
+          '</div>'+
         '</div>'+
       '</div>'+
     '</details>';
-  }).join('');
+  }).join('') +
+  // Pesaje del turno completo
+  '<div style="border:1px solid var(--nr);border-radius:var(--rad2);padding:14px;margin-top:12px">'+
+    '<div style="font-size:12px;font-weight:700;color:var(--nr);text-transform:uppercase;margin-bottom:10px">⚖ Pesaje y Rendimiento — Turno Completo</div>'+
+    '<table class="pt"><thead><tr><th>Posición</th><th>Peso (kg)</th><th>Carga Línea (kg/h)</th><th>Observación</th></tr></thead>'+
+    '<tbody>'+Array.from({length:6},function(_,i){
+      var p=i+1;
+      return '<tr>'+
+        '<td style="text-align:center;font-weight:700;color:var(--nr)">'+p+'</td>'+
+        '<td><input type="number" id="dh-p-peso-'+p+'" placeholder="0.000" step="0.001" style="width:100%;border:1px solid var(--gr2);border-radius:4px;padding:4px 6px;font-size:12px"></td>'+
+        '<td><input type="number" id="dh-p-carga-'+p+'" placeholder="0.0" style="width:100%;border:1px solid var(--gr2);border-radius:4px;padding:4px 6px;font-size:12px"></td>'+
+        '<td><input type="text" id="dh-p-obs-'+p+'" placeholder="" style="width:100%;border:1px solid var(--gr2);border-radius:4px;padding:4px 6px;font-size:12px"></td>'+
+      '</tr>';
+    }).join('')+
+    '</tbody></table>'+
+  '</div>';
+}
+
+function dig_buscarMezcla(input, h){
+  var v=input.value.trim().toLowerCase();
+  var m=maestroMezclas.find(function(m){return String(m.CodigoMezcla).trim().toLowerCase()===v;});
+  if(m){ var el=document.getElementById('dh-mezcla-'+h); if(el) el.value=m.NombreMezcla||''; }
 }
 
 async function dig_guardarTodo(){
@@ -3465,8 +3523,13 @@ async function dig_guardarTodo(){
         devolucionKg:flt('dh-dev-'+h), motivoDevolucion:val('dh-motivoDev-'+h),
         nroTubos:tubos, pesoTotal:flt('dh-pesoTotal-'+h),
         reprocesoKg:flt('dh-reproceso-'+h), pesoPromedio:flt('dh-pesoProm-'+h),
-        longitud:flt('dh-longitud-'+h), observaciones:val('dh-obs-'+h),
-        sobrePeso:0, rotuladoOk:false, motivoReproceso:''
+        sobrePeso:flt('dh-sobrePeso-'+h), longitud:flt('dh-longitud-'+h),
+        observaciones:val('dh-obs-'+h), rotuladoOk:false, motivoReproceso:'',
+        // Tendencias
+        espL1:val('dh-espL1-'+h), descL1:val('dh-descL1-'+h),
+        diamL1:val('dh-diamL1-'+h), ovalL1:val('dh-ovalL1-'+h),
+        espL2:val('dh-espL2-'+h), descL2:val('dh-descL2-'+h),
+        diamL2:val('dh-diamL2-'+h), ovalL2:val('dh-ovalL2-'+h)
       });
     }
   }
@@ -3475,10 +3538,37 @@ async function dig_guardarTodo(){
   try{
     var errores=0;
     for(var i=0;i<horas.length;i++){
-      var r=await api({action:'guardarHora', turnoId:_digTurnoId, ...horas[i]});
-      if(!r.ok) errores++;
+      var h=horas[i];
+      var r=await api({action:'guardarHora', turnoId:_digTurnoId,
+        hora:h.hora, codigoMezcla:h.codigoMezcla, mezcla:h.mezcla,
+        cantidadKgMezcla:h.cantidadKgMezcla, consecutivoOperario:h.consecutivoOperario,
+        devolucionKg:h.devolucionKg, motivoDevolucion:h.motivoDevolucion,
+        nroTubos:h.nroTubos, pesoTotal:h.pesoTotal, reprocesoKg:h.reprocesoKg,
+        pesoPromedio:h.pesoPromedio, sobrePeso:h.sobrePeso, longitud:h.longitud,
+        observaciones:h.observaciones, rotuladoOk:false, motivoReproceso:''
+      });
+      if(!r.ok){ errores++; continue; }
+      // Guardar tendencias si hay datos
+      if(h.espL1||h.espL2){
+        await api({action:'guardarTendencia', horaId:r.horaId, turnoId:_digTurnoId, hora:h.hora,
+          espesorL1:flt('dh-espL1-'+h.hora), descalibreL1:flt('dh-descL1-'+h.hora),
+          diamExtL1:flt('dh-diamL1-'+h.hora), ovalizacionL1:flt('dh-ovalL1-'+h.hora),
+          espesorL2:flt('dh-espL2-'+h.hora), descalibreL2:flt('dh-descL2-'+h.hora),
+          diamExtL2:flt('dh-diamL2-'+h.hora), ovalizacionL2:flt('dh-ovalL2-'+h.hora)
+        });
+      }
     }
-    // Cerrar el turno
+    // Guardar pesajes
+    var pesajes=[];
+    for(var p=1;p<=6;p++){
+      var pesoKg=flt('dh-p-peso-'+p);
+      var cargaLinea=flt('dh-p-carga-'+p);
+      if(pesoKg>0||cargaLinea>0){
+        pesajes.push({posicion:p, pesoKg:pesoKg, cargaLinea:cargaLinea, obs:val('dh-p-obs-'+p)});
+      }
+    }
+    if(pesajes.length) await api({action:'guardarPesaje', turnoId:_digTurnoId, pesajes:pesajes});
+    // Cerrar turno
     await api({action:'cerrarTurno', turnoId:_digTurnoId});
     loader(false);
     if(errores===0){
@@ -3487,7 +3577,7 @@ async function dig_guardarTodo(){
       document.getElementById('dig-paso1').style.display='block';
       document.getElementById('dig-paso2').style.display='none';
     } else {
-      notify('Guardado con '+errores+' errores — revisa los datos','err');
+      notify('Guardado con '+errores+' errores — revisa','err');
     }
   }catch(e){loader(false);notify('Error: '+e.message,'err');}
 }
