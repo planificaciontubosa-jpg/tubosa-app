@@ -234,6 +234,7 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:#EEF2F7;color:var(--
     <div class="admin-tab" onclick="adminTab('ordenes',this)">📋 Órdenes SAP</div>
     <div class="admin-tab" onclick="adminTab('mezclas',this)">🧪 Mezclas SAP</div>
     <div class="admin-tab" onclick="adminTab('lineas',this)">🏭 Líneas</div>
+    <div class="admin-tab" onclick="adminTab('calidad',this)">📊 Parámetros Calidad</div>
   </div>
 
   <!-- USUARIOS -->
@@ -307,6 +308,57 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:#EEF2F7;color:var(--
     <div class="card"><div class="card-head az">🏭 Líneas de Producción</div><div class="card-body">
       <button class="btn btn-gr btn-sm" onclick="verMaestro('lineas')" style="margin-bottom:10px">🔄 Ver líneas</button>
       <div class="pw"><table class="preview-table" id="lista-lineas"></table></div>
+    </div></div>
+  </div>
+
+  <!-- CALIDAD -->
+  <div id="tab-calidad" style="display:none">
+    <div class="card"><div class="card-head" style="background:#533AB7;color:#fff">📊 Parámetros de Calidad por Referencia</div><div class="card-body">
+      <p class="ts" style="margin-bottom:12px">Define los límites de control (LS, Promedio, LI) para las gráficas SPC de cada referencia. El descalibre es fijo para todas las referencias.</p>
+      <div class="fila fila-2" style="margin-bottom:10px">
+        <div class="campo"><label>Código SAP</label>
+          <input type="text" id="cal-codSAP" placeholder="Ej: 1030000933" list="ordenes-sap-list" oninput="cal_buscarSAP(this.value)">
+          <datalist id="ordenes-sap-list"></datalist>
+        </div>
+        <div class="campo"><label>Producto</label><input type="text" id="cal-producto" readonly class="auto" placeholder="Auto"></div>
+      </div>
+      <!-- Espesor -->
+      <div style="background:#EDE7F6;border-radius:var(--rad2);padding:12px;margin-bottom:10px">
+        <div style="font-size:11px;font-weight:700;color:#533AB7;margin-bottom:8px;text-transform:uppercase">📏 Espesor de Pared (mm)</div>
+        <div class="fila fila-3">
+          <div class="campo"><label>Límite Superior (LS)</label><input type="number" id="cal-espLS" placeholder="0.00" step="0.01"></div>
+          <div class="campo"><label>Promedio objetivo</label><input type="number" id="cal-espProm" placeholder="0.00" step="0.01"></div>
+          <div class="campo"><label>Límite Inferior (LI)</label><input type="number" id="cal-espLI" placeholder="0.00" step="0.01"></div>
+        </div>
+      </div>
+      <!-- Diámetro -->
+      <div style="background:var(--az3);border-radius:var(--rad2);padding:12px;margin-bottom:10px">
+        <div style="font-size:11px;font-weight:700;color:var(--az);margin-bottom:8px;text-transform:uppercase">⭕ Diámetro Exterior (mm)</div>
+        <div class="fila fila-3">
+          <div class="campo"><label>Límite Superior (LS)</label><input type="number" id="cal-diamLS" placeholder="0.00" step="0.01"></div>
+          <div class="campo"><label>Promedio objetivo</label><input type="number" id="cal-diamProm" placeholder="0.00" step="0.01"></div>
+          <div class="campo"><label>Límite Inferior (LI)</label><input type="number" id="cal-diamLI" placeholder="0.00" step="0.01"></div>
+        </div>
+      </div>
+      <!-- Ovalamiento -->
+      <div style="background:var(--vd2);border-radius:var(--rad2);padding:12px;margin-bottom:10px">
+        <div style="font-size:11px;font-weight:700;color:var(--vd);margin-bottom:8px;text-transform:uppercase">🔵 Ovalamiento</div>
+        <div class="fila fila-3">
+          <div class="campo"><label>Límite Superior (LS)</label><input type="number" id="cal-ovalLS" placeholder="0.00" step="0.01"></div>
+          <div class="campo"><label>Promedio objetivo</label><input type="number" id="cal-ovalProm" placeholder="0.00" step="0.01"></div>
+          <div class="campo"><label>Límite Inferior (LI = 0)</label><input type="number" id="cal-ovalLI" value="0" step="0.01"></div>
+        </div>
+      </div>
+      <!-- Descalibre fijo -->
+      <div style="background:var(--nr2);border-radius:var(--rad2);padding:12px;margin-bottom:12px">
+        <div style="font-size:11px;font-weight:700;color:var(--nr);margin-bottom:4px;text-transform:uppercase">📐 Descalibre (%) — Fijo para todas las referencias</div>
+        <div style="font-size:12px;color:var(--gr3)">LS: <strong>6%</strong> &nbsp;·&nbsp; Promedio: <strong>3%</strong> &nbsp;·&nbsp; LI: <strong>0%</strong></div>
+      </div>
+      <div style="display:flex;gap:8px">
+        <button class="btn btn-sm" style="background:#533AB7;color:#fff" onclick="cal_guardar()">💾 Guardar Parámetros</button>
+        <button class="btn btn-gr btn-sm" onclick="cal_cargarLista()">🔄 Ver registros</button>
+      </div>
+      <div id="cal-lista" style="margin-top:14px;overflow-x:auto"></div>
     </div></div>
   </div>
 </div>
@@ -506,6 +558,14 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:#EEF2F7;color:var(--
       </div>
     </div>
   </div></div>
+
+  <!-- GRÁFICAS SPC -->
+  <div class="card" id="spc-card" style="display:none">
+    <div class="card-head" style="background:#533AB7;color:#fff">📊 Gráficas de Control — Tendencias del Turno</div>
+    <div class="card-body">
+      <div id="spc-charts" style="display:grid;grid-template-columns:1fr 1fr;gap:16px"></div>
+    </div>
+  </div>
 
   <!-- Observaciones -->
   <div class="card"><div class="card-head pu">📝 Observaciones de la Hora</div><div class="card-body">
@@ -1761,7 +1821,10 @@ async function cargarMaestros(){
         return '<option value="'+String(o.OrdenFab).trim()+'">'+o.OrdenFab+' — '+(o.Producto||'')+'</option>';
       }).join('');
       syncOrdenesAca();
+      cal_poblarSAP();
     }
+    // Cargar parámetros de calidad
+    await cargarCalidad();
     if(rm.ok && rm.data.length){
       maestroMezclas=rm.data.filter(function(m){return !m.Activa||m.Activa!=='No';});
       var opts2=maestroMezclas.map(function(m){return '<option value="'+m.CodigoMezcla+'">'+m.CodigoMezcla+' — '+(m.NombreMezcla||'')+'</option>';}).join('');
@@ -2424,6 +2487,7 @@ async function guardarHora(){
     if(banner) banner.style.display='none';
     renderTabs('horas-tabs',false);
     actualizarContador();
+    renderSPCCharts();
     notify((horaIdExistente?'Hora '+horaActual+' actualizada ✓':'Hora '+horaActual+' guardada ✓'),'ok');
     if(!horaIdExistente && horaActual<8) selHora(horaActual+1, false);
   }catch(e){loader(false);notify('Error: '+e.message,'err');}
@@ -3084,12 +3148,230 @@ async function regenerarPDFTurno(turnoId, lineaNombre, turno, fecha, operario){
   }catch(e){loader(false);notify('Error: '+e.message,'err');}
 }
 
+// ── MAESTRO CALIDAD ───────────────────────────────────────────
+var maestroCalidad = {};
+
+async function cargarCalidad(){
+  try{
+    var r = await api({action:'getCalidad'});
+    if(r.ok && r.data){
+      maestroCalidad = {};
+      r.data.forEach(function(c){
+        if(c.CodigoSAP) maestroCalidad[String(c.CodigoSAP).trim()] = c;
+      });
+    }
+  }catch(e){}
+}
+
+function cal_buscarSAP(v){
+  var todas = window._todasOrdenes||maestroOrdenes;
+  var o = todas.find(function(o){ return String(o.CodigoSAP).trim()===String(v).trim(); });
+  if(o){
+    setVal('cal-producto', o.Producto||'');
+    // Cargar parámetros existentes si los hay
+    var c = maestroCalidad[String(v).trim()];
+    if(c){
+      setVal('cal-espLS', c.EspesorLS||''); setVal('cal-espProm', c.EspesorProm||''); setVal('cal-espLI', c.EspesorLI||'');
+      setVal('cal-diamLS', c.DiamLS||''); setVal('cal-diamProm', c.DiamProm||''); setVal('cal-diamLI', c.DiamLI||'');
+      setVal('cal-ovalLS', c.OvalLS||''); setVal('cal-ovalProm', c.OvalProm||''); setVal('cal-ovalLI', c.OvalLI||0);
+    } else {
+      ['cal-espLS','cal-espProm','cal-espLI','cal-diamLS','cal-diamProm','cal-diamLI','cal-ovalLS','cal-ovalProm'].forEach(function(id){setVal(id,'');});
+      setVal('cal-ovalLI','0');
+    }
+  }
+}
+
+async function cal_guardar(){
+  var codSAP = val('cal-codSAP').trim();
+  if(!codSAP){notify('Ingresa el Código SAP','err');return;}
+  loader(true,'Guardando...');
+  try{
+    var r = await api({action:'saveCalidad',
+      codigoSAP:codSAP, producto:val('cal-producto'),
+      espesorLS:flt('cal-espLS'), espesorProm:flt('cal-espProm'), espesorLI:flt('cal-espLI'),
+      diamLS:flt('cal-diamLS'), diamProm:flt('cal-diamProm'), diamLI:flt('cal-diamLI'),
+      ovalLS:flt('cal-ovalLS'), ovalProm:flt('cal-ovalProm'), ovalLI:flt('cal-ovalLI'),
+      descalibreLS:6, descalibreProm:3, descalibreLI:0
+    });
+    loader(false);
+    if(r.ok){
+      await cargarCalidad();
+      notify('Parámetros guardados ✓','ok');
+      cal_cargarLista();
+    } else notify(r.msg||'Error','err');
+  }catch(e){loader(false);notify('Error: '+e.message,'err');}
+}
+
+async function cal_cargarLista(){
+  var r = await api({action:'getCalidad'});
+  if(!r.ok) return;
+  var lista = document.getElementById('cal-lista');
+  if(!r.data||!r.data.length){lista.innerHTML='<p style="color:var(--gr3);font-size:13px">Sin registros aún</p>';return;}
+  lista.innerHTML='<table class="rt" style="font-size:12px"><thead><tr><th>Cód.SAP</th><th>Producto</th><th>Esp.LS</th><th>Esp.Prom</th><th>Esp.LI</th><th>Diám.LS</th><th>Diám.Prom</th><th>Diám.LI</th><th>Oval.LS</th><th>Oval.Prom</th></tr></thead><tbody>'+
+    r.data.map(function(c){return '<tr><td>'+c.CodigoSAP+'</td><td style="font-size:11px">'+( c.Producto||'—')+'</td><td>'+( c.EspesorLS||'—')+'</td><td><strong>'+( c.EspesorProm||'—')+'</strong></td><td>'+( c.EspesorLI||'—')+'</td><td>'+( c.DiamLS||'—')+'</td><td><strong>'+( c.DiamProm||'—')+'</strong></td><td>'+( c.DiamLI||'—')+'</td><td>'+( c.OvalLS||'—')+'</td><td><strong>'+( c.OvalProm||'—')+'</strong></td></tr>';}).join('')+
+  '</tbody></table>';
+}
+
+// Poblar datalist de códigos SAP en panel calidad
+function cal_poblarSAP(){
+  var todas = window._todasOrdenes||maestroOrdenes;
+  var codigos = [...new Set(todas.map(function(o){return o.CodigoSAP;}).filter(Boolean))];
+  var dl = document.getElementById('ordenes-sap-list');
+  if(dl) dl.innerHTML = codigos.map(function(c){ return '<option value="'+c+'">'+c+'</option>'; }).join('');
+}
+
+// ── GRÁFICAS SPC ──────────────────────────────────────────────
+function renderSPCCharts(){
+  var card = document.getElementById('spc-card');
+  if(!card) return;
+
+  // Recolectar datos de horas guardadas
+  var horas = Object.values(horasGuardadas).sort(function(a,b){return a.hora-b.hora;});
+  if(horas.length < 1){ card.style.display='none'; return; }
+
+  var codigoSAP = String(turnoActual.codigoSAP||'').trim();
+  var cal = maestroCalidad[codigoSAP] || {};
+
+  var series = {
+    espesor:  { vals: horas.map(function(h){return parseFloat(h.espL1)||null;}), ls:parseFloat(cal.EspesorLS)||null, prom:parseFloat(cal.EspesorProm)||null, li:parseFloat(cal.EspesorLI)||null, label:'Espesor Pared L1 (mm)', color:'#533AB7' },
+    descalibre:{ vals: horas.map(function(h){return parseFloat(h.descL1)||null;}), ls:6, prom:3, li:0, label:'Descalibre L1 (%)', color:'#C55A11' },
+    diametro: { vals: horas.map(function(h){return parseFloat(h.diamL1)||null;}), ls:parseFloat(cal.DiamLS)||null, prom:parseFloat(cal.DiamProm)||null, li:parseFloat(cal.DiamLI)||null, label:'Diámetro Exterior L1 (mm)', color:'#1F3864' },
+    oval:     { vals: horas.map(function(h){return parseFloat(h.ovalL1)||null;}), ls:parseFloat(cal.OvalLS)||null, prom:parseFloat(cal.OvalProm)||null, li:0, label:'Ovalización L1', color:'#1E6B3C' }
+  };
+
+  var labels = horas.map(function(h){return 'H'+h.hora;});
+
+  card.style.display='block';
+  document.getElementById('spc-charts').innerHTML = Object.values(series).map(function(s, idx){
+    return '<div><canvas id="spc-canvas-'+idx+'" style="width:100%;height:180px"></canvas></div>';
+  }).join('');
+
+  Object.values(series).forEach(function(s, idx){
+    var canvas = document.getElementById('spc-canvas-'+idx);
+    if(!canvas) return;
+    canvas.width = canvas.offsetWidth || 300;
+    canvas.height = 180;
+    dibujarSPC(canvas, labels, s);
+  });
+}
+
+function dibujarSPC(canvas, labels, serie){
+  var ctx = canvas.getContext('2d');
+  var W = canvas.width, H = canvas.height;
+  var PAD = {top:30, right:16, bottom:30, left:46};
+  var gW = W - PAD.left - PAD.right;
+  var gH = H - PAD.top - PAD.bottom;
+
+  ctx.clearRect(0,0,W,H);
+
+  // Calcular rango Y
+  var allVals = serie.vals.filter(function(v){return v!==null;});
+  var refs = [serie.ls, serie.prom, serie.li].filter(function(v){return v!==null;});
+  var allY = allVals.concat(refs);
+  if(!allY.length) allY = [0,10];
+  var yMin = Math.min.apply(null, allY);
+  var yMax = Math.max.apply(null, allY);
+  var yRange = yMax - yMin || 1;
+  yMin -= yRange * 0.1;
+  yMax += yRange * 0.1;
+  yRange = yMax - yMin;
+
+  function toX(i){ return PAD.left + (i / Math.max(labels.length-1, 1)) * gW; }
+  function toY(v){ return PAD.top + (1 - (v - yMin) / yRange) * gH; }
+
+  // Fondo cuadrícula
+  ctx.fillStyle = '#F8F8FC';
+  ctx.fillRect(PAD.left, PAD.top, gW, gH);
+
+  // Grid horizontal
+  ctx.strokeStyle = '#E0E0E0'; ctx.lineWidth = 0.5;
+  for(var yi=0; yi<=4; yi++){
+    var yy = PAD.top + (yi/4) * gH;
+    ctx.beginPath(); ctx.moveTo(PAD.left, yy); ctx.lineTo(PAD.left+gW, yy); ctx.stroke();
+    var yVal = yMax - (yi/4) * yRange;
+    ctx.fillStyle = '#888'; ctx.font = '9px DM Sans,sans-serif'; ctx.textAlign='right';
+    ctx.fillText(yVal.toFixed(2), PAD.left-4, yy+3);
+  }
+
+  // Grid vertical
+  labels.forEach(function(lbl, i){
+    var xx = toX(i);
+    ctx.strokeStyle='#E0E0E0'; ctx.lineWidth=0.5;
+    ctx.beginPath(); ctx.moveTo(xx, PAD.top); ctx.lineTo(xx, PAD.top+gH); ctx.stroke();
+    ctx.fillStyle='#888'; ctx.font='9px DM Sans,sans-serif'; ctx.textAlign='center';
+    ctx.fillText(lbl, xx, PAD.top+gH+14);
+  });
+
+  // Zona entre límites (sombreado suave)
+  if(serie.ls!==null && serie.li!==null){
+    ctx.fillStyle = serie.color+'18';
+    ctx.fillRect(PAD.left, toY(serie.ls), gW, toY(serie.li)-toY(serie.ls));
+  }
+
+  // Línea LS (punteada roja)
+  if(serie.ls!==null){
+    ctx.strokeStyle='#C0392B'; ctx.lineWidth=1.2; ctx.setLineDash([5,3]);
+    ctx.beginPath(); ctx.moveTo(PAD.left, toY(serie.ls)); ctx.lineTo(PAD.left+gW, toY(serie.ls)); ctx.stroke();
+    ctx.fillStyle='#C0392B'; ctx.font='bold 9px DM Sans,sans-serif'; ctx.textAlign='left';
+    ctx.fillText('LS '+serie.ls.toFixed(2), PAD.left+4, toY(serie.ls)-3);
+  }
+
+  // Línea LI (punteada naranja)
+  if(serie.li!==null){
+    ctx.strokeStyle='#C55A11'; ctx.lineWidth=1.2; ctx.setLineDash([5,3]);
+    ctx.beginPath(); ctx.moveTo(PAD.left, toY(serie.li)); ctx.lineTo(PAD.left+gW, toY(serie.li)); ctx.stroke();
+    ctx.fillStyle='#C55A11'; ctx.font='bold 9px DM Sans,sans-serif'; ctx.textAlign='left';
+    ctx.fillText('LI '+serie.li.toFixed(2), PAD.left+4, toY(serie.li)+10);
+  }
+
+  // Línea promedio (sólida)
+  if(serie.prom!==null){
+    ctx.strokeStyle=serie.color; ctx.lineWidth=1.5; ctx.setLineDash([]);
+    ctx.beginPath(); ctx.moveTo(PAD.left, toY(serie.prom)); ctx.lineTo(PAD.left+gW, toY(serie.prom)); ctx.stroke();
+    ctx.fillStyle=serie.color; ctx.font='bold 9px DM Sans,sans-serif'; ctx.textAlign='left';
+    ctx.fillText('X̄ '+serie.prom.toFixed(2), PAD.left+4, toY(serie.prom)-3);
+  }
+
+  // Línea de datos
+  ctx.setLineDash([]);
+  var puntos = serie.vals.map(function(v,i){ return v!==null ? {x:toX(i),y:toY(v),v:v,i:i} : null; }).filter(Boolean);
+  if(puntos.length > 1){
+    ctx.strokeStyle = serie.color; ctx.lineWidth=2;
+    ctx.beginPath();
+    puntos.forEach(function(p,pi){
+      if(pi===0) ctx.moveTo(p.x,p.y); else ctx.lineTo(p.x,p.y);
+    });
+    ctx.stroke();
+  }
+
+  // Puntos
+  puntos.forEach(function(p){
+    var fueraLS = serie.ls!==null && p.v > serie.ls;
+    var fueraLI = serie.li!==null && p.v < serie.li;
+    ctx.fillStyle = (fueraLS||fueraLI) ? '#C0392B' : serie.color;
+    ctx.beginPath(); ctx.arc(p.x, p.y, 4, 0, Math.PI*2); ctx.fill();
+    ctx.fillStyle='#fff'; ctx.beginPath(); ctx.arc(p.x, p.y, 2, 0, Math.PI*2); ctx.fill();
+  });
+
+  // Borde gráfica
+  ctx.strokeStyle='#D0D0D0'; ctx.lineWidth=1; ctx.setLineDash([]);
+  ctx.strokeRect(PAD.left, PAD.top, gW, gH);
+
+  // Título
+  ctx.fillStyle=serie.color; ctx.font='bold 10px DM Sans,sans-serif'; ctx.textAlign='left';
+  ctx.fillText(serie.label, PAD.left, PAD.top-8);
+}
+
 // ── ADMIN ─────────────────────────────────────────────────────
 function adminTab(tab,el){
-  ['usuarios','ordenes','mezclas','lineas'].forEach(t=>document.getElementById('tab-'+t).style.display=t===tab?'block':'none');
+  ['usuarios','ordenes','mezclas','lineas','calidad'].forEach(t=>{
+    var el2=document.getElementById('tab-'+t);
+    if(el2) el2.style.display=t===tab?'block':'none';
+  });
   document.querySelectorAll('.admin-tab').forEach(e=>e.classList.remove('activo'));
   el.classList.add('activo');
-  if(tab==='usuarios')cargarUsuarios();
+  if(tab==='usuarios') cargarUsuarios();
+  if(tab==='calidad') cal_cargarLista();
 }
 function dov(e,el){e.preventDefault();el.classList.add('drag');}
 function dlv(el){el.classList.remove('drag');}
