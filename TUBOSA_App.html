@@ -2158,6 +2158,7 @@ async function retomarTurno(){
       var elBH=document.getElementById('btn-hora-num'); if(elBH) elBH.textContent=horaActual;
       var elRH2=document.getElementById('reg-hora-num2'); if(elRH2) elRH2.textContent=horaActual;
       cargarAcumuladoOrden();
+      setTimeout(renderSPCCharts, 300);
     }
 
   }catch(e){
@@ -2337,6 +2338,7 @@ function iniciarRegistro(){
   _acumuladoToken++;
   _tubosAcumuladosOrden=0;
   cargarAcumuladoOrden();
+  setTimeout(renderSPCCharts, 200);
   // Check rotulado
   document.getElementById('reg-rotuladoOk').addEventListener('change',function(){
     document.getElementById('rotulado-txt').textContent=this.checked?'✓ Rotulado VERIFICADO':'Rotulado NO verificado';
@@ -3226,45 +3228,66 @@ function renderSPCCharts(){
   if(!card) return;
 
   var horas = Object.values(horasGuardadas).sort(function(a,b){return a.hora-b.hora;});
-  // Verificar que haya al menos una hora con datos de tendencias
+
+  // Usar parseFloat con distinción de vacío vs cero
+  function getVal(v){
+    if(v===''||v===null||v===undefined) return null;
+    var n=parseFloat(v);
+    return isNaN(n)?null:n;
+  }
+
+  // Verificar que haya al menos una hora con alguna tendencia
   var hayTend = horas.some(function(h){
-    return h.espL1!==''&&h.espL1!==null&&h.espL1!==undefined||
-           h.descL1!==''&&h.descL1!==null&&h.descL1!==undefined;
+    return getVal(h.espL1)!==null || getVal(h.descL1)!==null ||
+           getVal(h.diamL1)!==null || getVal(h.ovalL1)!==null;
   });
   if(!horas.length || !hayTend){ card.style.display='none'; return; }
 
   var codigoSAP = String(turnoActual.codigoSAP||'').trim();
   var cal = maestroCalidad[codigoSAP] || {};
 
-  // Usar parseFloat con fallback null — distinguir 0 de vacío
-  function getVal(v){ if(v===''||v===null||v===undefined) return null; var n=parseFloat(v); return isNaN(n)?null:n; }
+  // Construir labels con TODAS las horas del turno (1-8)
+  // Los puntos nulos simplemente no se dibujan pero el eje X es consistente
+  var labels = Array.from({length:8}, function(_,i){ return 'H'+(i+1); });
+  var horaMap = {};
+  horas.forEach(function(h){ horaMap[h.hora]=h; });
 
-  var labels = horas.map(function(h){return 'H'+h.hora;});
   var series = [
-    { vals: horas.map(function(h){return getVal(h.espL1);}), ls:getVal(cal.EspesorLS), prom:getVal(cal.EspesorProm), li:getVal(cal.EspesorLI), label:'Espesor Pared L1 (mm)', color:'#533AB7' },
-    { vals: horas.map(function(h){return getVal(h.descL1);}), ls:6, prom:3, li:0, label:'Descalibre L1 (%)', color:'#C55A11' },
-    { vals: horas.map(function(h){return getVal(h.diamL1);}), ls:getVal(cal.DiamLS), prom:getVal(cal.DiamProm), li:getVal(cal.DiamLI), label:'Diámetro Exterior L1 (mm)', color:'#1F3864' },
-    { vals: horas.map(function(h){return getVal(h.ovalL1);}), ls:getVal(cal.OvalLS), prom:getVal(cal.OvalProm), li:0, label:'Ovalización L1', color:'#1E6B3C' }
+    { vals: labels.map(function(_,i){ var h=horaMap[i+1]; return h?getVal(h.espL1):null; }),
+      ls:getVal(cal.EspesorLS), prom:getVal(cal.EspesorProm), li:getVal(cal.EspesorLI),
+      label:'Espesor Pared L1 (mm)', color:'#533AB7' },
+    { vals: labels.map(function(_,i){ var h=horaMap[i+1]; return h?getVal(h.descL1):null; }),
+      ls:6, prom:3, li:0, label:'Descalibre L1 (%)', color:'#C55A11' },
+    { vals: labels.map(function(_,i){ var h=horaMap[i+1]; return h?getVal(h.diamL1):null; }),
+      ls:getVal(cal.DiamLS), prom:getVal(cal.DiamProm), li:getVal(cal.DiamLI),
+      label:'Diámetro Exterior L1 (mm)', color:'#1F3864' },
+    { vals: labels.map(function(_,i){ var h=horaMap[i+1]; return h?getVal(h.ovalL1):null; }),
+      ls:getVal(cal.OvalLS), prom:getVal(cal.OvalProm), li:0,
+      label:'Ovalización L1', color:'#1E6B3C' }
   ];
 
+  // Filtrar series que no tienen ningún dato real
+  var seriesConDatos = series.filter(function(s){
+    return s.vals.some(function(v){ return v!==null; });
+  });
+  if(!seriesConDatos.length){ card.style.display='none'; return; }
+
   card.style.display='block';
-  document.getElementById('spc-charts').innerHTML = series.map(function(s, idx){
+  document.getElementById('spc-charts').innerHTML = seriesConDatos.map(function(s, idx){
     return '<div style="background:#fff;border-radius:8px;padding:10px;box-shadow:0 1px 4px rgba(0,0,0,.08)"><canvas id="spc-canvas-'+idx+'"></canvas></div>';
   }).join('');
 
-  // Usar setTimeout para asegurar que el DOM esté renderizado y el canvas tenga dimensiones
   setTimeout(function(){
-    series.forEach(function(s, idx){
+    seriesConDatos.forEach(function(s, idx){
       var canvas = document.getElementById('spc-canvas-'+idx);
       if(!canvas) return;
       var parent = canvas.parentElement;
-      var w = parent ? (parent.offsetWidth - 20) : 280;
-      if(w < 100) w = 280; // fallback mínimo
+      var w = parent ? Math.max(parent.offsetWidth - 20, 200) : 280;
       canvas.width = w;
       canvas.height = 180;
       dibujarSPC(canvas, labels, s);
     });
-  }, 50);
+  }, 80);
 }
 
 function dibujarSPC(canvas, labels, serie){
@@ -3344,9 +3367,13 @@ function dibujarSPC(canvas, labels, serie){
     ctx.fillText('X̄ '+serie.prom.toFixed(2), PAD.left+4, toY(serie.prom)-3);
   }
 
-  // Línea de datos
+  // Línea de datos — solo conecta puntos no nulos
   ctx.setLineDash([]);
-  var puntos = serie.vals.map(function(v,i){ return v!==null ? {x:toX(i),y:toY(v),v:v,i:i} : null; }).filter(Boolean);
+  var puntos = [];
+  serie.vals.forEach(function(v,i){
+    if(v!==null) puntos.push({x:toX(i), y:toY(v), v:v, i:i});
+  });
+
   if(puntos.length > 1){
     ctx.strokeStyle = serie.color; ctx.lineWidth=2;
     ctx.beginPath();
