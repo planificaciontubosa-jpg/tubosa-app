@@ -3522,7 +3522,8 @@ function abrirInformeSupervisor(){
   document.getElementById('is-fecha').value=hoy.toISOString().split('T')[0];
   document.getElementById('is-kpis').style.display='none';
   document.getElementById('is-card-lineas').style.display='none';
-  document.getElementById('is-card-inactivas').style.display='none';
+  var cardInact=document.getElementById('is-card-inactivas');
+  if(cardInact) cardInact.style.display='none';
   document.getElementById('is-btn-pdf').style.display='none';
   document.getElementById('is-empty').style.display='block';
 }
