@@ -3239,7 +3239,9 @@ function renderSPCCharts(){
   // Verificar que haya al menos una hora con alguna tendencia
   var hayTend = horas.some(function(h){
     return getVal(h.espL1)!==null || getVal(h.descL1)!==null ||
-           getVal(h.diamL1)!==null || getVal(h.ovalL1)!==null;
+           getVal(h.diamL1)!==null || getVal(h.ovalL1)!==null ||
+           getVal(h.espL2)!==null || getVal(h.descL2)!==null ||
+           getVal(h.diamL2)!==null || getVal(h.ovalL2)!==null;
   });
   if(!horas.length || !hayTend){ card.style.display='none'; return; }
 
@@ -3253,22 +3255,27 @@ function renderSPCCharts(){
   horas.forEach(function(h){ horaMap[h.hora]=h; });
 
   var series = [
-    { vals: labels.map(function(_,i){ var h=horaMap[i+1]; return h?getVal(h.espL1):null; }),
+    { vals:  labels.map(function(_,i){ var h=horaMap[i+1]; return h?getVal(h.espL1):null; }),
+      vals2: labels.map(function(_,i){ var h=horaMap[i+1]; return h?getVal(h.espL2):null; }),
       ls:getVal(cal.EspesorLS), prom:getVal(cal.EspesorProm), li:getVal(cal.EspesorLI),
-      label:'Espesor Pared L1 (mm)', color:'#533AB7' },
-    { vals: labels.map(function(_,i){ var h=horaMap[i+1]; return h?getVal(h.descL1):null; }),
-      ls:6, prom:3, li:0, label:'Descalibre L1 (%)', color:'#C55A11' },
-    { vals: labels.map(function(_,i){ var h=horaMap[i+1]; return h?getVal(h.diamL1):null; }),
+      label:'Espesor Pared (mm)', color:'#533AB7', color2:'#9C7FC3' },
+    { vals:  labels.map(function(_,i){ var h=horaMap[i+1]; return h?getVal(h.descL1):null; }),
+      vals2: labels.map(function(_,i){ var h=horaMap[i+1]; return h?getVal(h.descL2):null; }),
+      ls:6, prom:3, li:0, label:'Descalibre (%)', color:'#C55A11', color2:'#F4A261' },
+    { vals:  labels.map(function(_,i){ var h=horaMap[i+1]; return h?getVal(h.diamL1):null; }),
+      vals2: labels.map(function(_,i){ var h=horaMap[i+1]; return h?getVal(h.diamL2):null; }),
       ls:getVal(cal.DiamLS), prom:getVal(cal.DiamProm), li:getVal(cal.DiamLI),
-      label:'Diámetro Exterior L1 (mm)', color:'#1F3864' },
-    { vals: labels.map(function(_,i){ var h=horaMap[i+1]; return h?getVal(h.ovalL1):null; }),
+      label:'Diámetro Exterior (mm)', color:'#1F3864', color2:'#2E5BA8' },
+    { vals:  labels.map(function(_,i){ var h=horaMap[i+1]; return h?getVal(h.ovalL1):null; }),
+      vals2: labels.map(function(_,i){ var h=horaMap[i+1]; return h?getVal(h.ovalL2):null; }),
       ls:getVal(cal.OvalLS), prom:getVal(cal.OvalProm), li:0,
-      label:'Ovalización L1', color:'#1E6B3C' }
+      label:'Ovalización', color:'#1E6B3C', color2:'#52B788' }
   ];
 
   // Filtrar series que no tienen ningún dato real
   var seriesConDatos = series.filter(function(s){
-    return s.vals.some(function(v){ return v!==null; });
+    return s.vals.some(function(v){ return v!==null; }) ||
+           (s.vals2 && s.vals2.some(function(v){ return v!==null; }));
   });
   if(!seriesConDatos.length){ card.style.display='none'; return; }
 
@@ -3301,6 +3308,7 @@ function dibujarSPC(canvas, labels, serie){
 
   // Calcular rango Y
   var allVals = serie.vals.filter(function(v){return v!==null;});
+  if(serie.vals2) allVals = allVals.concat(serie.vals2.filter(function(v){return v!==null;}));
   var refs = [serie.ls, serie.prom, serie.li].filter(function(v){return v!==null;});
   var allY = allVals.concat(refs);
   if(!allY.length) allY = [0,10];
@@ -3367,30 +3375,54 @@ function dibujarSPC(canvas, labels, serie){
     ctx.fillText('X̄ '+serie.prom.toFixed(2), PAD.left+4, toY(serie.prom)-3);
   }
 
-  // Línea de datos — solo conecta puntos no nulos
+  // Línea de datos L1 — solo conecta puntos no nulos
   ctx.setLineDash([]);
   var puntos = [];
   serie.vals.forEach(function(v,i){
     if(v!==null) puntos.push({x:toX(i), y:toY(v), v:v, i:i});
   });
-
   if(puntos.length > 1){
     ctx.strokeStyle = serie.color; ctx.lineWidth=2;
     ctx.beginPath();
-    puntos.forEach(function(p,pi){
-      if(pi===0) ctx.moveTo(p.x,p.y); else ctx.lineTo(p.x,p.y);
-    });
+    puntos.forEach(function(p,pi){ if(pi===0) ctx.moveTo(p.x,p.y); else ctx.lineTo(p.x,p.y); });
     ctx.stroke();
   }
-
-  // Puntos
+  // Puntos L1
   puntos.forEach(function(p){
-    var fueraLS = serie.ls!==null && p.v > serie.ls;
-    var fueraLI = serie.li!==null && p.v < serie.li;
-    ctx.fillStyle = (fueraLS||fueraLI) ? '#C0392B' : serie.color;
-    ctx.beginPath(); ctx.arc(p.x, p.y, 4, 0, Math.PI*2); ctx.fill();
-    ctx.fillStyle='#fff'; ctx.beginPath(); ctx.arc(p.x, p.y, 2, 0, Math.PI*2); ctx.fill();
+    var fuera = (serie.ls!==null&&p.v>serie.ls)||(serie.li!==null&&p.v<serie.li);
+    ctx.fillStyle = fuera ? '#C0392B' : serie.color;
+    ctx.beginPath(); ctx.arc(p.x,p.y,4,0,Math.PI*2); ctx.fill();
+    ctx.fillStyle='#fff'; ctx.beginPath(); ctx.arc(p.x,p.y,2,0,Math.PI*2); ctx.fill();
   });
+
+  // Línea de datos L2
+  if(serie.vals2){
+    var puntos2 = [];
+    serie.vals2.forEach(function(v,i){ if(v!==null) puntos2.push({x:toX(i),y:toY(v),v:v,i:i}); });
+    if(puntos2.length > 1){
+      ctx.strokeStyle = serie.color2||'#999'; ctx.lineWidth=2; ctx.setLineDash([4,2]);
+      ctx.beginPath();
+      puntos2.forEach(function(p,pi){ if(pi===0) ctx.moveTo(p.x,p.y); else ctx.lineTo(p.x,p.y); });
+      ctx.stroke(); ctx.setLineDash([]);
+    }
+    // Puntos L2
+    puntos2.forEach(function(p){
+      var fuera = (serie.ls!==null&&p.v>serie.ls)||(serie.li!==null&&p.v<serie.li);
+      ctx.fillStyle = fuera ? '#C0392B' : (serie.color2||'#999');
+      ctx.beginPath(); ctx.arc(p.x,p.y,4,0,Math.PI*2); ctx.fill();
+      ctx.fillStyle='#fff'; ctx.beginPath(); ctx.arc(p.x,p.y,2,0,Math.PI*2); ctx.fill();
+    });
+  }
+
+  // Leyenda L1 / L2
+  var leyX = PAD.left + gW - 90;
+  ctx.font='9px DM Sans,sans-serif'; ctx.textAlign='left';
+  ctx.fillStyle=serie.color; ctx.fillRect(leyX,PAD.top+4,14,3);
+  ctx.fillStyle='#444'; ctx.fillText('L1',leyX+17,PAD.top+8);
+  if(serie.color2){
+    ctx.fillStyle=serie.color2; ctx.fillRect(leyX+36,PAD.top+4,14,3);
+    ctx.fillStyle='#444'; ctx.fillText('L2',leyX+53,PAD.top+8);
+  }
 
   // Borde gráfica
   ctx.strokeStyle='#D0D0D0'; ctx.lineWidth=1; ctx.setLineDash([]);
