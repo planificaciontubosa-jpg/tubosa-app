@@ -3588,6 +3588,7 @@ function renderInformeSupervisor(d){
 
   // Líneas activas
   var body=document.getElementById('is-lineas-body');
+  console.log('porLinea:', d.porLinea.length, d.porLinea[0]);
   if(d.porLinea.length){
     document.getElementById('is-card-lineas').style.display='block';
     body.innerHTML=d.porLinea.map(function(l, idx){
