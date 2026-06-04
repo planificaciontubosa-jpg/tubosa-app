@@ -3588,38 +3588,54 @@ function renderInformeSupervisor(d){
 
   // Líneas activas
   var body=document.getElementById('is-lineas-body');
-  console.log('porLinea:', d.porLinea.length, d.porLinea[0]);
   if(d.porLinea.length){
     document.getElementById('is-card-lineas').style.display='block';
     body.innerHTML=d.porLinea.map(function(l, idx){
-      var scL=parseFloat(l.pctScrap);
+      var scL=parseFloat(l.pctScrap)||0;
       var scLC=scL<8?'var(--vd)':scL<=10?'#F57F17':'var(--rd)';
       var horasHTML='';
       if(l.horas && l.horas.length){
         horasHTML='<div style="overflow-x:auto;margin-top:8px"><table class="pt" style="font-size:11px">'+
           '<thead><tr><th>H</th><th>Cód.Mezcla</th><th>Kg Mez.</th><th>Dev.</th><th>Tubos</th><th>Peso kg</th><th>Repro.</th><th>SP%</th><th>Obs.</th></tr></thead><tbody>'+
-          l.horas.map(function(h){return '<tr><td>H'+h.hora+'</td><td>'+(h.codigoMezcla||'—')+'</td><td>'+(h.kgMezcla||0).toFixed(1)+'</td><td>'+(h.devolucion>0?h.devolucion.toFixed(1):'—')+'</td><td>'+(h.tubos||0)+'</td><td>'+(h.pesoTotal||0).toFixed(1)+'</td><td>'+(h.reproceso>0?h.reproceso.toFixed(1):'—')+'</td><td>'+(h.sobrePeso?parseFloat(h.sobrePeso).toFixed(1)+'%':'—')+'</td><td style="font-size:10px;max-width:120px">'+(h.observaciones||'—')+'</td></tr>';}).join('')+
+          l.horas.map(function(h){
+            return '<tr>'+
+              '<td>H'+h.hora+'</td>'+
+              '<td>'+(h.codigoMezcla||'—')+'</td>'+
+              '<td>'+parseFloat(h.kgMezcla||0).toFixed(1)+'</td>'+
+              '<td>'+(parseFloat(h.devolucion||0)>0?parseFloat(h.devolucion).toFixed(1):'—')+'</td>'+
+              '<td>'+(h.tubos||0)+'</td>'+
+              '<td>'+parseFloat(h.pesoTotal||0).toFixed(1)+'</td>'+
+              '<td>'+(parseFloat(h.reproceso||0)>0?parseFloat(h.reproceso).toFixed(1):'—')+'</td>'+
+              '<td>'+(h.sobrePeso?parseFloat(h.sobrePeso).toFixed(1)+'%':'—')+'</td>'+
+              '<td style="font-size:10px;max-width:120px">'+(h.observaciones||'—')+'</td>'+
+            '</tr>';
+          }).join('')+
           '</tbody></table></div>';
       }
       var tmHTML='';
       if(l.tiemposMuertos && l.tiemposMuertos.length){
         tmHTML='<div style="margin-top:8px"><div style="font-size:11px;font-weight:700;color:var(--rd);margin-bottom:4px">⏱ Tiempos Muertos ('+l.tmMin+' min)</div>'+
-          l.tiemposMuertos.map(function(tm){return '<div style="font-size:11px;background:var(--rd2);border-radius:4px;padding:4px 8px;margin-bottom:3px">'+tm.horaInicio+' → '+tm.horaFin+' ('+tm.duracion+' min) — '+tm.motivo+'</div>';}).join('')+'</div>';
+          l.tiemposMuertos.map(function(tm){
+            return '<div style="font-size:11px;background:var(--rd2);border-radius:4px;padding:4px 8px;margin-bottom:3px">'+
+              (tm.horaInicio||'—')+' → '+(tm.horaFin||'—')+' ('+tm.duracion+' min) — '+(tm.motivo||'—')+'</div>';
+          }).join('')+'</div>';
       }
       return '<div style="border:1px solid var(--gr2);border-radius:var(--rad2);padding:12px;margin-bottom:10px;border-left:4px solid #533AB7">'+
         '<div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:8px;margin-bottom:8px">'+
           '<div>'+
-            '<div style="font-size:14px;font-weight:700;color:#533AB7">'+l.linea+' — Turno '+l.turno+'</div>'+
-            '<div style="font-size:11px;color:var(--gr3)">'+l.producto+' · Orden: '+l.ordenFab+'</div>'+
-            '<div style="font-size:11px;color:var(--gr3)">Operario: '+l.operario+' · Supervisor: '+l.supervisor+'</div>'+
+            '<div style="font-size:14px;font-weight:700;color:#533AB7">'+l.linea+' — Turno '+(l.turno||'')+'</div>'+
+            '<div style="font-size:11px;color:var(--gr3)">'+(l.producto||'—')+' · Orden: '+(l.ordenFab||'—')+'</div>'+
+            '<div style="font-size:11px;color:var(--gr3)">Operario: '+(l.operario||'—')+' · Supervisor: '+(l.supervisor||'—')+'</div>'+
           '</div>'+
           '<div style="display:flex;gap:6px;flex-wrap:wrap">'+
-            '<div style="background:#EDE7F6;border-radius:4px;padding:4px 10px;font-size:12px;font-weight:700;color:#533AB7">'+l.kgTubos+' kg</div>'+
-            '<div style="background:var(--az3);border-radius:4px;padding:4px 10px;font-size:12px;font-weight:700;color:var(--az)">'+l.tubos+' tubos</div>'+
-            '<div style="background:'+(scL<8?'var(--vd2)':'var(--rd2)')+';border-radius:4px;padding:4px 10px;font-size:12px;font-weight:700;color:'+scLC+'">Scrap: '+l.pctScrap+'%</div>'+
-            (parseFloat(l.tmMin)>0?'<div style="background:var(--rd2);border-radius:4px;padding:4px 10px;font-size:12px;font-weight:700;color:var(--rd)">⏱ '+l.tmHoras+'h</div>':'')+'</div>'+
+            '<div style="background:#EDE7F6;border-radius:4px;padding:4px 10px;font-size:12px;font-weight:700;color:#533AB7">'+(l.kgTubos||0)+' kg</div>'+
+            '<div style="background:var(--az3);border-radius:4px;padding:4px 10px;font-size:12px;font-weight:700;color:var(--az)">'+(l.tubos||0)+' tubos</div>'+
+            '<div style="background:'+(scL<8?'var(--vd2)':'var(--rd2)')+';border-radius:4px;padding:4px 10px;font-size:12px;font-weight:700;color:'+scLC+'">Scrap: '+(l.pctScrap||0)+'%</div>'+
+            (parseFloat(l.tmMin||0)>0?'<div style="background:var(--rd2);border-radius:4px;padding:4px 10px;font-size:12px;font-weight:700;color:var(--rd)">⏱ '+(l.tmHoras||0)+'h</div>':'')+'</div>'+
         '</div>'+
-        '<div style="font-size:11px;color:var(--gr3);margin-bottom:4px">Mezclas: '+l.mezclas.map(function(m){return m.codigo+' ('+m.kg.toFixed(1)+' kg)';}).join(', ')+'</div>'+
+        '<div style="font-size:11px;color:var(--gr3);margin-bottom:4px">Mezclas: '+
+          (l.mezclas||[]).map(function(m){return (m.codigo||'—')+' ('+parseFloat(m.kg||0).toFixed(1)+' kg)';}).join(', ')+
+        '</div>'+
         horasHTML+tmHTML+
         '<div id="is-spc-linea-'+idx+'" style="margin-top:10px"></div>'+
       '</div>';
