@@ -1423,7 +1423,7 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:#EEF2F7;color:var(--
     <div class="card-head" style="background:#533AB7;color:#fff">📈 Tendencias de Control — Toda la Orden</div>
     <div class="card-body">
       <p class="ts" style="margin-bottom:10px">Comportamiento de las tendencias hora a hora de todos los turnos de la orden.</p>
-      <div id="inf-spc-charts" style="display:grid;grid-template-columns:1fr 1fr;gap:16px"></div>
+      <div id="inf-spc-charts" style="display:flex;flex-direction:column;gap:16px"></div>
     </div>
   </div>
 
@@ -3619,6 +3619,7 @@ function renderInformeSupervisor(d){
         '</div>'+
         '<div style="font-size:11px;color:var(--gr3);margin-bottom:4px">Mezclas: '+l.mezclas.map(function(m){return m.codigo+' ('+m.kg.toFixed(1)+' kg)';}).join(', ')+'</div>'+
         horasHTML+tmHTML+
+        '<div id="is-spc-linea-'+idx+'" style="margin-top:10px"></div>'+
       '</div>';
     }).join('');
   } else {
@@ -4384,33 +4385,46 @@ function renderDashboard(d){
 
 function renderSupervisorSPC(d){
   var card=document.getElementById('is-spc-card');
-  if(!card) return;
-  var tends=d.tendencias||[];
-  if(!tends.length){ card.style.display='none'; return; }
+  if(card) card.style.display='none'; // Ocultamos el card global, usamos uno por línea
 
   function getV(v){ if(v===''||v===null||v===undefined) return null; var n=parseFloat(v); return isNaN(n)?null:n; }
-  var labels=tends.map(function(_,i){ return 'H'+(i+1); });
-  var series=[
-    { vals:tends.map(function(t){return getV(t.EspesorL1);}), vals2:tends.map(function(t){return getV(t.EspesorL2);}), ls:null, prom:null, li:null, label:'Espesor Pared (mm)', color:'#533AB7', color2:'#9C7FC3' },
-    { vals:tends.map(function(t){return getV(t.DescalibreL1);}), vals2:tends.map(function(t){return getV(t.DescalibreL2);}), ls:6, prom:3, li:0, label:'Descalibre (%)', color:'#C55A11', color2:'#F4A261' },
-    { vals:tends.map(function(t){return getV(t.DiamExtL1);}), vals2:tends.map(function(t){return getV(t.DiamExtL2);}), ls:null, prom:null, li:null, label:'Diámetro Exterior (mm)', color:'#1F3864', color2:'#2E5BA8' },
-    { vals:tends.map(function(t){return getV(t.OvalizacionL1);}), vals2:tends.map(function(t){return getV(t.OvalizacionL2);}), ls:null, prom:null, li:0, label:'Ovalización', color:'#1E6B3C', color2:'#52B788' }
-  ].filter(function(s){ return s.vals.some(function(v){return v!==null;})||(s.vals2&&s.vals2.some(function(v){return v!==null;})); });
 
-  if(!series.length){ card.style.display='none'; return; }
-  card.style.display='block';
-  document.getElementById('is-spc-charts').innerHTML=series.map(function(s,i){
-    return '<div style="background:#fff;border-radius:8px;padding:10px;box-shadow:0 1px 4px rgba(0,0,0,.08)"><canvas id="is-spc-c-'+i+'"></canvas></div>';
-  }).join('');
-  setTimeout(function(){
-    series.forEach(function(s,i){
-      var c=document.getElementById('is-spc-c-'+i);
-      if(!c) return;
-      var w=Math.max((c.parentElement?c.parentElement.offsetWidth-20:0),200);
-      c.width=w; c.height=180;
-      dibujarSPC(c,labels,s);
+  // Renderizar gráficas por cada línea
+  d.porLinea.forEach(function(l, idx){
+    var cont=document.getElementById('is-spc-linea-'+idx);
+    if(!cont) return;
+
+    // Filtrar tendencias de este turno por turnoId
+    var tends=(d.tendencias||[]).filter(function(t){
+      return String(t.TurnoID)===String(l.turnoId||'');
     });
-  },80);
+    if(!tends.length){ cont.innerHTML=''; return; }
+
+    var labels=tends.map(function(_,i){ return 'H'+(i+1); });
+    var series=[
+      { vals:tends.map(function(t){return getV(t.EspesorL1);}), vals2:tends.map(function(t){return getV(t.EspesorL2);}), ls:null, prom:null, li:null, label:'Espesor Pared (mm)', color:'#533AB7', color2:'#9C7FC3' },
+      { vals:tends.map(function(t){return getV(t.DescalibreL1);}), vals2:tends.map(function(t){return getV(t.DescalibreL2);}), ls:6, prom:3, li:0, label:'Descalibre (%)', color:'#C55A11', color2:'#F4A261' },
+      { vals:tends.map(function(t){return getV(t.DiamExtL1);}), vals2:tends.map(function(t){return getV(t.DiamExtL2);}), ls:null, prom:null, li:null, label:'Diámetro Exterior (mm)', color:'#1F3864', color2:'#2E5BA8' },
+      { vals:tends.map(function(t){return getV(t.OvalizacionL1);}), vals2:tends.map(function(t){return getV(t.OvalizacionL2);}), ls:null, prom:null, li:0, label:'Ovalización', color:'#1E6B3C', color2:'#52B788' }
+    ].filter(function(s){ return s.vals.some(function(v){return v!==null;})||(s.vals2&&s.vals2.some(function(v){return v!==null;})); });
+
+    if(!series.length){ cont.innerHTML=''; return; }
+
+    cont.innerHTML='<div style="font-size:11px;font-weight:700;color:#533AB7;margin-bottom:6px;text-transform:uppercase">📈 Tendencias</div>'+
+      series.map(function(s,si){
+        return '<div style="background:var(--gr);border-radius:6px;padding:8px;margin-bottom:8px"><canvas id="is-spc-'+idx+'-'+si+'"></canvas></div>';
+      }).join('');
+
+    setTimeout(function(){
+      var w=Math.max(cont.offsetWidth-16,200);
+      series.forEach(function(s,si){
+        var c=document.getElementById('is-spc-'+idx+'-'+si);
+        if(!c) return;
+        c.width=w; c.height=140;
+        dibujarSPC(c,labels,s);
+      });
+    },100);
+  });
 }
 
 // ── INFORMES ──────────────────────────────────────────────────
@@ -4599,15 +4613,17 @@ function renderInformeSPC(d){
   card.style.display='block';
 
   document.getElementById('inf-spc-charts').innerHTML=seriesFiltradas.map(function(s,idx){
-    return '<div style="background:#fff;border-radius:8px;padding:10px;box-shadow:0 1px 4px rgba(0,0,0,.08)"><canvas id="inf-spc-c-'+idx+'"></canvas></div>';
+    return '<div style="background:#fff;border-radius:8px;padding:12px;box-shadow:0 1px 4px rgba(0,0,0,.08)"><canvas id="inf-spc-c-'+idx+'"></canvas></div>';
   }).join('');
 
   setTimeout(function(){
+    var container=document.getElementById('inf-spc-charts');
+    var totalW=container?container.offsetWidth-32:600;
     seriesFiltradas.forEach(function(s,idx){
       var canvas=document.getElementById('inf-spc-c-'+idx);
       if(!canvas) return;
-      var w=Math.max((canvas.parentElement?canvas.parentElement.offsetWidth-20:0),200);
-      canvas.width=w; canvas.height=180;
+      canvas.width=Math.max(totalW,300);
+      canvas.height=160;
       dibujarSPC(canvas,labels,s);
     });
   },80);
