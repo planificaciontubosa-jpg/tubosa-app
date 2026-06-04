@@ -1053,20 +1053,15 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:#EEF2F7;color:var(--
     <div class="card-body" style="padding:10px" id="is-lineas-body"></div>
   </div>
 
-  <!-- Líneas inactivas -->
-  <div class="card" id="is-card-inactivas" style="display:none">
-    <div class="card-head az2">⏸ Estado de Líneas Inactivas</div>
-    <div class="card-body" style="padding:10px">
-      <div style="overflow-x:auto">
-        <table class="rt" style="font-size:12px">
-          <thead><tr><th>Línea</th><th>Tipo</th><th>Estado</th></tr></thead>
-          <tbody id="is-tbody-inactivas"></tbody>
-        </table>
-      </div>
+  <div id="is-empty" style="text-align:center;padding:40px;color:var(--gr3)">Selecciona fecha y turno para consultar</div>
+
+  <!-- SPC SUPERVISOR -->
+  <div class="card" id="is-spc-card" style="display:none">
+    <div class="card-head" style="background:#533AB7;color:#fff">📈 Tendencias de Control del Turno</div>
+    <div class="card-body">
+      <div id="is-spc-charts" style="display:grid;grid-template-columns:1fr 1fr;gap:16px"></div>
     </div>
   </div>
-
-  <div id="is-empty" style="text-align:center;padding:40px;color:var(--gr3)">Selecciona fecha y turno para consultar</div>
 </div>
 
 <!-- DIGITALIZAR TURNO ANTERIOR -->
@@ -1328,6 +1323,15 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:#EEF2F7;color:var(--
       </div>
     </div>
   </div>
+
+  <!-- SPC DASHBOARD -->
+  <div class="card" id="dash-spc-card" style="display:none">
+    <div class="card-head" style="background:#533AB7;color:#fff">📈 Tendencias de Control — Líneas Activas Hoy</div>
+    <div class="card-body">
+      <p class="ts" style="margin-bottom:10px">Comportamiento de las tendencias del turno actual en cada línea activa.</p>
+      <div id="dash-spc-charts"></div>
+    </div>
+  </div>
 </div>
 
 <!-- INFORMES -->
@@ -1413,6 +1417,16 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:#EEF2F7;color:var(--
       </div>
     </div>
   </div>
+
+  <!-- SPC INFORMES -->
+  <div class="card" id="inf-spc-card" style="display:none">
+    <div class="card-head" style="background:#533AB7;color:#fff">📈 Tendencias de Control — Toda la Orden</div>
+    <div class="card-body">
+      <p class="ts" style="margin-bottom:10px">Comportamiento de las tendencias hora a hora de todos los turnos de la orden.</p>
+      <div id="inf-spc-charts" style="display:grid;grid-template-columns:1fr 1fr;gap:16px"></div>
+    </div>
+  </div>
+
   <div id="inf-vacio" style="text-align:center;padding:40px;color:var(--gr3);display:none">
     <div style="font-size:48px;margin-bottom:12px">📭</div>
     <div style="font-size:16px;font-weight:600">Sin datos para esta orden</div>
@@ -1976,6 +1990,13 @@ async function cargarLineas(){
 // Variable global para turnos activos por línea
 let turnosActivosMap = {};
 
+function getTurnoActual(){
+  var h = new Date().getHours();
+  if(h >= 6 && h < 14) return 'A';
+  if(h >= 14 && h < 22) return 'B';
+  return 'C'; // 22:00 - 06:00
+}
+
 async function selLinea(l){
   lineaActual=l;
   esCorrugada=l.Tipo==='Corrugada'||LINEAS_CORRUGADAS.includes(parseInt(l.ID));
@@ -1991,7 +2012,7 @@ async function selLinea(l){
     setVal('cab-linea',l.NombreLinea);
     setVal('cab-fecha',fmtFecha());
     // Limpiar campos de la cabecera anterior
-    setVal('cab-turno','A');
+    setVal('cab-turno', getTurnoActual());
     setVal('cab-operario','');
     setVal('cab-coordinador','');
     setVal('cab-supervisor','');
@@ -3538,6 +3559,15 @@ function renderInformeSupervisor(d){
   var scC=scN<8?'var(--vd)':scN<=10?'#F57F17':'var(--rd)';
   var scBg=scN<8?'var(--vd2)':scN<=10?'#FFF9C4':'var(--rd2)';
 
+  // Añadir carga promedio a cada línea
+  d.porLinea.forEach(function(l){
+    var cargas=[];
+    if(l.horas) l.horas.forEach(function(h){
+      // carga viene de pesajes si están disponibles
+    });
+    l.kghPromedio = l.kghPromedio||'—';
+  });
+
   // KPIs
   document.getElementById('is-kpis').style.display='grid';
   document.getElementById('is-kpis').innerHTML=[
@@ -3545,7 +3575,7 @@ function renderInformeSupervisor(d){
     {val:t.kgTubos+' kg',lbl:'Kg Producidos',bg:'var(--vd2)',c:'var(--vd)'},
     {val:t.tubos+' und',lbl:'Tubos Producidos',bg:'var(--az3)',c:'var(--az)'},
     {val:t.kgMezcla+' kg',lbl:'Kg Mezcla',bg:'var(--gr)',c:'var(--gr3)'},
-    {val:t.reproceso+' kg',lbl:'Reproceso/Scrap',bg:'var(--rd2)',c:'var(--rd)'},
+    {val:t.reproceso+' kg',lbl:'Scrap (kg)',bg:'var(--rd2)',c:'var(--rd)'},
     {val:scN+'%',lbl:'% Scrap',bg:scBg,c:scC},
     {val:t.tmHoras+' h',lbl:'Tiempo Muerto',bg:'var(--nr2)',c:'var(--nr)'},
   ].map(function(k){
@@ -3562,15 +3592,13 @@ function renderInformeSupervisor(d){
     body.innerHTML=d.porLinea.map(function(l){
       var scL=parseFloat(l.pctScrap);
       var scLC=scL<8?'var(--vd)':scL<=10?'#F57F17':'var(--rd)';
-      // Tabla horas
       var horasHTML='';
       if(l.horas && l.horas.length){
         horasHTML='<div style="overflow-x:auto;margin-top:8px"><table class="pt" style="font-size:11px">'+
-          '<thead><tr><th>H</th><th>Cód.Mezcla</th><th>Consec.</th><th>Kg Mez.</th><th>Dev.</th><th>Tubos</th><th>Peso kg</th><th>Repro.</th><th>SP%</th><th>Obs.</th></tr></thead><tbody>'+
-          l.horas.map(function(h){return '<tr><td>H'+h.hora+'</td><td>'+( h.codigoMezcla||'—')+'</td><td>—</td><td>'+(h.kgMezcla||0).toFixed(1)+'</td><td>'+(h.devolucion>0?h.devolucion.toFixed(1):'—')+'</td><td>'+(h.tubos||0)+'</td><td>'+(h.pesoTotal||0).toFixed(1)+'</td><td>'+(h.reproceso>0?h.reproceso.toFixed(1):'—')+'</td><td>'+(h.sobrePeso?parseFloat(h.sobrePeso).toFixed(1)+'%':'—')+'</td><td style="font-size:10px;max-width:120px">'+(h.observaciones||'—')+'</td></tr>';}).join('')+
+          '<thead><tr><th>H</th><th>Cód.Mezcla</th><th>Kg Mez.</th><th>Dev.</th><th>Tubos</th><th>Peso kg</th><th>Repro.</th><th>SP%</th><th>Obs.</th></tr></thead><tbody>'+
+          l.horas.map(function(h){return '<tr><td>H'+h.hora+'</td><td>'+(h.codigoMezcla||'—')+'</td><td>'+(h.kgMezcla||0).toFixed(1)+'</td><td>'+(h.devolucion>0?h.devolucion.toFixed(1):'—')+'</td><td>'+(h.tubos||0)+'</td><td>'+(h.pesoTotal||0).toFixed(1)+'</td><td>'+(h.reproceso>0?h.reproceso.toFixed(1):'—')+'</td><td>'+(h.sobrePeso?parseFloat(h.sobrePeso).toFixed(1)+'%':'—')+'</td><td style="font-size:10px;max-width:120px">'+(h.observaciones||'—')+'</td></tr>';}).join('')+
           '</tbody></table></div>';
       }
-      // Tiempos muertos
       var tmHTML='';
       if(l.tiemposMuertos && l.tiemposMuertos.length){
         tmHTML='<div style="margin-top:8px"><div style="font-size:11px;font-weight:700;color:var(--rd);margin-bottom:4px">⏱ Tiempos Muertos ('+l.tmMin+' min)</div>'+
@@ -3583,10 +3611,10 @@ function renderInformeSupervisor(d){
             '<div style="font-size:11px;color:var(--gr3)">'+l.producto+' · Orden: '+l.ordenFab+'</div>'+
             '<div style="font-size:11px;color:var(--gr3)">Operario: '+l.operario+' · Supervisor: '+l.supervisor+'</div>'+
           '</div>'+
-          '<div style="display:flex;gap:8px;flex-wrap:wrap">'+
+          '<div style="display:flex;gap:6px;flex-wrap:wrap">'+
             '<div style="background:#EDE7F6;border-radius:4px;padding:4px 10px;font-size:12px;font-weight:700;color:#533AB7">'+l.kgTubos+' kg</div>'+
-            '<div style="background:'+(scL<8?'var(--vd2)':'var(--rd2)')+';border-radius:4px;padding:4px 10px;font-size:12px;font-weight:700;color:'+scLC+'">Scrap: '+l.pctScrap+'%</div>'+
             '<div style="background:var(--az3);border-radius:4px;padding:4px 10px;font-size:12px;font-weight:700;color:var(--az)">'+l.tubos+' tubos</div>'+
+            '<div style="background:'+(scL<8?'var(--vd2)':'var(--rd2)')+';border-radius:4px;padding:4px 10px;font-size:12px;font-weight:700;color:'+scLC+'">Scrap: '+l.pctScrap+'%</div>'+
             (parseFloat(l.tmMin)>0?'<div style="background:var(--rd2);border-radius:4px;padding:4px 10px;font-size:12px;font-weight:700;color:var(--rd)">⏱ '+l.tmHoras+'h</div>':'')+'</div>'+
         '</div>'+
         '<div style="font-size:11px;color:var(--gr3);margin-bottom:4px">Mezclas: '+l.mezclas.map(function(m){return m.codigo+' ('+m.kg.toFixed(1)+' kg)';}).join(', ')+'</div>'+
@@ -3597,17 +3625,16 @@ function renderInformeSupervisor(d){
     document.getElementById('is-card-lineas').style.display='none';
   }
 
-  // Líneas inactivas
-  if(d.lineasInactivas.length){
-    document.getElementById('is-card-inactivas').style.display='block';
-    var estadoColores={'Fuera de servicio':'var(--rd)','No existe':'var(--gr3)','Desarmada para despacho':'var(--nr)','Sin programa':'var(--az2)','Activa':'var(--vd)'};
-    document.getElementById('is-tbody-inactivas').innerHTML=d.lineasInactivas.map(function(l){
-      var c=estadoColores[l.estado]||'var(--gr3)';
-      return '<tr><td><strong>'+l.linea+'</strong></td><td>'+l.tipo+'</td>'+
-        '<td><span style="color:'+c+';font-weight:700">'+l.estado+'</span></td></tr>';
-    }).join('');
+  // Ocultar lineas inactivas (removido por solicitud)
+  var cardInact=document.getElementById('is-card-inactivas');
+  if(cardInact) cardInact.style.display='none';
+
+  // SPC del turno si hay tendencias
+  if(d.tendencias && d.tendencias.length){
+    setTimeout(function(){ renderSupervisorSPC(d); }, 100);
   } else {
-    document.getElementById('is-card-inactivas').style.display='none';
+    var spcCard=document.getElementById('is-spc-card');
+    if(spcCard) spcCard.style.display='none';
   }
 }
 
@@ -3734,6 +3761,8 @@ async function abrirDigitacionTurno(){
 
   // Fecha de hoy por defecto
   document.getElementById('dig-fecha').value=new Date().toISOString().split('T')[0];
+  var selT=document.getElementById('dig-turno');
+  if(selT) selT.value=getTurnoActual();
   dig_reset();
 }
 
@@ -4353,6 +4382,37 @@ function renderDashboard(d){
   }).join('') || '<tr><td colspan="4" style="text-align:center;color:var(--vd);padding:16px">✓ Sin scrap registrado este mes</td></tr>';
 }
 
+function renderSupervisorSPC(d){
+  var card=document.getElementById('is-spc-card');
+  if(!card) return;
+  var tends=d.tendencias||[];
+  if(!tends.length){ card.style.display='none'; return; }
+
+  function getV(v){ if(v===''||v===null||v===undefined) return null; var n=parseFloat(v); return isNaN(n)?null:n; }
+  var labels=tends.map(function(_,i){ return 'H'+(i+1); });
+  var series=[
+    { vals:tends.map(function(t){return getV(t.EspesorL1);}), vals2:tends.map(function(t){return getV(t.EspesorL2);}), ls:null, prom:null, li:null, label:'Espesor Pared (mm)', color:'#533AB7', color2:'#9C7FC3' },
+    { vals:tends.map(function(t){return getV(t.DescalibreL1);}), vals2:tends.map(function(t){return getV(t.DescalibreL2);}), ls:6, prom:3, li:0, label:'Descalibre (%)', color:'#C55A11', color2:'#F4A261' },
+    { vals:tends.map(function(t){return getV(t.DiamExtL1);}), vals2:tends.map(function(t){return getV(t.DiamExtL2);}), ls:null, prom:null, li:null, label:'Diámetro Exterior (mm)', color:'#1F3864', color2:'#2E5BA8' },
+    { vals:tends.map(function(t){return getV(t.OvalizacionL1);}), vals2:tends.map(function(t){return getV(t.OvalizacionL2);}), ls:null, prom:null, li:0, label:'Ovalización', color:'#1E6B3C', color2:'#52B788' }
+  ].filter(function(s){ return s.vals.some(function(v){return v!==null;})||(s.vals2&&s.vals2.some(function(v){return v!==null;})); });
+
+  if(!series.length){ card.style.display='none'; return; }
+  card.style.display='block';
+  document.getElementById('is-spc-charts').innerHTML=series.map(function(s,i){
+    return '<div style="background:#fff;border-radius:8px;padding:10px;box-shadow:0 1px 4px rgba(0,0,0,.08)"><canvas id="is-spc-c-'+i+'"></canvas></div>';
+  }).join('');
+  setTimeout(function(){
+    series.forEach(function(s,i){
+      var c=document.getElementById('is-spc-c-'+i);
+      if(!c) return;
+      var w=Math.max((c.parentElement?c.parentElement.offsetWidth-20:0),200);
+      c.width=w; c.height=180;
+      dibujarSPC(c,labels,s);
+    });
+  },80);
+}
+
 // ── INFORMES ──────────────────────────────────────────────────
 async function cargarInforme(){
   const orden=document.getElementById('inf-orden').value.trim();
@@ -4487,8 +4547,71 @@ function renderInforme(d){
       ['Unidades Reproceso', o.unidadesReproceso+' und'],
     ].map(([l,v])=>`<div class="info-item"><label>${l}</label><span style="font-size:13px">${v}</span></div>`).join('');
   }
+
+  // Gráficas SPC de toda la orden
+  if(d.tendencias && d.tendencias.length){
+    setTimeout(function(){ renderInformeSPC(d); }, 100);
+  } else {
+    var spcCard=document.getElementById('inf-spc-card');
+    if(spcCard) spcCard.style.display='none';
+  }
 }
 // ── TICKET SCRAP ──────────────────────────────────────────────
+
+function renderInformeSPC(d){
+  var card=document.getElementById('inf-spc-card');
+  if(!card) return;
+  var tends=d.tendencias||[];
+  if(!tends.length){ card.style.display='none'; return; }
+
+  function getV(v){ if(v===''||v===null||v===undefined) return null; var n=parseFloat(v); return isNaN(n)?null:n; }
+
+  var codigoSAP=String(d.codigoSAP||'').trim();
+  var cal=maestroCalidad[codigoSAP]||{};
+
+  // Etiquetas: T1H1, T1H2, T2H1... (turno + hora)
+  var labels=tends.map(function(t,i){ return 'H'+(i+1); });
+
+  var series=[
+    { vals: tends.map(function(t){return getV(t.EspesorL1);}),
+      vals2: tends.map(function(t){return getV(t.EspesorL2);}),
+      ls:getV(cal.EspesorLS), prom:getV(cal.EspesorProm), li:getV(cal.EspesorLI),
+      label:'Espesor Pared (mm)', color:'#533AB7', color2:'#9C7FC3' },
+    { vals: tends.map(function(t){return getV(t.DescalibreL1);}),
+      vals2: tends.map(function(t){return getV(t.DescalibreL2);}),
+      ls:6, prom:3, li:0, label:'Descalibre (%)', color:'#C55A11', color2:'#F4A261' },
+    { vals: tends.map(function(t){return getV(t.DiamExtL1);}),
+      vals2: tends.map(function(t){return getV(t.DiamExtL2);}),
+      ls:getV(cal.DiamLS), prom:getV(cal.DiamProm), li:getV(cal.DiamLI),
+      label:'Diámetro Exterior (mm)', color:'#1F3864', color2:'#2E5BA8' },
+    { vals: tends.map(function(t){return getV(t.OvalizacionL1);}),
+      vals2: tends.map(function(t){return getV(t.OvalizacionL2);}),
+      ls:getV(cal.OvalLS), prom:getV(cal.OvalProm), li:0,
+      label:'Ovalización', color:'#1E6B3C', color2:'#52B788' }
+  ];
+
+  var seriesFiltradas=series.filter(function(s){
+    return s.vals.some(function(v){return v!==null;})||
+           (s.vals2&&s.vals2.some(function(v){return v!==null;}));
+  });
+
+  if(!seriesFiltradas.length){ card.style.display='none'; return; }
+  card.style.display='block';
+
+  document.getElementById('inf-spc-charts').innerHTML=seriesFiltradas.map(function(s,idx){
+    return '<div style="background:#fff;border-radius:8px;padding:10px;box-shadow:0 1px 4px rgba(0,0,0,.08)"><canvas id="inf-spc-c-'+idx+'"></canvas></div>';
+  }).join('');
+
+  setTimeout(function(){
+    seriesFiltradas.forEach(function(s,idx){
+      var canvas=document.getElementById('inf-spc-c-'+idx);
+      if(!canvas) return;
+      var w=Math.max((canvas.parentElement?canvas.parentElement.offsetWidth-20:0),200);
+      canvas.width=w; canvas.height=180;
+      dibujarSPC(canvas,labels,s);
+    });
+  },80);
+}
 function abrirTicketScrap(){
   const t=turnoActual;
   // Auto-rellenar campos desde el turno activo
