@@ -3225,34 +3225,46 @@ function renderSPCCharts(){
   var card = document.getElementById('spc-card');
   if(!card) return;
 
-  // Recolectar datos de horas guardadas
   var horas = Object.values(horasGuardadas).sort(function(a,b){return a.hora-b.hora;});
-  if(horas.length < 1){ card.style.display='none'; return; }
+  // Verificar que haya al menos una hora con datos de tendencias
+  var hayTend = horas.some(function(h){
+    return h.espL1!==''&&h.espL1!==null&&h.espL1!==undefined||
+           h.descL1!==''&&h.descL1!==null&&h.descL1!==undefined;
+  });
+  if(!horas.length || !hayTend){ card.style.display='none'; return; }
 
   var codigoSAP = String(turnoActual.codigoSAP||'').trim();
   var cal = maestroCalidad[codigoSAP] || {};
 
-  var series = {
-    espesor:  { vals: horas.map(function(h){return parseFloat(h.espL1)||null;}), ls:parseFloat(cal.EspesorLS)||null, prom:parseFloat(cal.EspesorProm)||null, li:parseFloat(cal.EspesorLI)||null, label:'Espesor Pared L1 (mm)', color:'#533AB7' },
-    descalibre:{ vals: horas.map(function(h){return parseFloat(h.descL1)||null;}), ls:6, prom:3, li:0, label:'Descalibre L1 (%)', color:'#C55A11' },
-    diametro: { vals: horas.map(function(h){return parseFloat(h.diamL1)||null;}), ls:parseFloat(cal.DiamLS)||null, prom:parseFloat(cal.DiamProm)||null, li:parseFloat(cal.DiamLI)||null, label:'Diámetro Exterior L1 (mm)', color:'#1F3864' },
-    oval:     { vals: horas.map(function(h){return parseFloat(h.ovalL1)||null;}), ls:parseFloat(cal.OvalLS)||null, prom:parseFloat(cal.OvalProm)||null, li:0, label:'Ovalización L1', color:'#1E6B3C' }
-  };
+  // Usar parseFloat con fallback null — distinguir 0 de vacío
+  function getVal(v){ if(v===''||v===null||v===undefined) return null; var n=parseFloat(v); return isNaN(n)?null:n; }
 
   var labels = horas.map(function(h){return 'H'+h.hora;});
+  var series = [
+    { vals: horas.map(function(h){return getVal(h.espL1);}), ls:getVal(cal.EspesorLS), prom:getVal(cal.EspesorProm), li:getVal(cal.EspesorLI), label:'Espesor Pared L1 (mm)', color:'#533AB7' },
+    { vals: horas.map(function(h){return getVal(h.descL1);}), ls:6, prom:3, li:0, label:'Descalibre L1 (%)', color:'#C55A11' },
+    { vals: horas.map(function(h){return getVal(h.diamL1);}), ls:getVal(cal.DiamLS), prom:getVal(cal.DiamProm), li:getVal(cal.DiamLI), label:'Diámetro Exterior L1 (mm)', color:'#1F3864' },
+    { vals: horas.map(function(h){return getVal(h.ovalL1);}), ls:getVal(cal.OvalLS), prom:getVal(cal.OvalProm), li:0, label:'Ovalización L1', color:'#1E6B3C' }
+  ];
 
   card.style.display='block';
-  document.getElementById('spc-charts').innerHTML = Object.values(series).map(function(s, idx){
-    return '<div><canvas id="spc-canvas-'+idx+'" style="width:100%;height:180px"></canvas></div>';
+  document.getElementById('spc-charts').innerHTML = series.map(function(s, idx){
+    return '<div style="background:#fff;border-radius:8px;padding:10px;box-shadow:0 1px 4px rgba(0,0,0,.08)"><canvas id="spc-canvas-'+idx+'"></canvas></div>';
   }).join('');
 
-  Object.values(series).forEach(function(s, idx){
-    var canvas = document.getElementById('spc-canvas-'+idx);
-    if(!canvas) return;
-    canvas.width = canvas.offsetWidth || 300;
-    canvas.height = 180;
-    dibujarSPC(canvas, labels, s);
-  });
+  // Usar setTimeout para asegurar que el DOM esté renderizado y el canvas tenga dimensiones
+  setTimeout(function(){
+    series.forEach(function(s, idx){
+      var canvas = document.getElementById('spc-canvas-'+idx);
+      if(!canvas) return;
+      var parent = canvas.parentElement;
+      var w = parent ? (parent.offsetWidth - 20) : 280;
+      if(w < 100) w = 280; // fallback mínimo
+      canvas.width = w;
+      canvas.height = 180;
+      dibujarSPC(canvas, labels, s);
+    });
+  }, 50);
 }
 
 function dibujarSPC(canvas, labels, serie){
