@@ -3590,7 +3590,7 @@ function renderInformeSupervisor(d){
   var body=document.getElementById('is-lineas-body');
   if(d.porLinea.length){
     document.getElementById('is-card-lineas').style.display='block';
-    body.innerHTML=d.porLinea.map(function(l){
+    body.innerHTML=d.porLinea.map(function(l, idx){
       var scL=parseFloat(l.pctScrap);
       var scLC=scL<8?'var(--vd)':scL<=10?'#F57F17':'var(--rd)';
       var horasHTML='';
