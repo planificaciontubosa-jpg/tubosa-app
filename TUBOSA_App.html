@@ -1011,6 +1011,14 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:#EEF2F7;color:var(--
     <tbody id="pesaje-tbody-coext"></tbody></table>
     <button class="btn btn-nr btn-sm" onclick="guardarPesaje()" style="margin-top:10px">💾 Guardar Todo el Pesaje</button>
   </div></div>
+
+  <!-- GRÁFICAS SPC COEXT -->
+  <div class="card" id="spc-card-coext" style="display:none">
+    <div class="card-head" style="background:#533AB7;color:#fff">📊 Gráficas de Control — Tendencias del Turno</div>
+    <div class="card-body">
+      <div id="spc-charts-coext" style="display:grid;grid-template-columns:1fr 1fr;gap:16px"></div>
+    </div>
+  </div>
 </div>
 
 <!-- INFORME SUPERVISOR -->
@@ -2144,6 +2152,7 @@ async function retomarTurno(){
       var elXH=document.getElementById('coext-hora-num'); if(elXH) elXH.textContent=horaActual;
       var elXBH=document.getElementById('coext-btn-hora'); if(elXBH) elXBH.textContent=horaActual;
       cargarAcumuladoOrden();
+      setTimeout(renderSPCCharts, 300);
     } else {
       renderInfo('reg-info');
       renderTabs('horas-tabs', false);
@@ -3224,7 +3233,11 @@ function cal_poblarSAP(){
 
 // ── GRÁFICAS SPC ──────────────────────────────────────────────
 function renderSPCCharts(){
-  var card = document.getElementById('spc-card');
+  // Detectar si estamos en coext o normal
+  var isCoext = esCoextrusor;
+  var cardId = isCoext ? 'spc-card-coext' : 'spc-card';
+  var chartsId = isCoext ? 'spc-charts-coext' : 'spc-charts';
+  var card = document.getElementById(cardId);
   if(!card) return;
 
   var horas = Object.values(horasGuardadas).sort(function(a,b){return a.hora-b.hora;});
@@ -3280,7 +3293,7 @@ function renderSPCCharts(){
   if(!seriesConDatos.length){ card.style.display='none'; return; }
 
   card.style.display='block';
-  document.getElementById('spc-charts').innerHTML = seriesConDatos.map(function(s, idx){
+  document.getElementById(chartsId).innerHTML = seriesConDatos.map(function(s, idx){
     return '<div style="background:#fff;border-radius:8px;padding:10px;box-shadow:0 1px 4px rgba(0,0,0,.08)"><canvas id="spc-canvas-'+idx+'"></canvas></div>';
   }).join('');
 
@@ -4751,6 +4764,10 @@ function iniciarRegistroCoext(){
   document.getElementById('mezclas-list-coext').innerHTML = opts;
   irA('registro-coext','Línea 10 Coextrusor','Turno '+turnoActual.turno+' · '+turnoActual.fecha);
   selHoraCoext(1, false);
+  _acumuladoToken++;
+  _tubosAcumuladosOrden=0;
+  cargarAcumuladoOrden();
+  setTimeout(renderSPCCharts, 200);
   document.getElementById('coext-rotuladoOk').addEventListener('change', function(){
     document.getElementById('coext-rotulado-txt').textContent = this.checked ? '✓ Rotulado VERIFICADO' : 'Rotulado NO verificado';
     document.getElementById('coext-rotulado-txt').style.color = this.checked ? 'var(--vd)' : 'var(--gr3)';
@@ -4919,6 +4936,7 @@ async function guardarHoraCoext(){
     if(btnG) btnG.textContent='✔ Guardar Hora '+horaActual;
     renderTabs('horas-tabs-coext', false, 'coext');
     actualizarContadorCoext();
+    renderSPCCharts();
     notify((horaIdExistente?'Hora '+horaActual+' actualizada ✓':'Hora '+horaActual+' guardada ✓'),'ok');
     if(!horaIdExistente && horaActual < 8) selHoraCoext(horaActual+1, false);
   }catch(e){ loader(false); notify('Error: '+e.message,'err'); }
