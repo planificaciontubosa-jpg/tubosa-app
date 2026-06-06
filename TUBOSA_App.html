@@ -5375,56 +5375,71 @@ async function abrirMarcadora(){
     var selTurno = document.getElementById('marc-turno-sel');
     if(selTurno) selTurno.value = getTurnoActual();
 
-    // Verificar si hay turno activo de marcadora para esta operaria
-    var operaria = nombreActual;
-    if(operaria){
-      var rt2 = await api({action:'getMarcadoraTurno', operaria:operaria});
-      if(rt2.ok && rt2.turno){
-        marcadoraTurnoId = rt2.turno.TurnoMarcadoraID;
-        // Mostrar banner de retomar
-        // Restaurar datos guardados después del render
-        renderMarcadoraTabla();
-        if(rt2.lineas && rt2.lineas.length){
-          setTimeout(function(){
-            rt2.lineas.forEach(function(reg){
-              var idx = marcadoraLineas.findIndex(function(l){ return l.nombre===reg.Linea; });
-              if(idx<0) return;
-              // Restaurar estado
-              if(reg.Estado) setEstado(idx, reg.Estado);
-              // Restaurar campos de texto
-              var refEl=document.getElementById('marc-ref-'+idx); if(refEl) refEl.value=reg.Referencia||'';
-              var ordEl=document.getElementById('marc-ord-'+idx); if(ordEl) ordEl.value=reg.Orden||'';
-              var lonEl=document.getElementById('marc-lon-'+idx); if(lonEl) lonEl.value=reg.Longitud||'';
-              var obsEl=document.getElementById('marc-obs-'+idx); if(obsEl) obsEl.value=reg.Observaciones||'';
-              // Restaurar revisiones
-              [['1',reg.Rev1_Hora],['2',reg.Rev2_Hora],['3',reg.Rev3_Hora],['4',reg.Rev4_Hora]].forEach(function(pair){
-                var n=pair[0], h=pair[1];
-                if(!h) return;
-                marcadoraRevisiones[idx+'-'+n]=h;
-                // Actualizar hora en pantalla
-                var horaEl=document.getElementById('marc-rev-hora-'+idx+'-'+n);
-                if(horaEl){ horaEl.textContent=h; horaEl.style.color='var(--vd)'; horaEl.style.fontWeight='800'; }
-                // Desactivar botón
-                var btnEl=document.getElementById('marc-rev-btn-'+idx+'-'+n);
-                if(btnEl){ btnEl.textContent='✓'; btnEl.style.background='var(--vd)'; btnEl.style.color='#fff'; btnEl.disabled=true; }
-                // Colorear caja
-                var boxEl=document.getElementById('marc-rev-box-'+idx+'-'+n);
-                if(boxEl){ boxEl.style.background='var(--vd2)'; boxEl.style.borderColor='var(--vd)'; }
-              });
+    // Pre-seleccionar operaria si el nombre coincide con alguna opción
+    var selOp = document.getElementById('marc-operaria');
+    if(selOp && nombreActual){
+      Array.from(selOp.options).forEach(function(opt){
+        if(opt.value.toLowerCase()===nombreActual.toLowerCase()) selOp.value=opt.value;
+      });
+    }
+    var operaria = (selOp && selOp.value) ? selOp.value : nombreActual;
+
+    // Intentar retomar turno activo — buscar por operaria seleccionada o por nombreActual
+    var rt2 = null;
+    var nombresBuscar = [];
+    if(operaria) nombresBuscar.push(operaria);
+    if(nombreActual && nombreActual!==operaria) nombresBuscar.push(nombreActual);
+
+    for(var ni=0; ni<nombresBuscar.length; ni++){
+      var rTmp = await api({action:'getMarcadoraTurno', operaria:nombresBuscar[ni]});
+      if(rTmp.ok && rTmp.turno){ rt2=rTmp; break; }
+    }
+
+    if(rt2 && rt2.turno){
+      marcadoraTurnoId = rt2.turno.TurnoMarcadoraID;
+      // Pre-llenar select con la operaria del turno
+      if(selOp) selOp.value = rt2.turno.Operaria||operaria;
+      // Pre-llenar turno
+      if(selTurno) selTurno.value = rt2.turno.Turno||getTurnoActual();
+
+      renderMarcadoraTabla();
+
+      // Restaurar datos de líneas con timeout para esperar DOM
+      if(rt2.lineas && rt2.lineas.length){
+        setTimeout(function(){
+          rt2.lineas.forEach(function(reg){
+            var idx = marcadoraLineas.findIndex(function(l){ return l.nombre===String(reg.Linea||''); });
+            if(idx<0) return;
+            if(reg.Estado) setEstado(idx, reg.Estado);
+            var refEl=document.getElementById('marc-ref-'+idx); if(refEl) refEl.value=reg.Referencia||'';
+            var ordEl=document.getElementById('marc-ord-'+idx); if(ordEl) ordEl.value=reg.Orden||'';
+            var lonEl=document.getElementById('marc-lon-'+idx); if(lonEl) lonEl.value=reg.Longitud||'';
+            var obsEl=document.getElementById('marc-obs-'+idx); if(obsEl) obsEl.value=reg.Observaciones||'';
+            [['1',reg.Rev1_Hora],['2',reg.Rev2_Hora],['3',reg.Rev3_Hora],['4',reg.Rev4_Hora]].forEach(function(pair){
+              var n=pair[0], h=String(pair[1]||'').trim();
+              if(!h||h==='undefined') return;
+              marcadoraRevisiones[idx+'-'+n]=h;
+              var horaEl=document.getElementById('marc-rev-hora-'+idx+'-'+n);
+              if(horaEl){ horaEl.textContent=h; horaEl.style.color='var(--vd)'; horaEl.style.fontWeight='800'; }
+              var btnEl=document.getElementById('marc-rev-btn-'+idx+'-'+n);
+              if(btnEl){ btnEl.textContent='✓'; btnEl.style.background='var(--vd)'; btnEl.style.color='#fff'; btnEl.disabled=true; }
+              var boxEl=document.getElementById('marc-rev-box-'+idx+'-'+n);
+              if(boxEl){ boxEl.style.background='var(--vd2)'; boxEl.style.borderColor='var(--vd)'; }
             });
-          }, 300);
-        }
-        // Mostrar banner retomar
-        var banner=document.getElementById('marc-retomar-banner');
-        if(banner){
-          banner.style.display='flex';
-          banner.querySelector('.marc-banner-txt').textContent=
-            'Turno activo — '+rt2.turno.Turno+' · '+rt2.turno.Fecha+' · '+operaria;
-        }
-        irA('marcadora','Seguimiento Marcadoras','Retomando turno activo');
-        notify('Turno activo recuperado ✓','ok');
-        return;
+          });
+        }, 400);
       }
+
+      var banner=document.getElementById('marc-retomar-banner');
+      if(banner){
+        banner.style.display='flex';
+        banner.querySelector('.marc-banner-txt').textContent=
+          'Turno activo — Turno '+(rt2.turno.Turno||'')+' · '+(rt2.turno.Fecha||'')+' · '+(rt2.turno.Operaria||operaria);
+      }
+      irA('marcadora','Seguimiento Marcadoras','Retomando turno activo');
+      loader(false);
+      notify('Turno activo recuperado ✓','ok');
+      return;
     }
 
     marcadoraTurnoId = null;
