@@ -5382,35 +5382,37 @@ async function abrirMarcadora(){
       if(rt2.ok && rt2.turno){
         marcadoraTurnoId = rt2.turno.TurnoMarcadoraID;
         // Mostrar banner de retomar
+        // Restaurar datos guardados después del render
         renderMarcadoraTabla();
-        // Restaurar datos guardados
         if(rt2.lineas && rt2.lineas.length){
-          rt2.lineas.forEach(function(reg){
-            var idx = marcadoraLineas.findIndex(function(l){ return l.nombre===reg.Linea; });
-            if(idx<0) return;
-            marcadoraEstados[idx] = reg.Estado||'';
-            marcadoraRevisiones[idx+'-1'] = reg.Rev1_Hora||'';
-            marcadoraRevisiones[idx+'-2'] = reg.Rev2_Hora||'';
-            marcadoraRevisiones[idx+'-3'] = reg.Rev3_Hora||'';
-            marcadoraRevisiones[idx+'-4'] = reg.Rev4_Hora||'';
-            // Restaurar campos en DOM después del render
-            setTimeout(function(){
+          setTimeout(function(){
+            rt2.lineas.forEach(function(reg){
+              var idx = marcadoraLineas.findIndex(function(l){ return l.nombre===reg.Linea; });
+              if(idx<0) return;
+              // Restaurar estado
               if(reg.Estado) setEstado(idx, reg.Estado);
+              // Restaurar campos de texto
               var refEl=document.getElementById('marc-ref-'+idx); if(refEl) refEl.value=reg.Referencia||'';
               var ordEl=document.getElementById('marc-ord-'+idx); if(ordEl) ordEl.value=reg.Orden||'';
               var lonEl=document.getElementById('marc-lon-'+idx); if(lonEl) lonEl.value=reg.Longitud||'';
               var obsEl=document.getElementById('marc-obs-'+idx); if(obsEl) obsEl.value=reg.Observaciones||'';
-              ['1','2','3','4'].forEach(function(n){
-                var h=marcadoraRevisiones[idx+'-'+n];
-                if(h){
-                  var lbl=document.getElementById('marc-rev-lbl-'+idx+'-'+n);
-                  if(lbl){lbl.textContent=h;lbl.style.color='var(--vd)';}
-                  var btn=document.getElementById('marc-rev-btn-'+idx+'-'+n);
-                  if(btn){btn.textContent='✓';btn.style.background='var(--vd)';btn.disabled=true;}
-                }
+              // Restaurar revisiones
+              [['1',reg.Rev1_Hora],['2',reg.Rev2_Hora],['3',reg.Rev3_Hora],['4',reg.Rev4_Hora]].forEach(function(pair){
+                var n=pair[0], h=pair[1];
+                if(!h) return;
+                marcadoraRevisiones[idx+'-'+n]=h;
+                // Actualizar hora en pantalla
+                var horaEl=document.getElementById('marc-rev-hora-'+idx+'-'+n);
+                if(horaEl){ horaEl.textContent=h; horaEl.style.color='var(--vd)'; horaEl.style.fontWeight='800'; }
+                // Desactivar botón
+                var btnEl=document.getElementById('marc-rev-btn-'+idx+'-'+n);
+                if(btnEl){ btnEl.textContent='✓'; btnEl.style.background='var(--vd)'; btnEl.style.color='#fff'; btnEl.disabled=true; }
+                // Colorear caja
+                var boxEl=document.getElementById('marc-rev-box-'+idx+'-'+n);
+                if(boxEl){ boxEl.style.background='var(--vd2)'; boxEl.style.borderColor='var(--vd)'; }
               });
-            },200);
-          });
+            });
+          }, 300);
         }
         // Mostrar banner retomar
         var banner=document.getElementById('marc-retomar-banner');
