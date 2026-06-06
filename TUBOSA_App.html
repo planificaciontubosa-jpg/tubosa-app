@@ -5553,10 +5553,13 @@ function marcarRevision(idx, rev){
   var horaEl = document.getElementById('marc-rev-hora-'+idx+'-'+rev);
   var btnEl  = document.getElementById('marc-rev-btn-'+idx+'-'+rev);
   var boxEl  = document.getElementById('marc-rev-box-'+idx+'-'+rev);
-  if(horaEl) horaEl.textContent = hora;
-  if(btnEl){ btnEl.textContent='✓ Revisado'; btnEl.style.background='var(--vd)'; btnEl.style.color='#fff'; btnEl.disabled=true; }
+  if(horaEl){ horaEl.textContent = hora; horaEl.style.color='var(--vd)'; horaEl.style.fontWeight='800'; }
+  if(btnEl){ btnEl.textContent='✓'; btnEl.style.background='var(--vd)'; btnEl.style.color='#fff'; btnEl.disabled=true; }
   if(boxEl){ boxEl.style.background='var(--vd2)'; boxEl.style.borderColor='var(--vd)'; }
   notify('Revisión '+rev+' registrada a las '+hora,'ok');
+
+  // Auto-guardar inmediatamente si hay turno activo
+  if(marcadoraTurnoId) guardarMarcadora();
 }
 
 async function guardarMarcadora(){
