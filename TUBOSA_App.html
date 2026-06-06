@@ -814,70 +814,98 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:#EEF2F7;color:var(--
 <!-- MARCADORA -->
 <div class="vista" id="v-marcadora">
 
-  <!-- Banner turno activo -->
-  <div id="marc-retomar-banner" style="display:none;background:var(--vd);color:#fff;border-radius:var(--rad2);padding:10px 14px;margin-bottom:10px;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap">
-    <span>▶ <strong>Turno activo:</strong> <span class="marc-banner-txt"></span></span>
-    <button class="btn btn-sm" style="background:rgba(255,255,255,.2);color:#fff;border:1px solid rgba(255,255,255,.4)" onclick="cerrarMarcadoraTurno()">🔒 Cerrar Turno y PDF</button>
-  </div>
-
-  <div class="card">
-    <div class="card-head" style="background:#0F7B6C;color:#fff">🖊 Seguimiento Marcadoras — <span id="marc-turno-info"></span></div>
-    <div class="card-body">
-      <div class="fila fila-3">
-        <div class="campo"><label>Operaria Marcadora</label>
-          <select id="marc-operaria">
-            <option value="">Seleccionar...</option>
-            <option>Lesly Vidal</option>
-            <option>Daniela Montilla</option>
-            <option>Laura Mosquera</option>
-            <option>Diego Chacon</option>
-          </select>
+  <!-- PANTALLA A: Crear / Retomar turno -->
+  <div id="marc-pantalla-turno">
+    <div class="card">
+      <div class="card-head" style="background:#0F7B6C;color:#fff">🖊 Seguimiento Marcadoras</div>
+      <div class="card-body">
+        <div id="marc-turno-activo-info" style="display:none;background:var(--vd2);border-radius:var(--rad2);padding:12px 16px;margin-bottom:14px">
+          <div style="font-size:13px;font-weight:700;color:var(--vd);margin-bottom:4px">▶ Turno activo encontrado</div>
+          <div id="marc-turno-activo-det" style="font-size:12px;color:var(--vd)"></div>
+          <button class="btn btn-vd btn-sm" style="margin-top:10px" onclick="marc_retomarTurno()">▶ Retomar Turno</button>
         </div>
-        <div class="campo"><label>Fecha</label><input type="text" id="marc-fecha" readonly class="auto"></div>
-        <div class="campo"><label>Turno</label>
-          <select id="marc-turno-sel">
-            <option value="A">Turno A</option>
-            <option value="B">Turno B</option>
-            <option value="C">Turno C</option>
-          </select>
+        <div id="marc-form-nuevo">
+          <div style="font-size:12px;font-weight:700;color:var(--gr3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px">Nuevo Turno</div>
+          <div class="fila fila-2">
+            <div class="campo"><label>Operaria Marcadora</label>
+              <select id="marc-operaria" onchange="marc_buscarTurnoActivo()">
+                <option value="">Seleccionar...</option>
+                <option>Lesly Vidal</option>
+                <option>Daniela Montilla</option>
+                <option>Laura Mosquera</option>
+                <option>Diego Chacon</option>
+              </select>
+            </div>
+            <div class="campo"><label>Fecha</label>
+              <input type="text" id="marc-fecha" readonly class="auto">
+            </div>
+          </div>
+          <div class="campo">
+            <label>Turno</label>
+            <select id="marc-turno-sel">
+              <option value="A">Turno A — 6:00 am a 2:00 pm</option>
+              <option value="B">Turno B — 2:00 pm a 10:00 pm</option>
+              <option value="C">Turno C — 10:00 pm a 6:00 am</option>
+            </select>
+          </div>
+          <div id="marc-aviso-activo" style="display:none;background:var(--rd2);border-radius:var(--rad2);padding:10px 14px;margin-top:10px;font-size:13px;color:var(--rd)">
+            ⚠ Ya existe un turno activo. Debes cerrarlo antes de crear uno nuevo.
+          </div>
+          <button class="btn btn-vd" style="margin-top:14px;width:100%;justify-content:center" id="marc-btn-crear" onclick="marc_crearTurno()">✔ Crear Turno</button>
         </div>
       </div>
     </div>
   </div>
 
-  <!-- Tabla de líneas -->
-  <div class="card">
-    <div class="card-head az">📋 Revisión por Línea</div>
-    <div class="card-body" style="padding:0;overflow-x:auto">
-      <table style="width:100%;border-collapse:collapse;font-size:12px;min-width:800px">
-        <thead>
-          <tr style="background:#1F3864;color:#fff">
-            <th style="padding:10px 8px;text-align:center;font-size:10px;text-transform:uppercase;letter-spacing:.5px;width:50px">Línea</th>
-            <th style="padding:10px 8px;text-align:left;font-size:10px;text-transform:uppercase;letter-spacing:.5px">Estado</th>
-            <th style="padding:10px 8px;text-align:left;font-size:10px;text-transform:uppercase;letter-spacing:.5px;min-width:180px">Referencia / Orden</th>
-            <th style="padding:10px 8px;text-align:center;font-size:10px;text-transform:uppercase;letter-spacing:.5px;width:80px">Longitud (m)</th>
-            <th style="padding:10px 8px;text-align:center;font-size:10px;text-transform:uppercase;letter-spacing:.5px;min-width:320px">Revisiones (4 horas)</th>
-            <th style="padding:10px 8px;text-align:left;font-size:10px;text-transform:uppercase;letter-spacing:.5px;min-width:140px">Observaciones</th>
-          </tr>
-        </thead>
-        <tbody id="marc-tbody"></tbody>
-      </table>
+  <!-- PANTALLA B: Revisión por línea -->
+  <div id="marc-pantalla-registro" style="display:none">
+
+    <!-- Banner turno activo -->
+    <div style="background:#0F7B6C;color:#fff;border-radius:var(--rad2);padding:10px 16px;margin-bottom:12px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px">
+      <div>
+        <div style="font-size:13px;font-weight:700">🖊 Turno Activo — Marcadoras</div>
+        <div id="marc-banner-det" style="font-size:11px;opacity:.85"></div>
+      </div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        <button class="btn btn-sm" style="background:rgba(255,255,255,.2);color:#fff;border:1px solid rgba(255,255,255,.4)" onclick="guardarMarcadora()">💾 Guardar</button>
+        <button class="btn btn-sm" style="background:var(--rd);color:#fff" onclick="marc_cerrarYPDF()">🔒 Cerrar Turno y PDF</button>
+      </div>
     </div>
-  </div>
 
-  <!-- Leyenda -->
-  <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px;font-size:11px">
-    <span style="background:var(--vd2);color:var(--vd);padding:3px 10px;border-radius:10px;font-weight:600">✓ OK</span>
-    <span style="background:var(--az3);color:var(--az);padding:3px 10px;border-radius:10px;font-weight:600">SP Sobre Producción</span>
-    <span style="background:var(--rd2);color:var(--rd);padding:3px 10px;border-radius:10px;font-weight:600">LP Línea Parada</span>
-    <span style="background:var(--nr2);color:var(--nr);padding:3px 10px;border-radius:10px;font-weight:600">PI Pendiente Inspección</span>
-  </div>
+    <!-- Leyenda -->
+    <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px;font-size:11px">
+      <span style="background:var(--vd2);color:var(--vd);padding:3px 10px;border-radius:10px;font-weight:600">✓ OK</span>
+      <span style="background:var(--az3);color:var(--az);padding:3px 10px;border-radius:10px;font-weight:600">SP Sin Programa</span>
+      <span style="background:var(--rd2);color:var(--rd);padding:3px 10px;border-radius:10px;font-weight:600">LP Línea Parada</span>
+      <span style="background:var(--nr2);color:var(--nr);padding:3px 10px;border-radius:10px;font-weight:600">PI Pendiente Iniciar</span>
+    </div>
 
-  <div class="btn-group">
-    <button class="btn btn-vd" onclick="guardarMarcadora()">💾 Guardar</button>
-    <button class="btn btn-sm" style="background:#0F7B6C;color:#fff" onclick="generarPDFMarcadora()">📄 PDF</button>
-    <button class="btn btn-rd btn-sm" onclick="cerrarMarcadoraTurno()">🔒 Cerrar Turno</button>
-    <button class="btn btn-gr btn-sm" onclick="irInicio()">← Inicio</button>
+    <!-- Tabla revisiones -->
+    <div class="card">
+      <div class="card-head" style="background:#0F7B6C;color:#fff">📋 Revisión por Línea</div>
+      <div class="card-body" style="padding:0;overflow-x:auto">
+        <table style="width:100%;border-collapse:collapse;font-size:12px;min-width:800px">
+          <thead>
+            <tr style="background:#1F3864;color:#fff">
+              <th style="padding:10px 8px;text-align:center;font-size:10px;text-transform:uppercase;width:50px">Línea</th>
+              <th style="padding:10px 8px;text-align:left;font-size:10px;text-transform:uppercase">Estado</th>
+              <th style="padding:10px 8px;text-align:left;font-size:10px;text-transform:uppercase;min-width:180px">Referencia / Orden</th>
+              <th style="padding:10px 8px;text-align:center;font-size:10px;text-transform:uppercase;width:80px">Longitud (m)</th>
+              <th style="padding:10px 8px;text-align:center;font-size:10px;text-transform:uppercase;min-width:320px">Revisiones</th>
+              <th style="padding:10px 8px;text-align:left;font-size:10px;text-transform:uppercase;min-width:140px">Observaciones</th>
+            </tr>
+          </thead>
+          <tbody id="marc-tbody"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="btn-group" style="margin-top:12px">
+      <button class="btn btn-vd" onclick="guardarMarcadora()">💾 Guardar Registro</button>
+      <button class="btn btn-sm" style="background:#0F7B6C;color:#fff" onclick="generarPDFMarcadora()">📄 PDF</button>
+      <button class="btn btn-rd" onclick="marc_cerrarYPDF()">🔒 Cerrar Turno</button>
+      <button class="btn btn-gr btn-sm" onclick="irInicio()">← Inicio</button>
+    </div>
   </div>
 </div>
 
@@ -5346,112 +5374,159 @@ function copiarTextoWA(){
     });
   }
 }
-// ── MARCADORA ────────────────────────────────────────────────
-var marcadoraLineas = []; // líneas activas cargadas
-
+// ── MARCADORA ─────────────────────────────────────────────────
+var marcadoraLineas = [], marcadoraEstados = {}, marcadoraRevisiones = {};
 var marcadoraTurnoId = null;
+var _marcadoraTurnoData = null; // datos del turno activo
 
 async function abrirMarcadora(){
-  loader(true,'Cargando líneas activas...');
+  loader(true,'Cargando...');
   try{
-    const [rl, rt] = await Promise.all([api({action:'getLineas'}), api({action:'getTurnosActivosDetalle'})]);
+    const [rl, rt] = await Promise.all([
+      api({action:'getLineas'}),
+      api({action:'getTurnosActivosDetalle'})
+    ]);
     loader(false);
     const turnos = rt.ok ? rt.data : [];
     const todasLineas = rl.ok ? rl.data.filter(l=>l.Activa!=='No') : [];
-
     marcadoraLineas = todasLineas.map(function(l){
       const t = turnos.find(function(t){ return String(t.lineaId)===String(l.ID); });
-      return {
-        id: l.ID, nombre: l.NombreLinea,
-        turnoId: t ? t.turnoId : '',
-        ordenFab: t ? (t.ordenFab||'') : '',
-        producto: t ? (t.producto||'') : '',
-        activa: !!t
-      };
+      return { id:l.ID, nombre:l.NombreLinea, turnoId:t?t.turnoId:'',
+               ordenFab:t?(t.ordenFab||''):'', producto:t?(t.producto||''):'', activa:!!t };
     });
 
+    // Fecha y turno por defecto
     document.getElementById('marc-fecha').value = fmtFecha();
-    document.getElementById('marc-turno-info').textContent = fmtFecha();
-    var selTurno = document.getElementById('marc-turno-sel');
-    if(selTurno) selTurno.value = getTurnoActual();
+    var selT=document.getElementById('marc-turno-sel');
+    if(selT) selT.value=getTurnoActual();
 
-    // Pre-seleccionar operaria si el nombre coincide con alguna opción
-    var selOp = document.getElementById('marc-operaria');
+    // Pre-seleccionar operaria si coincide con el usuario
+    var selOp=document.getElementById('marc-operaria');
     if(selOp && nombreActual){
-      Array.from(selOp.options).forEach(function(opt){
-        if(opt.value.toLowerCase()===nombreActual.toLowerCase()) selOp.value=opt.value;
+      Array.from(selOp.options).forEach(function(o){
+        if(o.value.toLowerCase()===nombreActual.toLowerCase()) selOp.value=o.value;
       });
-    }
-    var operaria = (selOp && selOp.value) ? selOp.value : nombreActual;
-
-    // Intentar retomar turno activo — buscar por operaria seleccionada o por nombreActual
-    var rt2 = null;
-    var nombresBuscar = [];
-    if(operaria) nombresBuscar.push(operaria);
-    if(nombreActual && nombreActual!==operaria) nombresBuscar.push(nombreActual);
-
-    for(var ni=0; ni<nombresBuscar.length; ni++){
-      var rTmp = await api({action:'getMarcadoraTurno', operaria:nombresBuscar[ni]});
-      if(rTmp.ok && rTmp.turno){ rt2=rTmp; break; }
+      if(selOp.value) marc_buscarTurnoActivo();
     }
 
-    if(rt2 && rt2.turno){
-      marcadoraTurnoId = rt2.turno.TurnoMarcadoraID;
-      // Pre-llenar select con la operaria del turno
-      if(selOp) selOp.value = rt2.turno.Operaria||operaria;
-      // Pre-llenar turno
-      if(selTurno) selTurno.value = rt2.turno.Turno||getTurnoActual();
-
-      renderMarcadoraTabla();
-
-      // Restaurar datos de líneas con timeout para esperar DOM
-      if(rt2.lineas && rt2.lineas.length){
-        setTimeout(function(){
-          rt2.lineas.forEach(function(reg){
-            var idx = marcadoraLineas.findIndex(function(l){ return l.nombre===String(reg.Linea||''); });
-            if(idx<0) return;
-            if(reg.Estado) setEstado(idx, reg.Estado);
-            var refEl=document.getElementById('marc-ref-'+idx); if(refEl) refEl.value=reg.Referencia||'';
-            var ordEl=document.getElementById('marc-ord-'+idx); if(ordEl) ordEl.value=reg.Orden||'';
-            var lonEl=document.getElementById('marc-lon-'+idx); if(lonEl) lonEl.value=reg.Longitud||'';
-            var obsEl=document.getElementById('marc-obs-'+idx); if(obsEl) obsEl.value=reg.Observaciones||'';
-            [['1',reg.Rev1_Hora],['2',reg.Rev2_Hora],['3',reg.Rev3_Hora],['4',reg.Rev4_Hora]].forEach(function(pair){
-              var n=pair[0], h=String(pair[1]||'').trim();
-              if(!h||h==='undefined') return;
-              marcadoraRevisiones[idx+'-'+n]=h;
-              var horaEl=document.getElementById('marc-rev-hora-'+idx+'-'+n);
-              if(horaEl){ horaEl.textContent=h; horaEl.style.color='var(--vd)'; horaEl.style.fontWeight='800'; }
-              var btnEl=document.getElementById('marc-rev-btn-'+idx+'-'+n);
-              if(btnEl){ btnEl.textContent='✓'; btnEl.style.background='var(--vd)'; btnEl.style.color='#fff'; btnEl.disabled=true; }
-              var boxEl=document.getElementById('marc-rev-box-'+idx+'-'+n);
-              if(boxEl){ boxEl.style.background='var(--vd2)'; boxEl.style.borderColor='var(--vd)'; }
-            });
-          });
-        }, 400);
-      }
-
-      var banner=document.getElementById('marc-retomar-banner');
-      if(banner){
-        banner.style.display='flex';
-        banner.querySelector('.marc-banner-txt').textContent=
-          'Turno activo — Turno '+(rt2.turno.Turno||'')+' · '+(rt2.turno.Fecha||'')+' · '+(rt2.turno.Operaria||operaria);
-      }
-      irA('marcadora','Seguimiento Marcadoras','Retomando turno activo');
-      loader(false);
-      notify('Turno activo recuperado ✓','ok');
-      return;
-    }
-
-    marcadoraTurnoId = null;
-    var banner=document.getElementById('marc-retomar-banner');
-    if(banner) banner.style.display='none';
-    renderMarcadoraTabla();
-    irA('marcadora','Seguimiento Marcadoras','Revisión de turno');
+    // Mostrar pantalla de turno
+    document.getElementById('marc-pantalla-turno').style.display='block';
+    document.getElementById('marc-pantalla-registro').style.display='none';
+    irA('marcadora','Seguimiento Marcadoras','Crear o retomar turno');
   }catch(e){
     loader(false);
-    notify('Error cargando líneas: '+e.message,'err');
+    notify('Error: '+e.message,'err');
   }
 }
+
+async function marc_buscarTurnoActivo(){
+  var selOp=document.getElementById('marc-operaria');
+  var operaria=selOp?selOp.value:'';
+  if(!operaria){ document.getElementById('marc-turno-activo-info').style.display='none'; return; }
+  try{
+    var r=await api({action:'getMarcadoraTurno', operaria:operaria});
+    var infoDiv=document.getElementById('marc-turno-activo-info');
+    var avisoDiv=document.getElementById('marc-aviso-activo');
+    var btnCrear=document.getElementById('marc-btn-crear');
+    if(r.ok && r.turno){
+      _marcadoraTurnoData=r;
+      marcadoraTurnoId=r.turno.TurnoMarcadoraID;
+      infoDiv.style.display='block';
+      avisoDiv.style.display='block';
+      btnCrear.disabled=true; btnCrear.style.opacity='.4';
+      document.getElementById('marc-turno-activo-det').textContent=
+        'Turno '+r.turno.Turno+' · '+r.turno.Fecha+' · '+operaria+
+        ' ('+( r.lineas?r.lineas.length:0)+' líneas registradas)';
+    } else {
+      _marcadoraTurnoData=null; marcadoraTurnoId=null;
+      infoDiv.style.display='none';
+      avisoDiv.style.display='none';
+      btnCrear.disabled=false; btnCrear.style.opacity='1';
+    }
+  }catch(e){}
+}
+
+function marc_retomarTurno(){
+  if(!_marcadoraTurnoData || !_marcadoraTurnoData.turno) return;
+  var t=_marcadoraTurnoData.turno;
+  renderMarcadoraTabla();
+  document.getElementById('marc-banner-det').textContent=
+    'Turno '+t.Turno+' · '+t.Fecha+' · '+(t.Operaria||'');
+  document.getElementById('marc-pantalla-turno').style.display='none';
+  document.getElementById('marc-pantalla-registro').style.display='block';
+
+  // Restaurar datos guardados
+  if(_marcadoraTurnoData.lineas && _marcadoraTurnoData.lineas.length){
+    setTimeout(function(){
+      _marcadoraTurnoData.lineas.forEach(function(reg){
+        var idx=marcadoraLineas.findIndex(function(l){return l.nombre===String(reg.Linea||'');});
+        if(idx<0) return;
+        if(reg.Estado) setEstado(idx, reg.Estado);
+        var refEl=document.getElementById('marc-ref-'+idx); if(refEl) refEl.value=reg.Referencia||'';
+        var ordEl=document.getElementById('marc-ord-'+idx); if(ordEl) ordEl.value=reg.Orden||'';
+        var lonEl=document.getElementById('marc-lon-'+idx); if(lonEl) lonEl.value=reg.Longitud||'';
+        var obsEl=document.getElementById('marc-obs-'+idx); if(obsEl) obsEl.value=reg.Observaciones||'';
+        [['1',reg.Rev1_Hora],['2',reg.Rev2_Hora],['3',reg.Rev3_Hora],['4',reg.Rev4_Hora]].forEach(function(p){
+          var n=p[0], h=String(p[1]||'').trim();
+          if(!h||h==='undefined'||h==='null') return;
+          marcadoraRevisiones[idx+'-'+n]=h;
+          var horaEl=document.getElementById('marc-rev-hora-'+idx+'-'+n);
+          if(horaEl){horaEl.textContent=h;horaEl.style.color='var(--vd)';horaEl.style.fontWeight='800';}
+          var btnEl=document.getElementById('marc-rev-btn-'+idx+'-'+n);
+          if(btnEl){btnEl.textContent='✓';btnEl.style.background='var(--vd)';btnEl.style.color='#fff';btnEl.disabled=true;}
+          var boxEl=document.getElementById('marc-rev-box-'+idx+'-'+n);
+          if(boxEl){boxEl.style.background='var(--vd2)';boxEl.style.borderColor='var(--vd)';}
+        });
+      });
+    }, 300);
+  }
+  notify('Turno retomado ✓','ok');
+}
+
+async function marc_crearTurno(){
+  var operaria=document.getElementById('marc-operaria').value;
+  var turno=document.getElementById('marc-turno-sel').value;
+  var fecha=document.getElementById('marc-fecha').value;
+  if(!operaria){notify('Selecciona la operaria','err');return;}
+  loader(true,'Creando turno...');
+  try{
+    var r=await api({action:'guardarMarcadora',
+      turnoMarcadoraId:'', fecha:fecha, turno:turno, operaria:operaria, lineas:[]});
+    loader(false);
+    if(!r.ok){notify('Error creando turno','err');return;}
+    marcadoraTurnoId=r.turnoMarcadoraId;
+    _marcadoraTurnoData={turno:{TurnoMarcadoraID:marcadoraTurnoId,Turno:turno,Fecha:fecha,Operaria:operaria},lineas:[]};
+    marcadoraEstados={}; marcadoraRevisiones={};
+    renderMarcadoraTabla();
+    document.getElementById('marc-banner-det').textContent='Turno '+turno+' · '+fecha+' · '+operaria;
+    document.getElementById('marc-pantalla-turno').style.display='none';
+    document.getElementById('marc-pantalla-registro').style.display='block';
+    notify('Turno creado ✓','ok');
+  }catch(e){loader(false);notify('Error: '+e.message,'err');}
+}
+
+async function marc_cerrarYPDF(){
+  if(!marcadoraTurnoId){notify('No hay turno activo','err');return;}
+  if(!confirm('¿Cerrar el turno? Se generará el PDF.')) return;
+  // Guardar primero
+  await guardarMarcadora();
+  loader(true,'Cerrando turno...');
+  try{
+    var r=await api({action:'cerrarMarcadoraTurno', turnoMarcadoraId:marcadoraTurnoId});
+    loader(false);
+    if(r.ok){
+      generarPDFMarcadora();
+      marcadoraTurnoId=null; _marcadoraTurnoData=null;
+      marcadoraEstados={}; marcadoraRevisiones={};
+      document.getElementById('marc-pantalla-turno').style.display='block';
+      document.getElementById('marc-pantalla-registro').style.display='none';
+      notify('Turno cerrado ✓','ok');
+    } else notify('Error cerrando turno','err');
+  }catch(e){loader(false);notify('Error: '+e.message,'err');}
+}
+
+// Mantener cerrarMarcadoraTurno como alias
+function cerrarMarcadoraTurno(){ marc_cerrarYPDF(); }
 
 function renderMarcadoraTabla(){
   var tbody = document.getElementById('marc-tbody');
@@ -5604,22 +5679,6 @@ async function guardarMarcadora(){
   }catch(e){ loader(false); notify('Error: '+e.message,'err'); }
 }
 
-async function cerrarMarcadoraTurno(){
-  if(!marcadoraTurnoId){ notify('No hay turno activo','err'); return; }
-  if(!confirm('¿Cerrar el turno de marcadora? Ya no se podrá modificar.')) return;
-  loader(true,'Cerrando turno...');
-  try{
-    var r = await api({action:'cerrarMarcadoraTurno', turnoMarcadoraId:marcadoraTurnoId});
-    loader(false);
-    if(r.ok){
-      marcadoraTurnoId=null;
-      var banner=document.getElementById('marc-retomar-banner');
-      if(banner) banner.style.display='none';
-      notify('Turno cerrado ✓','ok');
-      generarPDFMarcadora();
-    } else notify('Error cerrando turno','err');
-  }catch(e){loader(false);notify('Error: '+e.message,'err');}
-}
 
 function generarPDFMarcadora(){
   var operaria = document.getElementById('marc-operaria').value||'—';
