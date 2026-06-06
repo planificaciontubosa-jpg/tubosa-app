@@ -5449,37 +5449,64 @@ async function marc_buscarTurnoActivo(){
 function marc_retomarTurno(){
   if(!_marcadoraTurnoData || !_marcadoraTurnoData.turno) return;
   var t=_marcadoraTurnoData.turno;
+
+  // Preparar mapa de datos restaurados antes de render
+  var mapaRestore={};
+  if(_marcadoraTurnoData.lineas){
+    _marcadoraTurnoData.lineas.forEach(function(reg){
+      mapaRestore[String(reg.Linea||'').trim()]=reg;
+    });
+  }
+
+  // Resetear estados y revisiones
+  marcadoraEstados={}; marcadoraRevisiones={};
+
+  // Pre-cargar estados y revisiones en los objetos antes del render
+  marcadoraLineas.forEach(function(l,i){
+    var reg=mapaRestore[l.nombre];
+    if(!reg) return;
+    if(reg.Estado) marcadoraEstados[i]=reg.Estado;
+    ['1','2','3','4'].forEach(function(n,ni){
+      var campos=['Rev1_Hora','Rev2_Hora','Rev3_Hora','Rev4_Hora'];
+      var h=String(reg[campos[ni]]||'').trim();
+      if(h && h!=='undefined' && h!=='null') marcadoraRevisiones[i+'-'+n]=h;
+    });
+  });
+
+  // Renderizar tabla (ya tiene marcadoraEstados y marcadoraRevisiones cargados)
   renderMarcadoraTabla();
+
+  // Después del render, restaurar campos de texto y visual de revisiones
+  setTimeout(function(){
+    marcadoraLineas.forEach(function(l,i){
+      var reg=mapaRestore[l.nombre];
+      if(!reg) return;
+      // Campos de texto
+      var refEl=document.getElementById('marc-ref-'+i); if(refEl) refEl.value=reg.Referencia||'';
+      var ordEl=document.getElementById('marc-ord-'+i); if(ordEl) ordEl.value=reg.Orden||'';
+      var lonEl=document.getElementById('marc-lon-'+i); if(lonEl) lonEl.value=reg.Longitud||'';
+      var obsEl=document.getElementById('marc-obs-'+i); if(obsEl) obsEl.value=reg.Observaciones||'';
+      // Estado visual
+      if(reg.Estado) setEstado(i, reg.Estado);
+      // Revisiones visuales
+      ['1','2','3','4'].forEach(function(n,ni){
+        var campos=['Rev1_Hora','Rev2_Hora','Rev3_Hora','Rev4_Hora'];
+        var h=String(reg[campos[ni]]||'').trim();
+        if(!h||h==='undefined'||h==='null') return;
+        var horaEl=document.getElementById('marc-rev-hora-'+i+'-'+n);
+        if(horaEl){horaEl.textContent=h;horaEl.style.color='var(--vd)';horaEl.style.fontWeight='800';}
+        var btnEl=document.getElementById('marc-rev-btn-'+i+'-'+n);
+        if(btnEl){btnEl.textContent='✓';btnEl.style.background='var(--vd)';btnEl.style.color='#fff';btnEl.disabled=true;}
+        var boxEl=document.getElementById('marc-rev-box-'+i+'-'+n);
+        if(boxEl){boxEl.style.background='var(--vd2)';boxEl.style.borderColor='var(--vd)';}
+      });
+    });
+  }, 100);
+
   document.getElementById('marc-banner-det').textContent=
-    'Turno '+t.Turno+' · '+t.Fecha+' · '+(t.Operaria||'');
+    'Turno '+(t.Turno||'')+' · '+(t.Fecha||'')+' · '+(t.Operaria||'');
   document.getElementById('marc-pantalla-turno').style.display='none';
   document.getElementById('marc-pantalla-registro').style.display='block';
-
-  // Restaurar datos guardados
-  if(_marcadoraTurnoData.lineas && _marcadoraTurnoData.lineas.length){
-    setTimeout(function(){
-      _marcadoraTurnoData.lineas.forEach(function(reg){
-        var idx=marcadoraLineas.findIndex(function(l){return l.nombre===String(reg.Linea||'');});
-        if(idx<0) return;
-        if(reg.Estado) setEstado(idx, reg.Estado);
-        var refEl=document.getElementById('marc-ref-'+idx); if(refEl) refEl.value=reg.Referencia||'';
-        var ordEl=document.getElementById('marc-ord-'+idx); if(ordEl) ordEl.value=reg.Orden||'';
-        var lonEl=document.getElementById('marc-lon-'+idx); if(lonEl) lonEl.value=reg.Longitud||'';
-        var obsEl=document.getElementById('marc-obs-'+idx); if(obsEl) obsEl.value=reg.Observaciones||'';
-        [['1',reg.Rev1_Hora],['2',reg.Rev2_Hora],['3',reg.Rev3_Hora],['4',reg.Rev4_Hora]].forEach(function(p){
-          var n=p[0], h=String(p[1]||'').trim();
-          if(!h||h==='undefined'||h==='null') return;
-          marcadoraRevisiones[idx+'-'+n]=h;
-          var horaEl=document.getElementById('marc-rev-hora-'+idx+'-'+n);
-          if(horaEl){horaEl.textContent=h;horaEl.style.color='var(--vd)';horaEl.style.fontWeight='800';}
-          var btnEl=document.getElementById('marc-rev-btn-'+idx+'-'+n);
-          if(btnEl){btnEl.textContent='✓';btnEl.style.background='var(--vd)';btnEl.style.color='#fff';btnEl.disabled=true;}
-          var boxEl=document.getElementById('marc-rev-box-'+idx+'-'+n);
-          if(boxEl){boxEl.style.background='var(--vd2)';boxEl.style.borderColor='var(--vd)';}
-        });
-      });
-    }, 300);
-  }
   notify('Turno retomado ✓','ok');
 }
 
@@ -5564,10 +5591,20 @@ function renderMarcadoraTabla(){
       '<td style="padding:6px 8px">' +
         '<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:4px;min-width:300px">' +
           [1,2,3,4].map(function(r){
-            return '<div id="marc-rev-box-'+i+'-'+r+'" style="background:var(--gr);border:1px solid var(--gr2);border-radius:4px;padding:5px 4px;text-align:center">' +
+            var horaGuardada = marcadoraRevisiones[i+'-'+r]||'';
+            var yaHecha = !!horaGuardada;
+            var boxBg   = yaHecha ? 'var(--vd2)' : 'var(--gr)';
+            var boxBrd  = yaHecha ? 'var(--vd)'  : 'var(--gr2)';
+            var horaTxt = yaHecha ? horaGuardada  : '—';
+            var horaCol = yaHecha ? 'var(--vd)'  : 'var(--gr3)';
+            var btnBg   = yaHecha ? 'var(--vd)'  : 'var(--gr2)';
+            var btnCol  = yaHecha ? '#fff'        : 'var(--gr3)';
+            var btnTxt  = yaHecha ? '✓'           : '✓ OK';
+            var btnDis  = yaHecha ? 'disabled'    : '';
+            return '<div id="marc-rev-box-'+i+'-'+r+'" style="background:'+boxBg+';border:1px solid '+boxBrd+';border-radius:4px;padding:5px 4px;text-align:center">' +
               '<div style="font-size:9px;font-weight:700;color:var(--gr3);text-transform:uppercase;margin-bottom:3px">Rev '+r+'</div>' +
-              '<div id="marc-rev-hora-'+i+'-'+r+'" style="font-size:11px;font-weight:700;color:var(--gr3);margin-bottom:4px;min-height:16px">—</div>' +
-              '<button onclick="marcarRevision('+i+','+r+')" id="marc-rev-btn-'+i+'-'+r+'" style="width:100%;padding:3px;font-size:10px;font-weight:700;border:none;border-radius:3px;cursor:pointer;background:var(--gr2);color:var(--gr3)">✓ OK</button>' +
+              '<div id="marc-rev-hora-'+i+'-'+r+'" style="font-size:11px;font-weight:800;color:'+horaCol+';margin-bottom:4px;min-height:16px">'+horaTxt+'</div>' +
+              '<button onclick="marcarRevision('+i+','+r+')" id="marc-rev-btn-'+i+'-'+r+'" '+btnDis+' style="width:100%;padding:3px;font-size:10px;font-weight:700;border:none;border-radius:3px;cursor:'+(yaHecha?'default':'pointer')+';background:'+btnBg+';color:'+btnCol+'">'+btnTxt+'</button>' +
             '</div>';
           }).join('') +
         '</div>' +
@@ -5579,9 +5616,6 @@ function renderMarcadoraTabla(){
     '</tr>';
   }).join('');
 }
-
-var marcadoraEstados = {};
-var marcadoraRevisiones = {};
 
 function setEstado(idx, est){
   marcadoraEstados[idx] = est;
