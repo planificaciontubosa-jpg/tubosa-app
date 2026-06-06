@@ -5406,7 +5406,14 @@ async function abrirMarcadora(){
       Array.from(selOp.options).forEach(function(o){
         if(o.value.toLowerCase()===nombreActual.toLowerCase()) selOp.value=o.value;
       });
-      if(selOp.value) marc_buscarTurnoActivo();
+      if(selOp.value) await marc_buscarTurnoActivo();
+    }
+
+    // Si hay turno activo, ir directo al registro sin pasar por pantalla de crear
+    if(_marcadoraTurnoData && _marcadoraTurnoData.turno){
+      marc_retomarTurno();
+      loader(false);
+      return;
     }
 
     // Mostrar pantalla de turno
