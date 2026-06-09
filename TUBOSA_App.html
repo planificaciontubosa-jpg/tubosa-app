@@ -5429,11 +5429,9 @@ async function abrirMarcadora(){
 async function marc_buscarTurnoActivo(){
   var selOp=document.getElementById('marc-operaria');
   var operaria=selOp?selOp.value:'';
-  console.log('Buscando turno para operaria:', operaria);
   if(!operaria){ document.getElementById('marc-turno-activo-info').style.display='none'; return; }
   try{
     var r=await api({action:'getMarcadoraTurno', operaria:operaria});
-    console.log('getMarcadoraTurno resultado:', r);
     var infoDiv=document.getElementById('marc-turno-activo-info');
     var avisoDiv=document.getElementById('marc-aviso-activo');
     var btnCrear=document.getElementById('marc-btn-crear');
@@ -5660,24 +5658,50 @@ function setEstado(idx, est){
 
 function marcarRevision(idx, rev){
   var key = idx+'-'+rev;
-  if(marcadoraRevisiones[key]) return; // ya marcada
+  if(marcadoraRevisiones[key]) return;
 
   var now = new Date();
-  var hh = String(now.getHours()).padStart(2,'0');
-  var mm = String(now.getMinutes()).padStart(2,'0');
-  var hora = hh+':'+mm;
+  var hora = String(now.getHours()).padStart(2,'0')+':'+String(now.getMinutes()).padStart(2,'0');
   marcadoraRevisiones[key] = hora;
 
-  var horaEl = document.getElementById('marc-rev-hora-'+idx+'-'+rev);
-  var btnEl  = document.getElementById('marc-rev-btn-'+idx+'-'+rev);
-  var boxEl  = document.getElementById('marc-rev-box-'+idx+'-'+rev);
-  if(horaEl){ horaEl.textContent = hora; horaEl.style.color='var(--vd)'; horaEl.style.fontWeight='800'; }
-  if(btnEl){ btnEl.textContent='✓'; btnEl.style.background='var(--vd)'; btnEl.style.color='#fff'; btnEl.disabled=true; }
-  if(boxEl){ boxEl.style.background='var(--vd2)'; boxEl.style.borderColor='var(--vd)'; }
-  notify('Revisión '+rev+' registrada a las '+hora,'ok');
+  var horaEl=document.getElementById('marc-rev-hora-'+idx+'-'+rev);
+  var btnEl =document.getElementById('marc-rev-btn-'+idx+'-'+rev);
+  var boxEl =document.getElementById('marc-rev-box-'+idx+'-'+rev);
+  if(horaEl){horaEl.textContent=hora;horaEl.style.color='var(--vd)';horaEl.style.fontWeight='800';}
+  if(btnEl){btnEl.textContent='✓';btnEl.style.background='var(--vd)';btnEl.style.color='#fff';btnEl.disabled=true;}
+  if(boxEl){boxEl.style.background='var(--vd2)';boxEl.style.borderColor='var(--vd)';}
+  notify('Revisión '+rev+' — '+hora,'ok');
 
-  // Auto-guardar inmediatamente si hay turno activo
-  if(marcadoraTurnoId) guardarMarcadora();
+  // Guardar SOLO esta línea
+  if(marcadoraTurnoId) guardarLineaMarcadora(idx);
+}
+
+async function guardarLineaMarcadora(idx){
+  if(!marcadoraTurnoId) return;
+  var l = marcadoraLineas[idx];
+  if(!l) return;
+  var operaria = document.getElementById('marc-operaria').value||nombreActual;
+  var turno    = document.getElementById('marc-turno-sel').value;
+  var fecha    = document.getElementById('marc-fecha').value;
+  var linea = {
+    linea:    l.nombre,
+    estado:   marcadoraEstados[idx]||'',
+    referencia: document.getElementById('marc-ref-'+idx)?document.getElementById('marc-ref-'+idx).value:'',
+    orden:    document.getElementById('marc-ord-'+idx)?document.getElementById('marc-ord-'+idx).value:'',
+    longitud: document.getElementById('marc-lon-'+idx)?document.getElementById('marc-lon-'+idx).value:'',
+    rev1_hora: marcadoraRevisiones[idx+'-1']||'',
+    rev2_hora: marcadoraRevisiones[idx+'-2']||'',
+    rev3_hora: marcadoraRevisiones[idx+'-3']||'',
+    rev4_hora: marcadoraRevisiones[idx+'-4']||'',
+    observaciones: document.getElementById('marc-obs-'+idx)?document.getElementById('marc-obs-'+idx).value:''
+  };
+  try{
+    await api({action:'actualizarMarcadora',
+      turnoMarcadoraId:marcadoraTurnoId,
+      fecha:fecha, turno:turno, operaria:operaria,
+      lineas:[linea]
+    });
+  }catch(e){}
 }
 
 async function guardarMarcadora(){
