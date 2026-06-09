@@ -5429,9 +5429,11 @@ async function abrirMarcadora(){
 async function marc_buscarTurnoActivo(){
   var selOp=document.getElementById('marc-operaria');
   var operaria=selOp?selOp.value:'';
+  console.log('Buscando turno para operaria:', operaria);
   if(!operaria){ document.getElementById('marc-turno-activo-info').style.display='none'; return; }
   try{
     var r=await api({action:'getMarcadoraTurno', operaria:operaria});
+    console.log('getMarcadoraTurno resultado:', r);
     var infoDiv=document.getElementById('marc-turno-activo-info');
     var avisoDiv=document.getElementById('marc-aviso-activo');
     var btnCrear=document.getElementById('marc-btn-crear');
