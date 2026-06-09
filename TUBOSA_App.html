@@ -5386,134 +5386,101 @@ async function abrirMarcadora(){
       api({action:'getLineas'}),
       api({action:'getTurnosActivosDetalle'})
     ]);
-    loader(false);
     const turnos = rt.ok ? rt.data : [];
     const todasLineas = rl.ok ? rl.data.filter(l=>l.Activa!=='No') : [];
     marcadoraLineas = todasLineas.map(function(l){
       const t = turnos.find(function(t){ return String(t.lineaId)===String(l.ID); });
-      return { id:l.ID, nombre:l.NombreLinea, turnoId:t?t.turnoId:'',
+      return { id:l.ID, nombre:l.NombreLinea,
                ordenFab:t?(t.ordenFab||''):'', producto:t?(t.producto||''):'', activa:!!t };
     });
 
-    // Fecha y turno por defecto
     document.getElementById('marc-fecha').value = fmtFecha();
     var selT=document.getElementById('marc-turno-sel');
     if(selT) selT.value=getTurnoActual();
 
-    // Pre-seleccionar operaria si coincide con el usuario
     var selOp=document.getElementById('marc-operaria');
+    var operariaLogin='';
     if(selOp && nombreActual){
       Array.from(selOp.options).forEach(function(o){
-        if(o.value.toLowerCase()===nombreActual.toLowerCase()) selOp.value=o.value;
+        if(o.value.toLowerCase()===nombreActual.toLowerCase()){
+          selOp.value=o.value; operariaLogin=o.value;
+        }
       });
-      if(selOp.value) await marc_buscarTurnoActivo();
     }
 
-    // Si hay turno activo, ir directo al registro sin pasar por pantalla de crear
-    if(_marcadoraTurnoData && _marcadoraTurnoData.turno){
-      marc_retomarTurno();
-      loader(false);
-      return;
-    }
-
-    // Mostrar pantalla de turno
+    // Ir a la vista PRIMERO para que el DOM exista
+    irA('marcadora','Seguimiento Marcadoras','');
     document.getElementById('marc-pantalla-turno').style.display='block';
     document.getElementById('marc-pantalla-registro').style.display='none';
-    irA('marcadora','Seguimiento Marcadoras','Crear o retomar turno');
+
+    // Buscar turno activo
+    var operariaBuscar = operariaLogin || (selOp?selOp.value:'');
+    var turnoActivo = null;
+    if(operariaBuscar){
+      var r = await api({action:'getMarcadoraTurno', operaria:operariaBuscar});
+      if(r.ok && r.turno) turnoActivo = r;
+    }
+
+    loader(false);
+
+    if(turnoActivo){
+      _marcadoraTurnoData = turnoActivo;
+      marcadoraTurnoId = turnoActivo.turno.TurnoMarcadoraID;
+      marc_retomarTurno();
+    } else {
+      _marcadoraTurnoData = null; marcadoraTurnoId = null;
+      var infoDiv=document.getElementById('marc-turno-activo-info');
+      if(infoDiv) infoDiv.style.display='none';
+      var avisoDiv=document.getElementById('marc-aviso-activo');
+      if(avisoDiv) avisoDiv.style.display='none';
+      var btnCrear=document.getElementById('marc-btn-crear');
+      if(btnCrear){btnCrear.disabled=false;btnCrear.style.opacity='1';}
+    }
   }catch(e){
     loader(false);
     notify('Error: '+e.message,'err');
   }
 }
 
-async function marc_buscarTurnoActivo(){
-  var selOp=document.getElementById('marc-operaria');
-  var operaria=selOp?selOp.value:'';
-  if(!operaria){ document.getElementById('marc-turno-activo-info').style.display='none'; return; }
-  try{
-    var r=await api({action:'getMarcadoraTurno', operaria:operaria});
-    var infoDiv=document.getElementById('marc-turno-activo-info');
-    var avisoDiv=document.getElementById('marc-aviso-activo');
-    var btnCrear=document.getElementById('marc-btn-crear');
-    if(r.ok && r.turno){
-      _marcadoraTurnoData=r;
-      marcadoraTurnoId=r.turno.TurnoMarcadoraID;
-      infoDiv.style.display='block';
-      avisoDiv.style.display='block';
-      btnCrear.disabled=true; btnCrear.style.opacity='.4';
-      document.getElementById('marc-turno-activo-det').textContent=
-        'Turno '+r.turno.Turno+' · '+r.turno.Fecha+' · '+operaria+
-        ' ('+( r.lineas?r.lineas.length:0)+' líneas registradas)';
-    } else {
-      _marcadoraTurnoData=null; marcadoraTurnoId=null;
-      infoDiv.style.display='none';
-      avisoDiv.style.display='none';
-      btnCrear.disabled=false; btnCrear.style.opacity='1';
-    }
-  }catch(e){}
-}
-
 function marc_retomarTurno(){
   if(!_marcadoraTurnoData || !_marcadoraTurnoData.turno) return;
   var t=_marcadoraTurnoData.turno;
 
-  // Preparar mapa de datos restaurados antes de render
-  var mapaRestore={};
-  if(_marcadoraTurnoData.lineas){
-    _marcadoraTurnoData.lineas.forEach(function(reg){
-      mapaRestore[String(reg.Linea||'').trim()]=reg;
-    });
-  }
-
-  // Resetear estados y revisiones
+  // Pre-cargar estados y revisiones ANTES del render
   marcadoraEstados={}; marcadoraRevisiones={};
-
-  // Pre-cargar estados y revisiones en los objetos antes del render
+  var mapaRestore={};
+  (_marcadoraTurnoData.lineas||[]).forEach(function(reg){
+    mapaRestore[String(reg.Linea||'').trim()]=reg;
+  });
   marcadoraLineas.forEach(function(l,i){
     var reg=mapaRestore[l.nombre];
     if(!reg) return;
     if(reg.Estado) marcadoraEstados[i]=reg.Estado;
-    ['1','2','3','4'].forEach(function(n,ni){
-      var campos=['Rev1_Hora','Rev2_Hora','Rev3_Hora','Rev4_Hora'];
-      var h=String(reg[campos[ni]]||'').trim();
-      if(h && h!=='undefined' && h!=='null') marcadoraRevisiones[i+'-'+n]=h;
+    ['Rev1_Hora','Rev2_Hora','Rev3_Hora','Rev4_Hora'].forEach(function(campo,ni){
+      var h=String(reg[campo]||'').trim();
+      if(h && h!=='undefined' && h!=='null') marcadoraRevisiones[i+'-'+(ni+1)]=h;
     });
   });
 
-  // Renderizar tabla (ya tiene marcadoraEstados y marcadoraRevisiones cargados)
+  // Render con datos ya precargados
   renderMarcadoraTabla();
 
-  // Después del render, restaurar campos de texto y visual de revisiones
+  // Restaurar campos de texto después del render
   setTimeout(function(){
     marcadoraLineas.forEach(function(l,i){
       var reg=mapaRestore[l.nombre];
       if(!reg) return;
-      // Campos de texto
       var refEl=document.getElementById('marc-ref-'+i); if(refEl) refEl.value=reg.Referencia||'';
       var ordEl=document.getElementById('marc-ord-'+i); if(ordEl) ordEl.value=reg.Orden||'';
       var lonEl=document.getElementById('marc-lon-'+i); if(lonEl) lonEl.value=reg.Longitud||'';
       var obsEl=document.getElementById('marc-obs-'+i); if(obsEl) obsEl.value=reg.Observaciones||'';
-      // Estado visual
-      if(reg.Estado) setEstado(i, reg.Estado);
-      // Revisiones visuales
-      ['1','2','3','4'].forEach(function(n,ni){
-        var campos=['Rev1_Hora','Rev2_Hora','Rev3_Hora','Rev4_Hora'];
-        var h=String(reg[campos[ni]]||'').trim();
-        if(!h||h==='undefined'||h==='null') return;
-        var horaEl=document.getElementById('marc-rev-hora-'+i+'-'+n);
-        if(horaEl){horaEl.textContent=h;horaEl.style.color='var(--vd)';horaEl.style.fontWeight='800';}
-        var btnEl=document.getElementById('marc-rev-btn-'+i+'-'+n);
-        if(btnEl){btnEl.textContent='✓';btnEl.style.background='var(--vd)';btnEl.style.color='#fff';btnEl.disabled=true;}
-        var boxEl=document.getElementById('marc-rev-box-'+i+'-'+n);
-        if(boxEl){boxEl.style.background='var(--vd2)';boxEl.style.borderColor='var(--vd)';}
-      });
     });
-  }, 100);
+  }, 150);
 
-  document.getElementById('marc-banner-det').textContent=
-    'Turno '+(t.Turno||'')+' · '+(t.Fecha||'')+' · '+(t.Operaria||'');
   document.getElementById('marc-pantalla-turno').style.display='none';
   document.getElementById('marc-pantalla-registro').style.display='block';
+  document.getElementById('marc-banner-det').textContent=
+    'Turno '+(t.Turno||'')+' · '+(t.Fecha||'')+' · '+(t.Operaria||'');
   notify('Turno retomado ✓','ok');
 }
 
