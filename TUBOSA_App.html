@@ -306,8 +306,10 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:#EEF2F7;color:var(--
   <!-- LÍNEAS -->
   <div id="tab-lineas" style="display:none">
     <div class="card"><div class="card-head az">🏭 Líneas de Producción</div><div class="card-body">
-      <button class="btn btn-gr btn-sm" onclick="verMaestro('lineas')" style="margin-bottom:10px">🔄 Ver líneas</button>
-      <div class="pw"><table class="preview-table" id="lista-lineas"></table></div>
+      <p class="ts" style="margin-bottom:10px">Configura el número de cabezales (1 = sencillo, 2 = doble) para controlar qué lados aparecen en tendencias.</p>
+      <button class="btn btn-gr btn-sm" onclick="cargarLineasAdmin()" style="margin-bottom:10px">🔄 Cargar líneas</button>
+      <div id="lineas-admin-tabla" style="overflow-x:auto"></div>
+      <button class="btn btn-vd btn-sm" id="btn-guardar-cabezales" style="display:none;margin-top:10px" onclick="guardarCabezales()">💾 Guardar Cabezales</button>
     </div></div>
   </div>
 
@@ -535,7 +537,7 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:#EEF2F7;color:var(--
   <div class="card"><div class="card-head az2">📈 Bloque 3 — Tendencias · Hora <span id="tend-hora-num">1</span></div><div class="card-body">
     <div class="fila fila-2">
       <div>
-        <div class="sec-t">Lado 1</div>
+        <div class="sec-t" id="tend-lbl-lado1">Lado 1</div>
         <div class="fila fila-2">
           <div class="campo"><label>Espesor Pared (mm)</label><input type="number" id="reg-espL1" placeholder="0.00" step="0.01"></div>
           <div class="campo"><label>Descalibre (%)</label><input type="number" id="reg-descL1" placeholder="0.0" step="0.1"></div>
@@ -545,7 +547,7 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:#EEF2F7;color:var(--
           <div class="campo"><label>Ovalización</label><input type="number" id="reg-ovalL1" placeholder="0.0" step="0.01"></div>
         </div>
       </div>
-      <div>
+      <div id="reg-lado2-tend">
         <div class="sec-t">Lado 2</div>
         <div class="fila fila-2">
           <div class="campo"><label>Espesor Pared (mm)</label><input type="number" id="reg-espL2" placeholder="0.00" step="0.01"></div>
@@ -2037,6 +2039,8 @@ async function selLinea(l){
   lineaActual=l;
   esCorrugada=l.Tipo==='Corrugada'||LINEAS_CORRUGADAS.includes(parseInt(l.ID));
   esCoextrusor=parseInt(l.ID)===LINEA_COEXTRUSOR;
+  // Guardar número de cabezales para la línea
+  lineaActual._cabezales = parseInt(l.Cabezales)||1;
   const turnoActivo = turnosActivosMap[l.ID];
   if(turnoActivo){
     mostrarModalRetomar(turnoActivo);
@@ -2225,10 +2229,8 @@ async function retomarTurno(){
       var elRH2=document.getElementById('reg-hora-num2'); if(elRH2) elRH2.textContent=horaActual;
       cargarAcumuladoOrden();
       setTimeout(renderSPCCharts, 300);
+      actualizarVisibilidadLado2();
     }
-
-  }catch(e){
-    loader(false);
     notify('Error al retomar turno: '+e.message,'err');
   }
 }
@@ -2405,6 +2407,7 @@ function iniciarRegistro(){
   _tubosAcumuladosOrden=0;
   cargarAcumuladoOrden();
   setTimeout(renderSPCCharts, 200);
+  actualizarVisibilidadLado2();
   // Check rotulado
   document.getElementById('reg-rotuladoOk').addEventListener('change',function(){
     document.getElementById('rotulado-txt').textContent=this.checked?'✓ Rotulado VERIFICADO':'Rotulado NO verificado';
@@ -3503,6 +3506,66 @@ function dibujarSPC(canvas, labels, serie){
   ctx.fillText(serie.label, PAD.left, PAD.top-8);
 }
 
+function actualizarVisibilidadLado2(){
+  var cab = lineaActual._cabezales || parseInt(turnoActual.cabezales||'1') || 1;
+  var esDoble = cab === 2;
+  // Mostrar/ocultar sección Lado 2 en registro normal
+  ['reg-lado2-tend','coext-lado2-tend'].forEach(function(id){
+    var el=document.getElementById(id);
+    if(el) el.style.display=esDoble?'block':'none';
+  });
+  // Actualizar label del bloque si es sencillo
+  var lbl1=document.getElementById('tend-lbl-lado1');
+  if(lbl1) lbl1.textContent=esDoble?'Lado 1':'Medición';
+}
+
+// ── ADMIN LÍNEAS / CABEZALES ──────────────────────────────────
+var _lineasAdminData = [];
+
+async function cargarLineasAdmin(){
+  loader(true,'Cargando...');
+  var r = await api({action:'getLineas'});
+  loader(false);
+  if(!r.ok) return;
+  _lineasAdminData = r.data;
+  var div = document.getElementById('lineas-admin-tabla');
+  var btn = document.getElementById('btn-guardar-cabezales');
+  if(btn) btn.style.display='inline-flex';
+  div.innerHTML = '<table class="rt" style="font-size:13px"><thead><tr>'+
+    '<th>Línea</th><th>Tipo</th><th>Estado</th><th>Activa</th><th style="text-align:center">Cabezales</th></tr></thead>'+
+    '<tbody>'+r.data.map(function(l,i){
+      var cab = parseInt(l.Cabezales)||1;
+      return '<tr>'+
+        '<td><strong>'+l.NombreLinea+'</strong></td>'+
+        '<td>'+( l.Tipo||'—')+'</td>'+
+        '<td>'+( l.Estado||'—')+'</td>'+
+        '<td>'+( l.Activa||'—')+'</td>'+
+        '<td style="text-align:center">'+
+          '<select id="cab-sel-'+i+'" style="padding:4px 8px;border-radius:4px;border:1px solid var(--gr2);font-size:13px">'+
+            '<option value="1"'+(cab===1?' selected':'')+'>1 — Sencillo</option>'+
+            '<option value="2"'+(cab===2?' selected':'')+'>2 — Doble</option>'+
+          '</select>'+
+        '</td>'+
+      '</tr>';
+    }).join('')+
+  '</tbody></table>';
+}
+
+async function guardarCabezales(){
+  var lineas = _lineasAdminData.map(function(l,i){
+    var sel = document.getElementById('cab-sel-'+i);
+    return {nombre:l.NombreLinea, cabezales:sel?parseInt(sel.value):1};
+  });
+  loader(true,'Guardando...');
+  var r = await api({action:'saveCabezales', lineas:lineas});
+  loader(false);
+  if(r.ok){
+    // Actualizar cache local
+    await cargarMaestros();
+    notify('Cabezales guardados ✓','ok');
+  } else notify('Error guardando','err');
+}
+
 // ── ADMIN ─────────────────────────────────────────────────────
 function adminTab(tab,el){
   ['usuarios','ordenes','mezclas','lineas','calidad'].forEach(t=>{
@@ -3513,6 +3576,7 @@ function adminTab(tab,el){
   el.classList.add('activo');
   if(tab==='usuarios') cargarUsuarios();
   if(tab==='calidad') cal_cargarLista();
+  if(tab==='lineas') cargarLineasAdmin();
 }
 function dov(e,el){e.preventDefault();el.classList.add('drag');}
 function dlv(el){el.classList.remove('drag');}
