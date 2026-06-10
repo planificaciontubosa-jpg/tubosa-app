@@ -3303,13 +3303,15 @@ function renderSPCCharts(){
   if(!card) return;
 
   var horas = Object.values(horasGuardadas).sort(function(a,b){return a.hora-b.hora;});
+  var esDoble = (lineaActual._cabezales||parseInt(turnoActual.cabezales||'1')||1) === 2;
 
-  // Usar parseFloat con distinción de vacío vs cero
   function getVal(v){
     if(v===''||v===null||v===undefined) return null;
     var n=parseFloat(v);
     return isNaN(n)?null:n;
   }
+  // L2 siempre null si es cabezal sencillo
+  function getValL2(v){ return esDoble ? getVal(v) : null; }
 
   // Verificar que haya al menos una hora con alguna tendencia
   var hayTend = horas.some(function(h){
@@ -3331,18 +3333,18 @@ function renderSPCCharts(){
 
   var series = [
     { vals:  labels.map(function(_,i){ var h=horaMap[i+1]; return h?getVal(h.espL1):null; }),
-      vals2: labels.map(function(_,i){ var h=horaMap[i+1]; return h?getVal(h.espL2):null; }),
+      vals2: labels.map(function(_,i){ var h=horaMap[i+1]; return h?getValL2(h.espL2):null; }),
       ls:getVal(cal.EspesorLS), prom:getVal(cal.EspesorProm), li:getVal(cal.EspesorLI),
       label:'Espesor Pared (mm)', color:'#533AB7', color2:'#9C7FC3' },
     { vals:  labels.map(function(_,i){ var h=horaMap[i+1]; return h?getVal(h.descL1):null; }),
-      vals2: labels.map(function(_,i){ var h=horaMap[i+1]; return h?getVal(h.descL2):null; }),
+      vals2: labels.map(function(_,i){ var h=horaMap[i+1]; return h?getValL2(h.descL2):null; }),
       ls:6, prom:3, li:0, label:'Descalibre (%)', color:'#C55A11', color2:'#F4A261' },
     { vals:  labels.map(function(_,i){ var h=horaMap[i+1]; return h?getVal(h.diamL1):null; }),
-      vals2: labels.map(function(_,i){ var h=horaMap[i+1]; return h?getVal(h.diamL2):null; }),
+      vals2: labels.map(function(_,i){ var h=horaMap[i+1]; return h?getValL2(h.diamL2):null; }),
       ls:getVal(cal.DiamLS), prom:getVal(cal.DiamProm), li:getVal(cal.DiamLI),
       label:'Diámetro Exterior (mm)', color:'#1F3864', color2:'#2E5BA8' },
     { vals:  labels.map(function(_,i){ var h=horaMap[i+1]; return h?getVal(h.ovalL1):null; }),
-      vals2: labels.map(function(_,i){ var h=horaMap[i+1]; return h?getVal(h.ovalL2):null; }),
+      vals2: labels.map(function(_,i){ var h=horaMap[i+1]; return h?getValL2(h.ovalL2):null; }),
       ls:getVal(cal.OvalLS), prom:getVal(cal.OvalProm), li:0,
       label:'Ovalización', color:'#1E6B3C', color2:'#52B788' }
   ];
