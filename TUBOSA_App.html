@@ -3390,9 +3390,14 @@ function dibujarSPC(canvas, labels, serie){
   var yMin = Math.min.apply(null, allY);
   var yMax = Math.max.apply(null, allY);
   var yRange = yMax - yMin || 1;
-  yMin -= yRange * 0.1;
-  yMax += yRange * 0.1;
+  // Padding ajustado: 15% del rango real de los datos, mínimo 0.5 de la escala
+  var pad = Math.max(yRange * 0.15, 0.05);
+  yMin = yMin - pad;
+  yMax = yMax + pad;
   yRange = yMax - yMin;
+
+  // Redondear etiquetas del eje Y a decimales razonables
+  var decimales = yRange > 100 ? 0 : yRange > 10 ? 1 : yRange > 1 ? 2 : 3;
 
   function toX(i){ return PAD.left + (i / Math.max(labels.length-1, 1)) * gW; }
   function toY(v){ return PAD.top + (1 - (v - yMin) / yRange) * gH; }
@@ -3408,7 +3413,7 @@ function dibujarSPC(canvas, labels, serie){
     ctx.beginPath(); ctx.moveTo(PAD.left, yy); ctx.lineTo(PAD.left+gW, yy); ctx.stroke();
     var yVal = yMax - (yi/4) * yRange;
     ctx.fillStyle = '#888'; ctx.font = '9px DM Sans,sans-serif'; ctx.textAlign='right';
-    ctx.fillText(yVal.toFixed(2), PAD.left-4, yy+3);
+    ctx.fillText(yVal.toFixed(decimales), PAD.left-4, yy+3);
   }
 
   // Grid vertical
@@ -3431,7 +3436,7 @@ function dibujarSPC(canvas, labels, serie){
     ctx.strokeStyle='#C0392B'; ctx.lineWidth=1.2; ctx.setLineDash([5,3]);
     ctx.beginPath(); ctx.moveTo(PAD.left, toY(serie.ls)); ctx.lineTo(PAD.left+gW, toY(serie.ls)); ctx.stroke();
     ctx.fillStyle='#C0392B'; ctx.font='bold 9px DM Sans,sans-serif'; ctx.textAlign='left';
-    ctx.fillText('LS '+serie.ls.toFixed(2), PAD.left+4, toY(serie.ls)-3);
+    ctx.fillText('LS '+serie.ls.toFixed(decimales), PAD.left+4, toY(serie.ls)-3);
   }
 
   // Línea LI (punteada naranja)
@@ -3439,7 +3444,7 @@ function dibujarSPC(canvas, labels, serie){
     ctx.strokeStyle='#C55A11'; ctx.lineWidth=1.2; ctx.setLineDash([5,3]);
     ctx.beginPath(); ctx.moveTo(PAD.left, toY(serie.li)); ctx.lineTo(PAD.left+gW, toY(serie.li)); ctx.stroke();
     ctx.fillStyle='#C55A11'; ctx.font='bold 9px DM Sans,sans-serif'; ctx.textAlign='left';
-    ctx.fillText('LI '+serie.li.toFixed(2), PAD.left+4, toY(serie.li)+10);
+    ctx.fillText('LI '+serie.li.toFixed(decimales), PAD.left+4, toY(serie.li)+10);
   }
 
   // Línea promedio (sólida)
