@@ -257,49 +257,77 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:#EEF2F7;color:var(--
 
   <!-- ORDENES -->
   <div id="tab-ordenes" style="display:none">
-    <div class="card"><div class="card-head az">📋 Cargar Órdenes de Producción (SAP)</div><div class="card-body">
-      <div class="hl">Columnas requeridas en el CSV: <strong>OrdenFab, CodigoSAP, Producto, EspesorMin_mm, Diametro_mm, PesoEstandar_kgm, CantidadOrden_und</strong></div>
-      <div class="upload-area" id="drop-ordenes" onclick="document.getElementById('file-ordenes').click()" ondragover="dov(event,this)" ondragleave="dlv(this)" ondrop="drf(event,'ordenes')">
-        <div style="font-size:36px">📁</div><div class="ts" style="margin-top:8px">Arrastra CSV aquí o haz clic</div>
-      </div>
-      <input type="file" id="file-ordenes" accept=".csv" style="display:none" onchange="lf(event,'ordenes')">
-      <div id="preview-ordenes" style="display:none;margin-top:12px">
-        <div class="sec-t">Vista previa</div>
-        <div class="pw"><table class="preview-table" id="ptable-ordenes"></table></div>
-        <div style="display:flex;gap:8px;margin-top:10px;align-items:center">
-          <span id="count-ordenes" class="ts"></span>
-          <button class="btn btn-vd btn-sm" onclick="subirMaestro('Maestros_Ordenes','ordenes')">⬆ Subir</button>
-          <button class="btn btn-gr btn-sm" onclick="cancelarPreview('ordenes')">Cancelar</button>
+    <div class="card"><div class="card-head az">📋 Órdenes SAP</div><div class="card-body">
+      <p class="ts" style="margin-bottom:12px">Agrega o modifica órdenes de fabricación. Al escribir la Orden se cargan los datos si ya existe.</p>
+      <div class="fila fila-2">
+        <div class="campo"><label>Orden de Fabricación <span class="oblig">*</span></label>
+          <input type="text" id="ord-ordenFab" placeholder="53000010XXX" oninput="ord_buscar(this.value)">
+        </div>
+        <div class="campo"><label>Código SAP</label>
+          <input type="text" id="ord-codigoSAP" placeholder="1030000XXX">
         </div>
       </div>
-    </div></div>
-    <div class="card"><div class="card-head az2">📊 Órdenes en el sistema</div><div class="card-body">
-      <button class="btn btn-gr btn-sm" onclick="verMaestro('ordenes')" style="margin-bottom:10px">🔄 Ver órdenes</button>
-      <div class="pw"><table class="preview-table" id="lista-ordenes"></table></div>
+      <div class="campo"><label>Producto / Descripción</label>
+        <input type="text" id="ord-producto" placeholder="Nombre del producto">
+      </div>
+      <div class="fila fila-4">
+        <div class="campo"><label>Espesor Mín (mm)</label><input type="number" id="ord-espesorMin" placeholder="0.00" step="0.01"></div>
+        <div class="campo"><label>Diámetro (mm)</label><input type="number" id="ord-diametro" placeholder="0.0" step="0.01"></div>
+        <div class="campo"><label>Peso Estándar (kg/m)</label><input type="number" id="ord-pesoEstandar" placeholder="0.000" step="0.001"></div>
+        <div class="campo"><label>Cantidad Orden (und)</label><input type="number" id="ord-cantidadOrden" placeholder="0"></div>
+      </div>
+      <div class="fila fila-3">
+        <div class="campo"><label>Carga Estándar Output</label><input type="text" id="ord-cargaEstandar" placeholder="kg/h"></div>
+        <div class="campo"><label>Línea Asignada</label>
+          <select id="ord-linea">
+            <option value="">Sin asignar</option>
+            <option>LIN03</option><option>LIN04</option><option>LIN05</option>
+            <option>LIN07</option><option>LIN09</option><option>LIN10</option>
+            <option>LIN11</option><option>LIN13</option><option>LIN14</option>
+            <option>LIN15</option><option>LIN16</option><option>LIN17</option>
+            <option>LIN18</option><option>LIN19</option><option>LIN20</option><option>LIN21</option>
+          </select>
+        </div>
+        <div class="campo"><label>Estado</label>
+          <select id="ord-estado">
+            <option value="Activa">Activa</option>
+            <option value="Cerrada">Cerrada</option>
+          </select>
+        </div>
+      </div>
+      <div style="display:flex;gap:8px;margin-top:8px">
+        <button class="btn btn-az btn-sm" onclick="ord_guardar()">💾 Guardar Orden</button>
+        <button class="btn btn-gr btn-sm" onclick="ord_limpiar()">🗑 Limpiar</button>
+        <button class="btn btn-gr btn-sm" onclick="ord_cargarLista()">🔄 Ver todas</button>
+      </div>
+      <div id="ord-lista" style="margin-top:14px;overflow-x:auto"></div>
     </div></div>
   </div>
 
   <!-- MEZCLAS -->
   <div id="tab-mezclas" style="display:none">
-    <div class="card"><div class="card-head az">🧪 Cargar Mezclas SAP</div><div class="card-body">
-      <div class="hl">Columnas requeridas: <strong>CodigoMezcla, NombreMezcla</strong></div>
-      <div class="upload-area" id="drop-mezclas" onclick="document.getElementById('file-mezclas').click()" ondragover="dov(event,this)" ondragleave="dlv(this)" ondrop="drf(event,'mezclas')">
-        <div style="font-size:36px">📁</div><div class="ts" style="margin-top:8px">Arrastra CSV aquí</div>
-      </div>
-      <input type="file" id="file-mezclas" accept=".csv" style="display:none" onchange="lf(event,'mezclas')">
-      <div id="preview-mezclas" style="display:none;margin-top:12px">
-        <div class="sec-t">Vista previa</div>
-        <div class="pw"><table class="preview-table" id="ptable-mezclas"></table></div>
-        <div style="display:flex;gap:8px;margin-top:10px;align-items:center">
-          <span id="count-mezclas" class="ts"></span>
-          <button class="btn btn-vd btn-sm" onclick="subirMaestro('Maestros_Mezclas','mezclas')">⬆ Subir</button>
-          <button class="btn btn-gr btn-sm" onclick="cancelarPreview('mezclas')">Cancelar</button>
+    <div class="card"><div class="card-head az">🧪 Mezclas SAP</div><div class="card-body">
+      <p class="ts" style="margin-bottom:12px">Agrega o modifica mezclas. Al escribir el código se cargan los datos si ya existe.</p>
+      <div class="fila fila-2">
+        <div class="campo"><label>Código Mezcla <span class="oblig">*</span></label>
+          <input type="text" id="mez-codigo" placeholder="MZ-001" oninput="mez_buscar(this.value)">
+        </div>
+        <div class="campo"><label>Nombre Mezcla</label>
+          <input type="text" id="mez-nombre" placeholder="Nombre o descripción">
         </div>
       </div>
-    </div></div>
-    <div class="card"><div class="card-head az2">📊 Mezclas en el sistema</div><div class="card-body">
-      <button class="btn btn-gr btn-sm" onclick="verMaestro('mezclas')" style="margin-bottom:10px">🔄 Ver mezclas</button>
-      <div class="pw"><table class="preview-table" id="lista-mezclas"></table></div>
+      <div class="campo"><label>Activa</label>
+        <select id="mez-activa">
+          <option value="Sí">Sí</option>
+          <option value="No">No</option>
+        </select>
+      </div>
+      <div style="display:flex;gap:8px;margin-top:8px">
+        <button class="btn btn-az btn-sm" onclick="mez_guardar()">💾 Guardar Mezcla</button>
+        <button class="btn btn-gr btn-sm" onclick="mez_limpiar()">🗑 Limpiar</button>
+        <button class="btn btn-gr btn-sm" onclick="mez_cargarLista()">🔄 Ver todas</button>
+      </div>
+      <div id="mez-lista" style="margin-top:14px;overflow-x:auto"></div>
     </div></div>
   </div>
 
@@ -312,6 +340,7 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:#EEF2F7;color:var(--
       <button class="btn btn-vd btn-sm" id="btn-guardar-cabezales" style="display:none;margin-top:10px" onclick="guardarCabezales()">💾 Guardar Cabezales</button>
     </div></div>
   </div>
+
 
   <!-- CALIDAD -->
   <div id="tab-calidad" style="display:none">
@@ -3528,6 +3557,128 @@ function actualizarVisibilidadLado2(){
   if(lbl1) lbl1.textContent=esDoble?'Lado 1':'Medición';
 }
 
+// ── ADMIN ÓRDENES ─────────────────────────────────────────────
+function ord_buscar(v){
+  var todas=window._todasOrdenes||maestroOrdenes;
+  var o=todas.find(function(o){return String(o.OrdenFab).trim()===String(v).trim();});
+  if(o){
+    setVal('ord-codigoSAP',o.CodigoSAP||'');
+    setVal('ord-producto',o.Producto||'');
+    setVal('ord-espesorMin',o.EspesorMin_mm||'');
+    setVal('ord-diametro',o.Diametro_mm||'');
+    setVal('ord-pesoEstandar',o.PesoEstandar_kgm||'');
+    setVal('ord-cantidadOrden',o.CantidadOrden_und||'');
+    setVal('ord-cargaEstandar',o.CargaEstandar_output||'');
+    setVal('ord-linea',o.Linea||'');
+    setVal('ord-estado',o.Estado||'Activa');
+  }
+}
+
+async function ord_guardar(){
+  var ordenFab=val('ord-ordenFab').trim();
+  if(!ordenFab){notify('Ingresa el número de orden','err');return;}
+  loader(true,'Guardando...');
+  try{
+    var r=await api({action:'saveOrden',
+      ordenFab:ordenFab, codigoSAP:val('ord-codigoSAP'),
+      producto:val('ord-producto'), espesorMin:flt('ord-espesorMin'),
+      diametro:flt('ord-diametro'), pesoEstandar:flt('ord-pesoEstandar'),
+      cantidadOrden:parseInt(val('ord-cantidadOrden'))||0,
+      cargaEstandar:val('ord-cargaEstandar'), linea:val('ord-linea'),
+      estado:val('ord-estado')
+    });
+    loader(false);
+    if(r.ok){
+      await cargarMaestros();
+      notify(r.msg+' ✓','ok');
+      ord_cargarLista();
+    } else notify(r.msg||'Error','err');
+  }catch(e){loader(false);notify('Error: '+e.message,'err');}
+}
+
+function ord_limpiar(){
+  ['ord-ordenFab','ord-codigoSAP','ord-producto','ord-espesorMin','ord-diametro',
+   'ord-pesoEstandar','ord-cantidadOrden','ord-cargaEstandar'].forEach(function(id){setVal(id,'');});
+  setVal('ord-linea',''); setVal('ord-estado','Activa');
+}
+
+async function ord_cargarLista(){
+  var r=await api({action:'getOrdenes'});
+  if(!r.ok) return;
+  var lista=document.getElementById('ord-lista');
+  if(!r.data||!r.data.length){lista.innerHTML='<p style="color:var(--gr3);font-size:13px">Sin registros</p>';return;}
+  lista.innerHTML='<table class="rt" style="font-size:11px"><thead><tr>'+
+    '<th>Orden</th><th>Cód.SAP</th><th>Producto</th><th>Línea</th><th>Estado</th><th>Editar</th></tr></thead><tbody>'+
+    r.data.map(function(o){
+      return '<tr><td>'+o.OrdenFab+'</td><td>'+( o.CodigoSAP||'—')+'</td>'+
+        '<td style="font-size:10px;max-width:200px">'+( o.Producto||'—')+'</td>'+
+        '<td>'+( o.Linea||'—')+'</td>'+
+        '<td><span style="color:'+(o.Estado==='Cerrada'?'var(--rd)':'var(--vd)')+'">'+( o.Estado||'—')+'</span></td>'+
+        '<td><button class="btn btn-sm btn-az" style="padding:3px 8px;font-size:10px" onclick="ord_editar(\''+o.OrdenFab+'\')">✏</button></td></tr>';
+    }).join('')+
+  '</tbody></table>';
+}
+
+function ord_editar(ordenFab){
+  setVal('ord-ordenFab',ordenFab);
+  ord_buscar(ordenFab);
+  document.getElementById('tab-ordenes').scrollTop=0;
+  window.scrollTo(0,0);
+  notify('Orden cargada para editar','ok');
+}
+
+// ── ADMIN MEZCLAS ──────────────────────────────────────────────
+function mez_buscar(v){
+  var m=maestroMezclas.find(function(m){return String(m.CodigoMezcla).trim().toLowerCase()===v.trim().toLowerCase();});
+  if(m){
+    setVal('mez-nombre',m.NombreMezcla||'');
+    setVal('mez-activa',m.Activa||'Sí');
+  }
+}
+
+async function mez_guardar(){
+  var codigo=val('mez-codigo').trim();
+  if(!codigo){notify('Ingresa el código de mezcla','err');return;}
+  loader(true,'Guardando...');
+  try{
+    var r=await api({action:'saveMezcla',
+      codigo:codigo, nombre:val('mez-nombre'), activa:val('mez-activa')
+    });
+    loader(false);
+    if(r.ok){
+      await cargarMaestros();
+      notify(r.msg+' ✓','ok');
+      mez_cargarLista();
+    } else notify(r.msg||'Error','err');
+  }catch(e){loader(false);notify('Error: '+e.message,'err');}
+}
+
+function mez_limpiar(){
+  setVal('mez-codigo',''); setVal('mez-nombre',''); setVal('mez-activa','Sí');
+}
+
+async function mez_cargarLista(){
+  var r=await api({action:'getMezclas'});
+  if(!r.ok) return;
+  var lista=document.getElementById('mez-lista');
+  if(!r.data||!r.data.length){lista.innerHTML='<p style="color:var(--gr3);font-size:13px">Sin registros</p>';return;}
+  lista.innerHTML='<table class="rt" style="font-size:12px"><thead><tr>'+
+    '<th>Código</th><th>Nombre</th><th>Activa</th><th>Editar</th></tr></thead><tbody>'+
+    r.data.map(function(m){
+      return '<tr><td><strong>'+m.CodigoMezcla+'</strong></td><td>'+( m.NombreMezcla||'—')+'</td>'+
+        '<td><span style="color:'+(m.Activa==='No'?'var(--rd)':'var(--vd)')+'">'+( m.Activa||'Sí')+'</span></td>'+
+        '<td><button class="btn btn-sm btn-az" style="padding:3px 8px;font-size:10px" onclick="mez_editar(\''+m.CodigoMezcla+'\')">✏</button></td></tr>';
+    }).join('')+
+  '</tbody></table>';
+}
+
+function mez_editar(codigo){
+  setVal('mez-codigo',codigo);
+  mez_buscar(codigo);
+  window.scrollTo(0,0);
+  notify('Mezcla cargada para editar','ok');
+}
+
 // ── ADMIN LÍNEAS / CABEZALES ──────────────────────────────────
 var _lineasAdminData = [];
 
@@ -3586,6 +3737,8 @@ function adminTab(tab,el){
   if(tab==='usuarios') cargarUsuarios();
   if(tab==='calidad') cal_cargarLista();
   if(tab==='lineas') cargarLineasAdmin();
+  if(tab==='ordenes') ord_cargarLista();
+  if(tab==='mezclas') mez_cargarLista();
 }
 function dov(e,el){e.preventDefault();el.classList.add('drag');}
 function dlv(el){el.classList.remove('drag');}
