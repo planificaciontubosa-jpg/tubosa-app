@@ -4527,12 +4527,25 @@ function renderSupervisorSPC(d){
     });
     if(!tends.length){ cont.innerHTML=''; return; }
 
+    // Obtener parámetros de calidad para esta referencia
+    var codigoSAP = String(l.codigoSAP||'').trim();
+    var cal = {};
+    if(d.calMap && codigoSAP) cal = d.calMap[codigoSAP] || {};
+    if(!cal.EspesorLS && codigoSAP) cal = maestroCalidad[codigoSAP] || {};
+
     var labels=tends.map(function(_,i){ return 'H'+(i+1); });
     var series=[
-      { vals:tends.map(function(t){return getV(t.EspesorL1);}), vals2:tends.map(function(t){return getV(t.EspesorL2);}), ls:null, prom:null, li:null, label:'Espesor Pared (mm)', color:'#533AB7', color2:'#9C7FC3' },
-      { vals:tends.map(function(t){return getV(t.DescalibreL1);}), vals2:tends.map(function(t){return getV(t.DescalibreL2);}), ls:6, prom:3, li:0, label:'Descalibre (%)', color:'#C55A11', color2:'#F4A261' },
-      { vals:tends.map(function(t){return getV(t.DiamExtL1);}), vals2:tends.map(function(t){return getV(t.DiamExtL2);}), ls:null, prom:null, li:null, label:'Diámetro Exterior (mm)', color:'#1F3864', color2:'#2E5BA8' },
-      { vals:tends.map(function(t){return getV(t.OvalizacionL1);}), vals2:tends.map(function(t){return getV(t.OvalizacionL2);}), ls:null, prom:null, li:0, label:'Ovalización', color:'#1E6B3C', color2:'#52B788' }
+      { vals:tends.map(function(t){return getV(t.EspesorL1);}), vals2:tends.map(function(t){return getV(t.EspesorL2);}),
+        ls:getV(cal.EspesorLS), prom:getV(cal.EspesorProm), li:getV(cal.EspesorLI),
+        label:'Espesor Pared (mm)', color:'#533AB7', color2:'#9C7FC3' },
+      { vals:tends.map(function(t){return getV(t.DescalibreL1);}), vals2:tends.map(function(t){return getV(t.DescalibreL2);}),
+        ls:6, prom:3, li:0, label:'Descalibre (%)', color:'#C55A11', color2:'#F4A261' },
+      { vals:tends.map(function(t){return getV(t.DiamExtL1);}), vals2:tends.map(function(t){return getV(t.DiamExtL2);}),
+        ls:getV(cal.DiamLS), prom:getV(cal.DiamProm), li:getV(cal.DiamLI),
+        label:'Diámetro Exterior (mm)', color:'#1F3864', color2:'#2E5BA8' },
+      { vals:tends.map(function(t){return getV(t.OvalizacionL1);}), vals2:tends.map(function(t){return getV(t.OvalizacionL2);}),
+        ls:getV(cal.OvalLS), prom:getV(cal.OvalProm), li:0,
+        label:'Ovalización', color:'#1E6B3C', color2:'#52B788' }
     ].filter(function(s){ return s.vals.some(function(v){return v!==null;})||(s.vals2&&s.vals2.some(function(v){return v!==null;})); });
 
     if(!series.length){ cont.innerHTML=''; return; }
