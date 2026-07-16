@@ -6,154 +6,122 @@
 <title>Dashboard Extrusión — TUBOSA S.A.</title>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
-<link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;800;900&display=swap" rel="stylesheet">
 <style>
-body { font-family:'Outfit',sans-serif; background:#f1f5f9; }
-/* ── Machine Card ── */
-.machine-card { border:none; border-radius:8px; overflow:hidden; background:#fff;
-  transition:transform .2s ease; box-shadow:0 2px 8px rgba(0,0,0,.05);
-  height:100%; display:flex; flex-direction:column; cursor:pointer; }
-.machine-card:hover { transform:translateY(-2px); box-shadow:0 6px 20px rgba(0,0,0,.1); }
-.card-header-custom { background-color:#1a5a96!important; color:#fff!important;
-  text-align:center; padding:5px 10px; font-weight:800; font-size:.85rem; text-transform:uppercase; }
-.status-badge { padding:2px 14px; font-weight:800; border-radius:20px; display:inline-block;
-  margin-bottom:4px; font-size:.65rem; letter-spacing:.04em; }
-.status-operativa  { background:#10b981!important; color:#fff!important; }
-.status-parada     { background:#f43f5e!important; color:#fff!important; }
-.status-programada { background:#f59e0b!important; color:#fff!important; }
-.data-row-card { display:flex; justify-content:space-between; align-items:center;
-  padding:2px 10px; font-size:.68rem; }
-.data-label-card { font-weight:600; color:#64748b; text-transform:uppercase; }
-.data-value-card  { font-weight:800; color:#1a5a96; text-align:right; }
-.machine-img { width:100%; height:38px; object-fit:contain; margin:4px 0; }
-/* ── Summary Boxes ── */
-.summary-box { width:39px; height:28px; border-radius:6px; display:flex;
-  align-items:center; justify-content:center; font-size:.85rem; font-weight:800;
-  color:#fff; box-shadow:0 2px 4px rgba(0,0,0,.1); }
-.summary-box--lg { width:80px; height:56px; border-radius:12px; font-size:1.6rem;
-  box-shadow:0 4px 12px rgba(0,0,0,.15); }
-.summary-label    { font-size:8px;  font-weight:800; color:#1a5a96; margin-bottom:2px; text-transform:uppercase; }
-.summary-label--lg{ font-size:11px; font-weight:800; color:#1a5a96; margin-bottom:4px; text-transform:uppercase; letter-spacing:.05em; }
-.box-operativas { background:#10b981; }
-.box-paradas    { background:#f43f5e; }
-.box-uso        { background:#6366f1; }
-/* ── Gauge ── */
-.gauge-svg { overflow:visible; }
-.gauge-label { font-size:.75rem; font-weight:800; color:#1a5a96; }
-/* ── Charts ── */
-.chart-wrapper { width:100%; height:180px; }
-.chart-title-badge { display:inline-block; color:#fff; font-size:.65rem; font-weight:800;
-  letter-spacing:.05em; text-transform:uppercase; padding:2px 15px; border-radius:20px; margin-bottom:8px; }
-.badge-promedio  { background:#1a5a96; }
-.badge-sumatoria { background:#10b981; }
-.badge-operativas{ background:#f59e0b; }
-.badge-materiales{ background:#8b5cf6; }
-.dash-section-card { background:#fff; padding:15px; }
-/* ── Tabs ── */
-.nav-tabs-custom { border-bottom:2px solid #e2e8f0; gap:10px; }
-.nav-tabs-custom .nav-link { border:none; color:#64748b; font-weight:800; text-transform:uppercase;
-  font-size:.85rem; padding:10px 20px; border-radius:8px 8px 0 0; transition:all .2s; }
-.nav-tabs-custom .nav-link.active { color:#1a5a96; background:transparent; border-bottom:3px solid #1a5a96; }
-.nav-tabs-custom .nav-link:hover:not(.active) { background:#f1f5f9; color:#1e293b; }
-/* ── Modal ── */
-.modal-content-custom { border:none; border-radius:16px; overflow:hidden; }
-.modal-chart-title  { font-size:.75rem; font-weight:800; color:#1a5a96; text-transform:uppercase; margin-bottom:6px; }
-.modal-chart-wrapper { height:130px; position:relative; }
-.modal-chart-skeleton { display:flex; align-items:center; justify-content:center;
-  height:100%; color:#94a3b8; font-size:.8rem; gap:6px; }
-.modal-data-large .data-row-card { font-size:.82rem; padding:3px 0; }
-/* Responsive grid */
-@media(max-width:1200px){ .col-xl-2 { width:33.333%!important; } }
-@media(max-width:768px) { .col-xl-2 { width:50%!important; } }
-/* ── Topbar ── */
-.topbar-ext { background:#1a5a96; color:#fff; padding:8px 20px;
-  display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap; }
-.topbar-ext .title-block { display:flex; align-items:center; gap:12px; }
-.topbar-ext .badge-total { background:rgba(255,255,255,.2); color:#fff; font-size:.75rem;
-  font-weight:700; padding:4px 12px; border-radius:20px; }
-.topbar-ext .clock-block { font-size:.85rem; font-weight:700; color:rgba(255,255,255,.85); }
-.topbar-ext .back-btn { background:rgba(255,255,255,.15); border:1px solid rgba(255,255,255,.3);
-  color:#fff; font-size:.8rem; font-weight:700; border-radius:8px; padding:5px 14px; cursor:pointer; transition:.2s; }
-.topbar-ext .back-btn:hover { background:rgba(255,255,255,.3); }
+body{font-family:'Outfit',sans-serif;background:#f1f5f9;}
+.machine-card{border:none;border-radius:8px;overflow:hidden;background:#fff;
+  transition:transform .2s,box-shadow .2s;box-shadow:0 2px 8px rgba(0,0,0,.06);
+  height:100%;display:flex;flex-direction:column;cursor:pointer;}
+.machine-card:hover{transform:translateY(-2px);box-shadow:0 8px 24px rgba(0,0,0,.12);}
+.card-header-custom{background:#1a5a96!important;color:#fff!important;
+  text-align:center;padding:5px 10px;font-weight:800;font-size:.85rem;text-transform:uppercase;}
+.status-badge{padding:2px 14px;font-weight:800;border-radius:20px;display:inline-block;
+  margin-bottom:4px;font-size:.65rem;letter-spacing:.04em;}
+.status-operativa{background:#10b981!important;color:#fff!important;}
+.status-parada{background:#f43f5e!important;color:#fff!important;}
+.data-row-card{display:flex;justify-content:space-between;align-items:center;
+  padding:2px 10px;font-size:.68rem;}
+.data-label-card{font-weight:600;color:#64748b;text-transform:uppercase;}
+.data-value-card{font-weight:800;color:#1a5a96;text-align:right;}
+.summary-box{width:39px;height:28px;border-radius:6px;display:flex;align-items:center;
+  justify-content:center;font-size:.85rem;font-weight:800;color:#fff;box-shadow:0 2px 4px rgba(0,0,0,.1);}
+.summary-box--lg{width:80px;height:56px;border-radius:12px;font-size:1.6rem;box-shadow:0 4px 12px rgba(0,0,0,.15);}
+.summary-label{font-size:8px;font-weight:800;color:#1a5a96;margin-bottom:2px;text-transform:uppercase;}
+.summary-label--lg{font-size:11px;font-weight:800;color:#1a5a96;margin-bottom:4px;text-transform:uppercase;letter-spacing:.05em;}
+.box-operativas{background:#10b981;}.box-paradas{background:#f43f5e;}.box-uso{background:#6366f1;}
+.gauge-svg{overflow:visible;}
+.chart-wrapper{width:100%;height:180px;}
+.chart-title-badge{display:inline-block;color:#fff;font-size:.65rem;font-weight:800;
+  letter-spacing:.05em;text-transform:uppercase;padding:2px 15px;border-radius:20px;margin-bottom:8px;}
+.badge-promedio{background:#1a5a96;}.badge-sumatoria{background:#10b981;}
+.badge-operativas{background:#f59e0b;}.badge-materiales{background:#8b5cf6;}
+.dash-section-card{background:#fff;padding:15px;border-radius:12px;}
+.nav-tabs-custom{border-bottom:2px solid #e2e8f0;gap:10px;}
+.nav-tabs-custom .nav-link{border:none;color:#64748b;font-weight:800;text-transform:uppercase;
+  font-size:.85rem;padding:10px 20px;border-radius:8px 8px 0 0;transition:all .2s;}
+.nav-tabs-custom .nav-link.active{color:#1a5a96;background:transparent;border-bottom:3px solid #1a5a96;}
+.nav-tabs-custom .nav-link:hover:not(.active){background:#f1f5f9;color:#1e293b;}
+.modal-content-custom{border:none;border-radius:16px;overflow:hidden;}
+.topbar-ext{background:#1a5a96;color:#fff;padding:8px 20px;
+  display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;}
+.back-btn{background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.3);
+  color:#fff;font-size:.8rem;font-weight:700;border-radius:8px;padding:5px 14px;cursor:pointer;transition:.2s;}
+.back-btn:hover{background:rgba(255,255,255,.3);}
+@media(max-width:1200px){.col-xl-2{width:33.333%!important;}}
+@media(max-width:768px){.col-xl-2{width:50%!important;}}
 </style>
 </head>
 <body>
 
-<!-- ── TOP BAR ── -->
+<!-- TOP BAR -->
 <div class="topbar-ext">
-  <div class="title-block">
+  <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
     <button class="back-btn" onclick="goBack()"><i class="bi bi-arrow-left me-1"></i>App Producción</button>
     <div>
       <div style="font-size:1.1rem;font-weight:900;line-height:1;">Dashboard Extrusión</div>
       <div style="font-size:.72rem;opacity:.75;">TUBOSA S.A. — Control de Líneas de Producción</div>
     </div>
-    <span class="badge-total">TOTAL EXTRUSORAS: <span id="count-total-ext">—</span></span>
-    <span style="font-size:.75rem;opacity:.7;"><span id="count-operativa" style="color:#6ee7b7;font-weight:800;">—</span> operativas &nbsp;·&nbsp; <span id="count-parada" style="color:#fca5a5;font-weight:800;">—</span> paradas</span>
+    <span style="background:rgba(255,255,255,.2);color:#fff;font-size:.75rem;font-weight:700;padding:4px 12px;border-radius:20px;">
+      TOTAL EXTRUSORAS: <span id="count-total-ext">—</span>
+    </span>
+    <span style="font-size:.75rem;opacity:.85;">
+      <span id="count-operativa" style="color:#6ee7b7;font-weight:800;">—</span> operativas &nbsp;·&nbsp;
+      <span id="count-parada" style="color:#fca5a5;font-weight:800;">—</span> paradas
+    </span>
   </div>
   <div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap;">
-    <!-- Date range filter -->
     <div class="input-group input-group-sm" style="width:auto;border-radius:10px;overflow:hidden;">
       <span class="input-group-text" style="background:#f0f6ff;border-color:#d0e4f7;"><i class="bi bi-calendar-range" style="color:#1a5a96;"></i></span>
-      <input type="date" id="filter-fecha-inicio" class="form-control" style="border-color:#d0e4f7;font-size:.82rem;">
-      <span class="input-group-text" style="padding:0 6px;background:#f0f6ff;border-color:#d0e4f7;">-</span>
-      <input type="date" id="filter-fecha-fin"   class="form-control" style="border-color:#d0e4f7;font-size:.82rem;">
-      <button onclick="resetDates()" class="btn" style="background:#1a5a96;color:#fff;border-color:#1a5a96;" title="Resetear fechas">
-        <i class="bi bi-arrow-counterclockwise"></i>
-      </button>
+      <input type="date" id="filter-fecha" class="form-control" style="border-color:#d0e4f7;font-size:.82rem;">
+      <button onclick="loadDashboard()" class="btn" style="background:#1a5a96;color:#fff;border-color:#1a5a96;"><i class="bi bi-search"></i></button>
+      <button onclick="resetDate()" class="btn" style="background:#475569;color:#fff;border-color:#475569;" title="Hoy"><i class="bi bi-arrow-counterclockwise"></i></button>
     </div>
-    <div class="clock-block"><i class="bi bi-clock me-1"></i><span id="live-clock">--:--:--</span></div>
+    <div style="font-size:.85rem;font-weight:700;color:rgba(255,255,255,.85);"><i class="bi bi-clock me-1"></i><span id="live-clock">--:--:--</span></div>
     <div style="font-size:.7rem;opacity:.6;" id="last-update-lbl"></div>
   </div>
 </div>
 
-<!-- ── MAIN ── -->
+<!-- MAIN -->
 <div class="container-fluid px-3 py-3">
-  <div class="dash-section-card mb-3" style="border-radius:12px;">
-    <!-- Tabs -->
+  <div class="dash-section-card mb-3">
     <ul class="nav nav-tabs nav-tabs-custom mb-4" role="tablist">
-      <li class="nav-item" role="presentation">
+      <li class="nav-item">
         <button class="nav-link active" data-bs-toggle="tab" data-bs-target="#tab-general" type="button">
           <i class="bi bi-grid-3x3-gap-fill me-2"></i>Vista General
         </button>
       </li>
     </ul>
-
     <div class="tab-content">
-      <!-- TAB 1: GENERAL -->
-      <div class="tab-pane fade show active" id="tab-general" role="tabpanel">
-        <!-- Unified grid: Resumen card + one card per line -->
-        <div id="ext-grid-container" class="row g-2">
-          <div class="col-12 text-center py-5 text-muted" id="ext-loading-msg">
+      <div class="tab-pane fade show active" id="tab-general">
+        <div id="ext-grid" class="row g-2">
+          <div class="col-12 text-center py-5" id="ext-spinner">
             <div class="spinner-border text-primary mb-3" role="status"></div>
-            <div style="font-weight:700;">Cargando datos de extrusión...</div>
+            <div style="font-weight:700;color:#64748b;">Cargando datos de extrusión...</div>
           </div>
         </div>
-
-        <!-- 4 Charts at bottom -->
         <div class="row g-2 mt-4 pt-3 border-top">
           <div class="col-6 col-xl-3 mb-1">
             <div style="cursor:pointer;" onclick="expandChart('promedio')">
-              <div class="text-center mb-1"><span class="chart-title-badge badge-promedio">Kg/h Prom. Turno</span></div>
-              <div class="chart-wrapper"><canvas id="extKghPromedioChart"></canvas></div>
+              <div class="text-center mb-1"><span class="chart-title-badge badge-promedio">Kg/h Prom. por Línea</span></div>
+              <div class="chart-wrapper"><canvas id="chartProm"></canvas></div>
             </div>
           </div>
           <div class="col-6 col-xl-3 mb-1">
             <div style="cursor:pointer;" onclick="expandChart('sumatoria')">
-              <div class="text-center mb-1"><span class="chart-title-badge badge-sumatoria">Sumatoria Kg/h</span></div>
-              <div class="chart-wrapper"><canvas id="extKghSumatoriaChart"></canvas></div>
+              <div class="text-center mb-1"><span class="chart-title-badge badge-sumatoria">Kg Producidos Hoy</span></div>
+              <div class="chart-wrapper"><canvas id="chartSum"></canvas></div>
             </div>
           </div>
           <div class="col-6 col-xl-3 mb-1">
-            <div style="cursor:pointer;" onclick="expandChart('operativas')">
-              <div class="text-center mb-1"><span class="chart-title-badge badge-operativas">Operativas/Turno</span></div>
-              <div class="chart-wrapper"><canvas id="extOperativasChart"></canvas></div>
+            <div style="cursor:pointer;" onclick="expandChart('oee')">
+              <div class="text-center mb-1"><span class="chart-title-badge badge-operativas">OEE por Línea (%)</span></div>
+              <div class="chart-wrapper"><canvas id="chartOEE"></canvas></div>
             </div>
           </div>
           <div class="col-6 col-xl-3 mb-1">
-            <div style="cursor:pointer;" onclick="expandChart('mezclas')">
-              <div class="text-center mb-1"><span class="chart-title-badge badge-materiales">Mezcla de Materiales</span></div>
-              <div class="chart-wrapper"><canvas id="extMezclasChart"></canvas></div>
+            <div style="cursor:pointer;" onclick="expandChart('scrap')">
+              <div class="text-center mb-1"><span class="chart-title-badge badge-materiales">% Scrap por Línea</span></div>
+              <div class="chart-wrapper"><canvas id="chartScrap"></canvas></div>
             </div>
           </div>
         </div>
@@ -162,87 +130,58 @@ body { font-family:'Outfit',sans-serif; background:#f1f5f9; }
   </div>
 </div>
 
-<!-- ══════════════════════════════════════════════
-     MODAL: Detalle de Línea / Extrusora
-══════════════════════════════════════════════ -->
-<div class="modal fade" id="extMachineModal" tabindex="-1" aria-hidden="true">
+<!-- MODAL DETALLE LÍNEA -->
+<div class="modal fade" id="modalDetalle" tabindex="-1" aria-hidden="true">
   <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
     <div class="modal-content modal-content-custom">
-      <div id="ext-modal-header" class="card-header-custom py-3 ps-3" style="font-size:1.4rem;background:#1a5a96;"></div>
+      <div id="modal-header" class="card-header-custom py-3 ps-3" style="font-size:1.4rem;background:#1a5a96;"></div>
       <div class="modal-body p-4 bg-white">
         <div class="row">
-          <!-- Left col -->
           <div class="col-md-5 text-center">
-            <div id="ext-modal-badge" class="mb-2"></div>
-            <!-- Gauge Kg/h real -->
-            <div class="d-flex flex-column align-items-center mb-2">
-              <svg viewBox="0 0 240 180" class="gauge-svg" id="ext-modal-gauge" style="width:100%;max-width:280px;">
-                <g stroke-width="20" fill="none">
-                  <path d="M 50 140 A 70 70 0 0 1 58 94" stroke="#b20000"/>
-                  <path d="M 64 87 A 70 70 0 0 1 89 63" stroke="#ff0000"/>
-                  <path d="M 98 58 A 70 70 0 0 1 116 55" stroke="#ff9900"/>
-                  <path d="M 124 55 A 70 70 0 0 1 142 58" stroke="#ffff00"/>
-                  <path d="M 151 63 A 70 70 0 0 1 176 87" stroke="#92d050"/>
-                  <path d="M 182 94 A 70 70 0 0 1 190 140" stroke="#38761d"/>
-                </g>
-                <g font-size="11" font-weight="900" fill="#1e293b" text-anchor="middle">
-                  <text id="ext-lbl-0" x="35"  y="145">0</text>
-                  <text id="ext-lbl-1" x="45"  y="90" >100</text>
-                  <text id="ext-lbl-2" x="80"  y="55" >200</text>
-                  <text id="ext-lbl-3" x="120" y="45" >300</text>
-                  <text id="ext-lbl-4" x="160" y="55" >400</text>
-                  <text id="ext-lbl-5" x="195" y="90" >500</text>
-                  <text id="ext-lbl-6" x="205" y="145">600</text>
-                </g>
-                <text id="ext-modal-val-kgh" x="120" y="170" font-size="30" font-weight="900" fill="#0f172a" text-anchor="middle">0</text>
-                <g class="gauge-needle" id="ext-modal-needle" style="transform:rotate(-90deg);transform-origin:120px 140px;transition:transform .8s cubic-bezier(.65,0,.35,1);">
-                  <path d="M 120 140 L 120 50" stroke="#000" stroke-width="2.5" stroke-linecap="round"/>
-                  <circle cx="120" cy="140" r="4" fill="#000"/>
-                </g>
-              </svg>
-              <div style="font-size:.85rem;color:#1a5a96;font-weight:800;">Kg/h Real</div>
-              <div id="ext-modal-goal" style="font-size:.75rem;color:#64748b;font-weight:600;"></div>
-            </div>
-            <!-- Mini bar chart Kg/h por turno -->
-            <div class="modal-chart-title mt-2">Kg/h Prom. por Turno</div>
-            <div class="modal-chart-wrapper">
-              <div id="ext-modal-chart-skeleton" class="modal-chart-skeleton">
-                <div class="spinner-border spinner-border-sm text-primary" role="status"></div> Cargando...
-              </div>
-              <canvas id="extModalKghChart" style="display:none;height:130px;"></canvas>
-            </div>
+            <div id="modal-badge" class="mb-3"></div>
+            <svg viewBox="0 0 240 180" class="gauge-svg" id="modal-gauge" style="width:100%;max-width:280px;">
+              <g stroke-width="20" fill="none">
+                <path d="M 50 140 A 70 70 0 0 1 58 94" stroke="#b20000"/>
+                <path d="M 64 87 A 70 70 0 0 1 89 63" stroke="#ff0000"/>
+                <path d="M 98 58 A 70 70 0 0 1 116 55" stroke="#ff9900"/>
+                <path d="M 124 55 A 70 70 0 0 1 142 58" stroke="#ffff00"/>
+                <path d="M 151 63 A 70 70 0 0 1 176 87" stroke="#92d050"/>
+                <path d="M 182 94 A 70 70 0 0 1 190 140" stroke="#38761d"/>
+              </g>
+              <g font-size="11" font-weight="900" fill="#1e293b" text-anchor="middle">
+                <text id="gl-0" x="35" y="145">0</text><text id="gl-1" x="45" y="90">50</text>
+                <text id="gl-2" x="80" y="55">100</text><text id="gl-3" x="120" y="45">150</text>
+                <text id="gl-4" x="160" y="55">200</text><text id="gl-5" x="195" y="90">250</text>
+                <text id="gl-6" x="205" y="145">300</text>
+              </g>
+              <text id="modal-val-kgh" x="120" y="170" font-size="30" font-weight="900" fill="#0f172a" text-anchor="middle">0</text>
+              <g class="gauge-needle" id="modal-needle" style="transform:rotate(-90deg);transform-origin:120px 140px;transition:transform .8s cubic-bezier(.65,0,.35,1);">
+                <path d="M 120 140 L 120 50" stroke="#000" stroke-width="2.5" stroke-linecap="round"/>
+                <circle cx="120" cy="140" r="4" fill="#000"/>
+              </g>
+            </svg>
+            <div style="font-size:.85rem;color:#1a5a96;font-weight:800;">Kg/h Promedio</div>
+            <div id="modal-goal" style="font-size:.75rem;color:#64748b;font-weight:600;margin-bottom:12px;"></div>
+            <div class="chart-wrapper" style="height:140px;"><canvas id="modalProjChart"></canvas></div>
           </div>
-
-          <!-- Right col -->
           <div class="col-md-7">
-            <!-- Especificaciones programadas vs condiciones reales -->
             <div class="p-3 mb-3 rounded border" style="background:#f0f6ff;">
-              <h6 class="fw-bold mb-2" style="color:#1a5a96;font-size:.82rem;text-transform:uppercase;">
+              <h6 style="color:#1a5a96;font-size:.82rem;font-weight:800;text-transform:uppercase;">
                 <i class="bi bi-clipboard-check me-1"></i>Especificaciones Programadas
               </h6>
-              <div id="ext-modal-specs"></div>
+              <div id="modal-specs"></div>
             </div>
             <div class="p-3 mb-3 rounded border" style="background:#f0fdf4;">
-              <h6 class="fw-bold mb-2" style="color:#1a5a96;font-size:.82rem;text-transform:uppercase;">
+              <h6 style="color:#1a5a96;font-size:.82rem;font-weight:800;text-transform:uppercase;">
                 <i class="bi bi-activity me-1"></i>Condiciones Reales de Proceso
               </h6>
-              <div id="ext-modal-reales"></div>
+              <div id="modal-reales"></div>
             </div>
-            <!-- Supervisor / Operario -->
-            <div class="p-3 mb-3 rounded border" style="background:#fefce8;">
-              <h6 class="fw-bold mb-2" style="color:#1a5a96;font-size:.82rem;text-transform:uppercase;">
+            <div class="p-3 rounded border" style="background:#fefce8;">
+              <h6 style="color:#1a5a96;font-size:.82rem;font-weight:800;text-transform:uppercase;">
                 <i class="bi bi-person-badge me-1"></i>Responsables del Turno
               </h6>
-              <div id="ext-modal-personal"></div>
-            </div>
-            <!-- Proyección producción -->
-            <div class="p-3 rounded border" style="background:#f8fafc;">
-              <h6 class="fw-bold mb-2" style="color:#1a5a96;font-size:.82rem;text-transform:uppercase;">
-                <i class="bi bi-graph-up me-1"></i>Proyección de Producción (Ton / Kg)
-              </h6>
-              <div class="chart-wrapper" style="height:120px;">
-                <canvas id="extModalProyeccionChart"></canvas>
-              </div>
+              <div id="modal-personal"></div>
             </div>
           </div>
         </div>
@@ -254,35 +193,22 @@ body { font-family:'Outfit',sans-serif; background:#f1f5f9; }
   </div>
 </div>
 
-<!-- ══════════════════════════════════════════════
-     MODAL: Resumen General (tarjeta Resumen)
-══════════════════════════════════════════════ -->
-<div class="modal fade" id="extSummaryModal" tabindex="-1" aria-hidden="true">
-  <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
+<!-- MODAL RESUMEN -->
+<div class="modal fade" id="modalResumen" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-lg modal-dialog-centered">
     <div class="modal-content border-0 shadow-lg rounded-4">
       <div class="card-header-custom py-3 ps-3" style="font-size:1.2rem;background:#1a5a96;border-radius:12px 12px 0 0;">
-        <i class="bi bi-graph-up me-2"></i>Proyección de Producción General — Extrusión
+        <i class="bi bi-graph-up me-2"></i>Resumen General — Extrusión
       </div>
       <div class="modal-body p-4 bg-white">
-        <!-- KPI mini cards -->
         <div class="d-flex gap-4 justify-content-center mb-4">
-          <div class="text-center">
-            <div class="summary-label--lg">OPERATIVAS</div>
-            <div class="summary-box summary-box--lg box-operativas" id="sm-operativas">0</div>
-          </div>
-          <div class="text-center">
-            <div class="summary-label--lg">PARADAS</div>
-            <div class="summary-box summary-box--lg box-paradas" id="sm-paradas">0</div>
-          </div>
-          <div class="text-center">
-            <div class="summary-label--lg">% DE USO</div>
-            <div class="summary-box summary-box--lg box-uso" id="sm-uso">0%</div>
-          </div>
+          <div class="text-center"><div class="summary-label--lg">OPERATIVAS</div><div class="summary-box summary-box--lg box-operativas" id="sm-op">0</div></div>
+          <div class="text-center"><div class="summary-label--lg">PARADAS</div><div class="summary-box summary-box--lg box-paradas" id="sm-pa">0</div></div>
+          <div class="text-center"><div class="summary-label--lg">% DE USO</div><div class="summary-box summary-box--lg box-uso" id="sm-uso">0%</div></div>
         </div>
-        <!-- Gauges -->
         <div class="d-flex justify-content-center gap-4 mb-3">
           <div class="text-center">
-            <svg viewBox="0 0 240 180" id="sm-gauge-prom" style="width:150px;">
+            <svg viewBox="0 0 240 180" style="width:150px;">
               <g stroke-width="20" fill="none">
                 <path d="M 50 140 A 70 70 0 0 1 58 94" stroke="#b20000"/>
                 <path d="M 64 87 A 70 70 0 0 1 89 63" stroke="#ff0000"/>
@@ -291,17 +217,8 @@ body { font-family:'Outfit',sans-serif; background:#f1f5f9; }
                 <path d="M 151 63 A 70 70 0 0 1 176 87" stroke="#92d050"/>
                 <path d="M 182 94 A 70 70 0 0 1 190 140" stroke="#38761d"/>
               </g>
-              <g font-size="11" font-weight="900" fill="#1e293b" text-anchor="middle">
-                <text id="sm-prom-lbl-0" x="35" y="145">0</text>
-                <text id="sm-prom-lbl-1" x="45" y="90">100</text>
-                <text id="sm-prom-lbl-2" x="80" y="55">200</text>
-                <text id="sm-prom-lbl-3" x="120" y="45">300</text>
-                <text id="sm-prom-lbl-4" x="160" y="55">400</text>
-                <text id="sm-prom-lbl-5" x="195" y="90">500</text>
-                <text id="sm-prom-lbl-6" x="205" y="145">600</text>
-              </g>
               <text id="sm-val-prom" x="120" y="170" font-size="30" font-weight="900" fill="#0f172a" text-anchor="middle">0</text>
-              <g class="gauge-needle" id="sm-needle-prom" style="transform:rotate(-90deg);transform-origin:120px 140px;transition:transform .8s cubic-bezier(.65,0,.35,1);">
+              <g id="sm-needle-prom" style="transform:rotate(-90deg);transform-origin:120px 140px;transition:transform .8s cubic-bezier(.65,0,.35,1);">
                 <path d="M 120 140 L 120 50" stroke="#000" stroke-width="2.5" stroke-linecap="round"/>
                 <circle cx="120" cy="140" r="4" fill="#000"/>
               </g>
@@ -309,7 +226,7 @@ body { font-family:'Outfit',sans-serif; background:#f1f5f9; }
             <div style="font-size:.72rem;font-weight:700;color:#64748b;margin-top:2px;">Kg/h Prom.</div>
           </div>
           <div class="text-center">
-            <svg viewBox="0 0 240 180" id="sm-gauge-sum" style="width:150px;">
+            <svg viewBox="0 0 240 180" style="width:150px;">
               <g stroke-width="20" fill="none">
                 <path d="M 50 140 A 70 70 0 0 1 58 94" stroke="#b20000"/>
                 <path d="M 64 87 A 70 70 0 0 1 89 63" stroke="#ff0000"/>
@@ -318,39 +235,25 @@ body { font-family:'Outfit',sans-serif; background:#f1f5f9; }
                 <path d="M 151 63 A 70 70 0 0 1 176 87" stroke="#92d050"/>
                 <path d="M 182 94 A 70 70 0 0 1 190 140" stroke="#38761d"/>
               </g>
-              <g font-size="11" font-weight="900" fill="#1e293b" text-anchor="middle">
-                <text id="sm-sum-lbl-0" x="35" y="145">0</text>
-                <text id="sm-sum-lbl-1" x="45" y="90">500</text>
-                <text id="sm-sum-lbl-2" x="80" y="55">1000</text>
-                <text id="sm-sum-lbl-3" x="120" y="45">1500</text>
-                <text id="sm-sum-lbl-4" x="160" y="55">2000</text>
-                <text id="sm-sum-lbl-5" x="195" y="90">2500</text>
-                <text id="sm-sum-lbl-6" x="205" y="145">3000</text>
-              </g>
-              <text id="sm-val-sum" x="120" y="170" font-size="30" font-weight="900" fill="#0f172a" text-anchor="middle">0</text>
-              <g class="gauge-needle" id="sm-needle-sum" style="transform:rotate(-90deg);transform-origin:120px 140px;transition:transform .8s cubic-bezier(.65,0,.35,1);">
+              <text id="sm-val-sum" x="120" y="170" font-size="28" font-weight="900" fill="#0f172a" text-anchor="middle">0</text>
+              <g id="sm-needle-sum" style="transform:rotate(-90deg);transform-origin:120px 140px;transition:transform .8s cubic-bezier(.65,0,.35,1);">
                 <path d="M 120 140 L 120 50" stroke="#000" stroke-width="2.5" stroke-linecap="round"/>
                 <circle cx="120" cy="140" r="4" fill="#000"/>
               </g>
             </svg>
-            <div style="font-size:.72rem;font-weight:700;color:#64748b;margin-top:2px;">Σ Kg/h Total</div>
+            <div style="font-size:.72rem;font-weight:700;color:#64748b;margin-top:2px;">Σ Kg Hoy</div>
           </div>
         </div>
-        <!-- Proyección gráfica -->
-        <div class="chart-wrapper mb-3" style="height:150px;">
-          <canvas id="smProyeccionChart"></canvas>
-        </div>
-        <!-- Toneladas proyectadas -->
         <div class="p-3 rounded" style="background:#f0fdf4;border:1px solid #bbf7d0;">
           <div class="d-flex justify-content-around">
             <div class="text-center">
               <div style="font-size:.7rem;font-weight:700;color:#64748b;text-transform:uppercase;">Proy. Turno (8h)</div>
-              <div style="font-size:1.4rem;font-weight:900;color:#10b981;" id="sm-proj-turno">0,00 Ton</div>
+              <div style="font-size:1.4rem;font-weight:900;color:#10b981;" id="sm-proj-turno">— Ton</div>
             </div>
             <div style="width:1px;background:#bbf7d0;"></div>
             <div class="text-center">
               <div style="font-size:.7rem;font-weight:700;color:#64748b;text-transform:uppercase;">Proy. Día (24h)</div>
-              <div style="font-size:1.4rem;font-weight:900;color:#6366f1;" id="sm-proj-dia">0,00 Ton</div>
+              <div style="font-size:1.4rem;font-weight:900;color:#6366f1;" id="sm-proj-dia">— Ton</div>
             </div>
           </div>
         </div>
@@ -362,21 +265,17 @@ body { font-family:'Outfit',sans-serif; background:#f1f5f9; }
   </div>
 </div>
 
-<!-- ══════════════════════════════════════════════
-     MODAL: Gráfica expandida
-══════════════════════════════════════════════ -->
-<div class="modal fade" id="extChartExpandModal" tabindex="-1" aria-hidden="true">
+<!-- MODAL GRÁFICA EXPANDIDA -->
+<div class="modal fade" id="modalExpand" tabindex="-1" aria-hidden="true">
   <div class="modal-dialog modal-lg modal-dialog-centered">
     <div class="modal-content border-0 shadow-lg rounded-4">
-      <div class="card-header-custom py-3 ps-3 d-flex align-items-center justify-content-between"
-           id="ext-expand-header" style="font-size:1.1rem;background:#1a5a96;border-radius:12px 12px 0 0;">
-        <span><i class="bi bi-zoom-in me-2"></i><span id="ext-expand-title">Gráfica</span></span>
+      <div class="card-header-custom py-3 ps-3 d-flex justify-content-between align-items-center"
+           id="expand-header" style="font-size:1.1rem;background:#1a5a96;border-radius:12px 12px 0 0;">
+        <span><i class="bi bi-zoom-in me-2"></i><span id="expand-title">Gráfica</span></span>
         <button type="button" class="btn-close btn-close-white pe-3" data-bs-dismiss="modal"></button>
       </div>
       <div class="modal-body p-4 bg-white">
-        <div style="height:400px;width:100%;">
-          <canvas id="extExpandedCanvas"></canvas>
-        </div>
+        <div style="height:400px;"><canvas id="expandCanvas"></canvas></div>
       </div>
       <div class="modal-footer bg-light border-0">
         <button type="button" class="btn btn-secondary px-4" data-bs-dismiss="modal">Cerrar</button>
@@ -385,532 +284,347 @@ body { font-family:'Outfit',sans-serif; background:#f1f5f9; }
   </div>
 </div>
 
-<!-- ── SCRIPTS ── -->
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
-
 <script>
-// ══════════════════════════════════════════════════════════
-//  CONFIG — cambia esta URL por la del Apps Script de TUBOSA
-// ══════════════════════════════════════════════════════════
-const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbykdmPFuhuA94oKM0TmzAb67zxpdHmskQaN-AyH6gM4-4wOui8J4Bs0H4BZtEqtKCmv/exec';
+// ── CONFIG ─────────────────────────────────────────────────────
+const AS_URL='https://script.google.com/macros/s/AKfycbykdmPFuhuA94oKM0TmzAb67zxpdHmskQaN-AyH6gM4-4wOui8J4Bs0H4BZtEqtKCmv/exec';
 
-// ── State
-let extChartProm=null, extChartSum=null, extChartOp=null, extChartMez=null;
-let extModalKghChartInst=null, extModalProjChartInst=null, smProjChartInst=null;
-let extExpandedChartInst=null;
-let _lastData=null;
+let _chProm=null,_chSum=null,_chOEE=null,_chScrap=null,_chModalProj=null,_chExpand=null;
+let _lastPorLinea=[];
 
-// ── Helpers
-function fmt(v,d=1){ const n=parseFloat(v); return isNaN(n)?'—':n.toFixed(d).replace('.',','); }
-function fmtTon(kg){ return (parseFloat(kg)||0)/1000; }
-function turnoLabel(t){ return {A:'Turno A',B:'Turno B',C:'Turno C'}[String(t||'').toUpperCase()]||t||'—'; }
-function turnoActualStr(){
-  const h=new Date().getHours();
-  return h>=6&&h<14?'A': h>=14&&h<22?'B':'C';
-}
+// ── Helpers ────────────────────────────────────────────────────
+const fmt=(v,d=1)=>{const n=parseFloat(v);return isNaN(n)?'—':n.toFixed(d).replace('.',',');};
+const today=()=>new Date().toISOString().split('T')[0];
 
-// ── Navigation
 function goBack(){
-  const app='TUBOSA_App.html';
-  if(document.referrer.includes(app)) history.back();
-  else window.location.href=app;
+  if(document.referrer) history.back();
+  else window.location.href='TUBOSA_App.html';
 }
 
-// ── Dates
-function setDefaultDates(){
-  const hoy=new Date();
-  const hace7=new Date(hoy); hace7.setDate(hoy.getDate()-6);
-  document.getElementById('filter-fecha-inicio').value=hace7.toISOString().split('T')[0];
-  document.getElementById('filter-fecha-fin').value=hoy.toISOString().split('T')[0];
-}
-function resetDates(){ setDefaultDates(); loadDashboard(); }
-
-// ── Clock
-function updateClock(){
-  const now=new Date();
+// ── Clock ──────────────────────────────────────────────────────
+setInterval(()=>{
   const el=document.getElementById('live-clock');
-  if(el) el.innerText=now.toLocaleTimeString('es-CO',{hour:'2-digit',minute:'2-digit',second:'2-digit'});
-}
-setInterval(updateClock,1000); updateClock();
+  if(el) el.innerText=new Date().toLocaleTimeString('es-CO',{hour:'2-digit',minute:'2-digit',second:'2-digit'});
+},1000);
 
-// ── API call via JSONP
-function apiCall(params){
+// ── Date ──────────────────────────────────────────────────────
+function resetDate(){
+  document.getElementById('filter-fecha').value=today();
+  loadDashboard();
+}
+
+// ── JSONP API ─────────────────────────────────────────────────
+function api(params){
   return new Promise((resolve,reject)=>{
-    const cb='_cb_'+Date.now();
-    const url=APPS_SCRIPT_URL+'?callback='+cb+'&'+new URLSearchParams(params).toString();
-    const s=document.createElement('script'); s.src=url; s.onerror=()=>reject('error');
-    window[cb]=(data)=>{ resolve(data); delete window[cb]; document.head.removeChild(s); };
+    const cb='_ext_cb_'+Date.now()+'_'+Math.random().toString(36).slice(2);
+    const url=AS_URL+'?callback='+cb+'&'+new URLSearchParams(params).toString();
+    const s=document.createElement('script');
+    s.src=url;
+    s.onerror=()=>reject(new Error('Script error'));
+    window[cb]=data=>{resolve(data);delete window[cb];try{document.head.removeChild(s);}catch(e){}};
     document.head.appendChild(s);
-    setTimeout(()=>{ if(window[cb]){delete window[cb]; reject('timeout');} },15000);
+    setTimeout(()=>{if(window[cb]){delete window[cb];try{document.head.removeChild(s);}catch(e){}reject(new Error('Timeout'));}},20000);
   });
 }
 
-// ══════════════════════════════════════════════════════════
-//  LOAD DASHBOARD — main function
-// ══════════════════════════════════════════════════════════
+// ══════════════════════════════════════════════════════════════
+//  LOAD DASHBOARD
+// ══════════════════════════════════════════════════════════════
 async function loadDashboard(){
+  document.getElementById('ext-spinner').style.display='block';
+  const fecha=document.getElementById('filter-fecha').value||today();
   try{
-    // 1. Load active turnos from Google Sheets
-    const [rTurnos, rHoras, rTiempos, rPesaje, rLineas] = await Promise.all([
-      apiCall({action:'getRegistroTurnos'}),
-      apiCall({action:'getRegistroHoras'}),
-      apiCall({action:'getTiemposMuertosDash'}),
-      apiCall({action:'getPesajeDash'}),
-      apiCall({action:'getLineas'})
-    ]);
-
-    const turnos  = (rTurnos.ok  ? rTurnos.data  : []) || [];
-    const horas   = (rHoras.ok   ? rHoras.data   : []) || [];
-    const tiempos = (rTiempos.ok ? rTiempos.data : []) || [];
-    const pesajes = (rPesaje.ok  ? rPesaje.data  : []) || [];
-    const lineas  = (rLineas.ok  ? rLineas.data  : []) || [];
-
-    // ── Procesar datos por línea
-    const hoy=new Date().toLocaleDateString('es-CO',{day:'2-digit',month:'2-digit',year:'numeric'}).replace(/\//g,'/');
-    const turnoActual=turnoActualStr();
-
-    // Turnos abiertos hoy del turno actual
-    const turnosHoy=turnos.filter(t=>{
-      const f=String(t.Fecha||''); const tr=String(t.Turno||'').toUpperCase();
-      return tr===turnoActual && t.Estado==='Abierto';
-    });
-
-    // Mapa TurnoID -> horas y tiempos
-    const horasPorTurno={};
-    horas.forEach(h=>{ const id=String(h.TurnoID||''); if(!horasPorTurno[id]) horasPorTurno[id]=[]; horasPorTurno[id].push(h); });
-    const tiemposPorTurno={};
-    tiempos.forEach(t=>{ const id=String(t.TurnoID||''); if(!tiemposPorTurno[id]) tiemposPorTurno[id]=[]; tiemposPorTurno[id].push(t); });
-    const pesajePorTurno={};
-    pesajes.forEach(p=>{ const id=String(p.TurnoID||''); if(!pesajePorTurno[id]) pesajePorTurno[id]=[]; pesajePorTurno[id].push(p); });
-
-    // Enriquecer cada turno activo
-    const maquinas=turnosHoy.map(t=>{
-      const tid=String(t.TurnoID||'');
-      const hs=horasPorTurno[tid]||[];
-      const tm=tiemposPorTurno[tid]||[];
-      const ps=pesajePorTurno[tid]||[];
-      const kgTubos=hs.reduce((s,h)=>s+(parseFloat(h.PesoTotal_kg)||0),0);
-      const nHoras=hs.length||1;
-      const kghProm=kgTubos/nHoras;
-      const cargaEst=parseFloat(t.CargaEstandar||t.CargaEstandar_output||0)||250;
-      const oee=cargaEst>0?Math.min(100,(kghProm/cargaEst*100)):0;
-      const tmMin=tm.reduce((s,x)=>s+(parseFloat(x.DuracionMin)||0),0);
-      const ultimaHora=hs.sort((a,b)=>(parseInt(b.Hora)||0)-(parseInt(a.Hora)||0))[0]||{};
-      const promPeso=ps.length?ps.reduce((s,p)=>s+(parseFloat(p.Peso_kg)||0),0)/ps.length:0;
-      const cargaLinea=ps.length?ps.reduce((s,p)=>s+(parseFloat(p.CargaLinea)||0),0)/ps.length:kghProm;
-      return {
-        turnoId:tid, linea:t.LineaNombre||t.Linea||'—',
-        turno:t.Turno, fecha:t.Fecha, operario:t.Operario||'—',
-        supervisor:t.Supervisor||'—', coordinador:t.Coordinador||'—',
-        ordenFab:t.OrdenFab||'—', producto:t.Producto||'—',
-        codigoSAP:t.CodigoSAP||'—',
-        espesorMin:t.EspesorMin_mm||t.EspesorMin||'—',
-        diametro:t.Diametro_mm||t.Diametro||'—',
-        pesoEstandar:t.PesoEstandar_kgm||t.PesoEstandar||'—',
-        cantidadOrden:t.CantidadOrden_und||t.CantidadOrden||0,
-        cargaEstandar:cargaEst,
-        estado:'OPERATIVA',
-        kghProm, oee, tmMin, tmHoras:(tmMin/60),
-        kgTotal:kgTubos, horas:nHoras,
-        ultimoEspesor:ultimaHora.EspesorL1||ultimaHora.espL1||'—',
-        ultimoDiametro:ultimaHora.DiamExtL1||ultimaHora.diamL1||'—',
-        cargaLinea, promPeso,
-        horasData:hs, tiemposData:tm
-      };
-    });
-
-    // Líneas sin turno activo (paradas)
-    const lineasActivas=new Set(maquinas.map(m=>m.linea));
-    const lineasParadas=lineas.filter(l=>l.Activa==='Sí' && !lineasActivas.has(l.NombreLinea));
-    lineasParadas.forEach(l=>maquinas.push({
-      linea:l.NombreLinea, estado:'PARADA', producto:'—', kghProm:0,
-      oee:0, tmMin:0, tmHoras:0, kgTotal:0, horas:0,
-      operario:'—', supervisor:'—', ultimoEspesor:'—', ultimoDiametro:'—',
-      cargaEstandar:parseFloat(l.CargaEstandar_output||0)||250,
-      cargaLinea:0, horasData:[], tiemposData:[]
-    }));
-
-    maquinas.sort((a,b)=>a.linea.localeCompare(b.linea));
-
-    // ── KPIs globales
-    const countOp=maquinas.filter(m=>m.estado==='OPERATIVA').length;
-    const countPa=maquinas.filter(m=>m.estado==='PARADA').length;
-    const totalM=maquinas.length;
-    const usoPct=totalM>0?Math.round(countOp/totalM*100):0;
-    const totalKgh=maquinas.reduce((s,m)=>s+(m.kghProm||0),0);
-    const avgKgh=countOp>0?totalKgh/countOp:0;
-    const maxKgh=600; const maxSum=3000;
-
-    document.getElementById('count-total-ext').innerText=totalM;
-    document.getElementById('count-operativa').innerText=countOp;
-    document.getElementById('count-parada').innerText=countPa;
-    document.getElementById('last-update-lbl').innerText='Actualizado: '+new Date().toLocaleTimeString('es-CO',{hour:'2-digit',minute:'2-digit'});
-
-    // ── Render grid
-    renderGrid(maquinas, countOp, countPa, usoPct, avgKgh, totalKgh, maxKgh, maxSum);
-    // ── Render charts
-    renderCharts(maquinas, turnos, horas);
-    // Store for modals
-    _lastData={maquinas, countOp, countPa, usoPct, avgKgh, totalKgh};
-
+    const r=await api({action:'getDashboard', fecha:fecha.split('-').reverse().join('/')});
+    document.getElementById('ext-spinner').style.display='none';
+    if(!r.ok){
+      showError('El Apps Script respondió con error: '+(r.msg||'desconocido'));
+      return;
+    }
+    renderDashboard(r);
+    document.getElementById('last-update-lbl').innerText=
+      'Act: '+new Date().toLocaleTimeString('es-CO',{hour:'2-digit',minute:'2-digit'});
   }catch(e){
-    console.error('Dashboard error:',e);
-    document.getElementById('ext-loading-msg').innerHTML=
-      '<div class="text-danger py-4"><i class="bi bi-exclamation-triangle fs-2 d-block mb-2"></i>Error cargando datos.<br><small>'+e+'</small></div>';
+    document.getElementById('ext-spinner').style.display='none';
+    showError('No se pudo conectar al Apps Script. Verifica que esté desplegado.<br><small>'+e.message+'</small>');
   }
 }
 
-// ══════════════════════════════════════════════════════════
-//  RENDER GRID
-// ══════════════════════════════════════════════════════════
-function renderGrid(maquinas, countOp, countPa, usoPct, avgKgh, totalKgh, maxKgh, maxSum){
-  const container=document.getElementById('ext-grid-container');
-  container.innerHTML='';
+function showError(msg){
+  document.getElementById('ext-grid').innerHTML=
+    '<div class="col-12 text-center py-5 text-danger"><i class="bi bi-exclamation-triangle fs-2 d-block mb-2"></i>'+msg+'</div>';
+}
 
-  // ── Resumen card
-  const promAngle=-90+(Math.min(avgKgh/maxKgh,1)*180);
-  const sumAngle=-90+(Math.min(totalKgh/maxSum,1)*180);
-  const tonTurno=totalKgh*8/1000;
-  const tonDia=totalKgh*24/1000;
+// ══════════════════════════════════════════════════════════════
+//  RENDER
+// ══════════════════════════════════════════════════════════════
+function renderDashboard(r){
+  const lineas=r.porLinea||[];
+  const kpis=r.kpis||{};
+  _lastPorLinea=lineas;
 
-  const kpiDiv=document.createElement('div');
-  kpiDiv.className='col-6 col-md-4 col-xl-2 px-1';
-  kpiDiv.innerHTML=`
+  const countOp=parseInt(kpis.lineasActivas)||0;
+  const countPa=parseInt(kpis.lineasInactivas)||0;
+  const totalM=countOp+countPa;
+  const usoPct=totalM>0?Math.round(countOp/totalM*100):0;
+  const totalKg=parseFloat(kpis.kgEntregadosHoy)||0;
+  const avgKgh=lineas.length?lineas.reduce((s,l)=>s+(parseFloat(l.kghPromedio)||0),0)/lineas.length:0;
+  const maxKgh=Math.max(300, avgKgh*1.5);
+  const tonTurno=avgKgh*8*countOp/1000;
+  const tonDia=avgKgh*24*countOp/1000;
+
+  document.getElementById('count-total-ext').innerText=totalM;
+  document.getElementById('count-operativa').innerText=countOp;
+  document.getElementById('count-parada').innerText=countPa;
+
+  const grid=document.getElementById('ext-grid');
+  grid.innerHTML='';
+
+  // ── Resumen card ──────────────────────────────────────────
+  const pProm=Math.min(avgKgh/maxKgh,1);
+  const pSum=Math.min(totalKg/Math.max(totalKg*1.5,1),1);
+  const aProm=-90+(pProm*180); const aSum=-90+(pSum*180);
+
+  const kpiCol=document.createElement('div');
+  kpiCol.className='col-6 col-md-4 col-xl-2 px-1';
+  kpiCol.innerHTML=`
     <div class="machine-card h-100" style="min-height:220px;border-top:3px solid #1a5a96;"
-         onclick="showSummaryModal(${countOp},${countPa},${usoPct},${avgKgh},${totalKgh},${maxKgh},${maxSum})">
+         onclick="showResumen(${countOp},${countPa},${usoPct},${avgKgh},${totalKg},${maxKgh},${tonTurno},${tonDia})">
       <div class="card-header-custom">Resumen</div>
-      <div class="d-flex flex-column align-items-center justify-content-between flex-grow-1 py-1 w-100">
+      <div class="d-flex flex-column align-items-center justify-content-between flex-grow-1 py-1 w-100 px-1">
         <div class="d-flex gap-1 justify-content-center w-100 mt-1">
           <div class="text-center"><div class="summary-label">OPER.</div><div class="summary-box box-operativas">${countOp}</div></div>
           <div class="text-center"><div class="summary-label">PARAD.</div><div class="summary-box box-paradas">${countPa}</div></div>
           <div class="text-center"><div class="summary-label">% USO</div><div class="summary-box box-uso">${usoPct}%</div></div>
         </div>
         <div class="d-flex flex-column align-items-center w-100">
-          <div class="text-center">
-            <svg viewBox="0 0 240 180" class="gauge-svg" style="width:110px;">
-              <g stroke-width="20" fill="none">
-                <path d="M 50 140 A 70 70 0 0 1 58 94" stroke="#b20000"/>
-                <path d="M 64 87 A 70 70 0 0 1 89 63" stroke="#ff0000"/>
-                <path d="M 98 58 A 70 70 0 0 1 116 55" stroke="#ff9900"/>
-                <path d="M 124 55 A 70 70 0 0 1 142 58" stroke="#ffff00"/>
-                <path d="M 151 63 A 70 70 0 0 1 176 87" stroke="#92d050"/>
-                <path d="M 182 94 A 70 70 0 0 1 190 140" stroke="#38761d"/>
-              </g>
-              <text x="120" y="170" font-size="26" font-weight="900" fill="#0f172a" text-anchor="middle">${fmt(avgKgh,1)}</text>
-              <g class="gauge-needle" style="transform:rotate(${promAngle}deg);transform-origin:120px 140px;transition:transform .8s cubic-bezier(.65,0,.35,1);">
-                <path d="M 120 140 L 120 50" stroke="#000" stroke-width="2.5" stroke-linecap="round"/>
-                <circle cx="120" cy="140" r="4" fill="#000"/>
-              </g>
-            </svg>
-            <div class="gauge-label" style="font-size:.6rem;margin-top:2px;">Kg/h Prom.</div>
-          </div>
-          <div class="text-center mt-1">
-            <svg viewBox="0 0 240 180" class="gauge-svg" style="width:110px;">
-              <g stroke-width="20" fill="none">
-                <path d="M 50 140 A 70 70 0 0 1 58 94" stroke="#b20000"/>
-                <path d="M 64 87 A 70 70 0 0 1 89 63" stroke="#ff0000"/>
-                <path d="M 98 58 A 70 70 0 0 1 116 55" stroke="#ff9900"/>
-                <path d="M 124 55 A 70 70 0 0 1 142 58" stroke="#ffff00"/>
-                <path d="M 151 63 A 70 70 0 0 1 176 87" stroke="#92d050"/>
-                <path d="M 182 94 A 70 70 0 0 1 190 140" stroke="#38761d"/>
-              </g>
-              <text x="120" y="170" font-size="26" font-weight="900" fill="#0f172a" text-anchor="middle">${Math.round(totalKgh)}</text>
-              <g class="gauge-needle" style="transform:rotate(${sumAngle}deg);transform-origin:120px 140px;transition:transform .8s cubic-bezier(.65,0,.35,1);">
-                <path d="M 120 140 L 120 50" stroke="#000" stroke-width="2.5" stroke-linecap="round"/>
-                <circle cx="120" cy="140" r="4" fill="#000"/>
-              </g>
-            </svg>
-            <div class="gauge-label" style="font-size:.6rem;margin-top:2px;">Σ Kg/h</div>
-          </div>
+          <svg viewBox="0 0 240 180" style="width:110px;overflow:visible;">
+            <g stroke-width="20" fill="none">
+              <path d="M 50 140 A 70 70 0 0 1 58 94" stroke="#b20000"/>
+              <path d="M 64 87 A 70 70 0 0 1 89 63" stroke="#ff0000"/>
+              <path d="M 98 58 A 70 70 0 0 1 116 55" stroke="#ff9900"/>
+              <path d="M 124 55 A 70 70 0 0 1 142 58" stroke="#ffff00"/>
+              <path d="M 151 63 A 70 70 0 0 1 176 87" stroke="#92d050"/>
+              <path d="M 182 94 A 70 70 0 0 1 190 140" stroke="#38761d"/>
+            </g>
+            <text x="120" y="170" font-size="24" font-weight="900" fill="#0f172a" text-anchor="middle">${fmt(avgKgh,0)}</text>
+            <g style="transform:rotate(${aProm}deg);transform-origin:120px 140px;transition:transform .8s cubic-bezier(.65,0,.35,1);">
+              <path d="M 120 140 L 120 50" stroke="#000" stroke-width="2.5" stroke-linecap="round"/>
+              <circle cx="120" cy="140" r="4" fill="#000"/>
+            </g>
+          </svg>
+          <div style="font-size:.6rem;font-weight:800;color:#1a5a96;">Kg/h Prom.</div>
+          <svg viewBox="0 0 240 180" style="width:110px;overflow:visible;margin-top:4px;">
+            <g stroke-width="20" fill="none">
+              <path d="M 50 140 A 70 70 0 0 1 58 94" stroke="#b20000"/>
+              <path d="M 64 87 A 70 70 0 0 1 89 63" stroke="#ff0000"/>
+              <path d="M 98 58 A 70 70 0 0 1 116 55" stroke="#ff9900"/>
+              <path d="M 124 55 A 70 70 0 0 1 142 58" stroke="#ffff00"/>
+              <path d="M 151 63 A 70 70 0 0 1 176 87" stroke="#92d050"/>
+              <path d="M 182 94 A 70 70 0 0 1 190 140" stroke="#38761d"/>
+            </g>
+            <text x="120" y="170" font-size="22" font-weight="900" fill="#0f172a" text-anchor="middle">${Math.round(totalKg)}</text>
+            <g style="transform:rotate(${aSum}deg);transform-origin:120px 140px;transition:transform .8s cubic-bezier(.65,0,.35,1);">
+              <path d="M 120 140 L 120 50" stroke="#000" stroke-width="2.5" stroke-linecap="round"/>
+              <circle cx="120" cy="140" r="4" fill="#000"/>
+            </g>
+          </svg>
+          <div style="font-size:.6rem;font-weight:800;color:#1a5a96;">Σ Kg Hoy</div>
         </div>
-        <div style="font-size:.55rem;color:#10b981;text-align:center;margin-top:2px;border-top:1px solid #f1f5f9;padding-top:2px;line-height:1.1;font-weight:700;width:100%;">
-          <div>PROY. TURNO (8h): ${fmt(tonTurno,2)} Ton</div>
-          <div>PROY. DÍA (24h): ${fmt(tonDia,2)} Ton</div>
+        <div style="font-size:.55rem;color:#10b981;text-align:center;border-top:1px solid #f1f5f9;padding:3px 4px;line-height:1.3;font-weight:700;width:100%;">
+          <div>PROY. TURNO: ${fmt(tonTurno,2)} Ton</div>
+          <div>PROY. DÍA: ${fmt(tonDia,2)} Ton</div>
         </div>
       </div>
     </div>`;
-  container.appendChild(kpiDiv);
+  grid.appendChild(kpiCol);
 
-  // ── Tarjeta por extrusora
-  maquinas.forEach(m=>{
-    const isOp=m.estado==='OPERATIVA';
-    const borderColor=isOp?'#10b981':'#f43f5e';
-    const badgeClass=isOp?'status-operativa':'status-parada';
-    const subestado=isOp?'EX-PRODUCCIÓN':'SIN TURNO ACTIVO';
-    const oeeColor=m.oee>=80?'#10b981':m.oee>=60?'#f59e0b':'#f43f5e';
+  // ── Tarjeta por línea ──────────────────────────────────────
+  lineas.forEach((l,idx)=>{
+    const isOp=parseFloat(l.kghPromedio)>0;
+    const border=isOp?'#10b981':'#f43f5e';
+    const oeeColor=parseFloat(l.oeeLinea)>=80?'#10b981':parseFloat(l.oeeLinea)>=60?'#f59e0b':'#f43f5e';
     const now=new Date();
     const horaStr=now.toLocaleTimeString('es-CO',{hour:'2-digit',minute:'2-digit',second:'2-digit'});
     const fechaStr=now.toLocaleDateString('es-CO');
-
     const col=document.createElement('div');
     col.className='col-6 col-md-4 col-xl-2 px-1';
     col.innerHTML=`
-      <div class="machine-card" style="border-top:3px solid ${borderColor};" onclick="showDetailModal(${JSON.stringify(m).replace(/"/g,'&quot;')})">
-        <div class="card-header-custom">${m.linea}</div>
+      <div class="machine-card" style="border-top:3px solid ${border};" onclick="showDetalle(${idx})">
+        <div class="card-header-custom">${l.linea||'LIN??'}</div>
         <div class="px-2 pt-1 pb-1">
           <div class="text-center mb-1">
-            <span class="status-badge ${badgeClass}">${m.estado}</span>
-            <div style="font-size:.58rem;color:#64748b;font-weight:700;line-height:1;margin-top:1px;">${subestado}</div>
+            <span class="status-badge ${isOp?'status-operativa':'status-parada'}">${isOp?'OPERATIVA':'PARADA'}</span>
+            <div style="font-size:.58rem;color:#64748b;font-weight:700;line-height:1;margin-top:1px;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;max-width:100%;padding:0 4px;">${l.producto||'SIN PROGRAMA'}</div>
           </div>
           <div class="text-center mb-1">
-            <svg viewBox="0 0 120 50" width="80" height="32" style="display:block;margin:auto;">
-              <rect x="2" y="10" width="116" height="28" rx="6" fill="#e2e8f0"/>
-              <rect x="10" y="16" width="100" height="16" rx="4" fill="#cbd5e1"/>
-              <circle cx="10" cy="24" r="6" fill="#475569"/>
-              <circle cx="110" cy="24" r="6" fill="#475569"/>
-              <text x="60" y="28" text-anchor="middle" font-size="9" font-weight="800" fill="#1a5a96">TUBERÍA PVC</text>
+            <svg viewBox="0 0 120 40" width="80" height="28" style="display:block;margin:auto;">
+              <rect x="2" y="6" width="116" height="28" rx="5" fill="#e2e8f0"/>
+              <rect x="10" y="12" width="100" height="16" rx="3" fill="#cbd5e1"/>
+              <circle cx="10" cy="20" r="6" fill="#475569"/>
+              <circle cx="110" cy="20" r="6" fill="#475569"/>
+              <text x="60" y="24" text-anchor="middle" font-size="8" font-weight="800" fill="#1a5a96">TUBERÍA PVC</text>
             </svg>
           </div>
           <div class="w-100">
-            <div class="data-row-card"><span class="data-label-card">PROD</span><span class="data-value-card" style="font-size:.62rem;max-width:80px;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;">${m.producto||'—'}</span></div>
-            <div class="data-row-card"><span class="data-label-card">VEL.L.</span><span class="data-value-card">${fmt(m.cargaLinea,1)} Kg/h</span></div>
-            <div class="data-row-card"><span class="data-label-card">ESP.</span><span class="data-value-card">${m.ultimoEspesor||'—'}</span></div>
-            <div class="data-row-card"><span class="data-label-card">DIÁM.</span><span class="data-value-card">${m.ultimoDiametro||'—'}</span></div>
-            <div class="data-row-card"><span class="data-label-card">KG/H</span><span class="data-value-card">${fmt(m.kghProm,1)}</span></div>
-            <div class="data-row-card"><span class="data-label-card">OEE</span><span class="data-value-card" style="color:${oeeColor};">${fmt(m.oee,1)}%</span></div>
-            <div class="data-row-card"><span class="data-label-card">T.MUERTO</span><span class="data-value-card ${m.tmHoras>2?'text-danger':''}">${fmt(m.tmHoras,1)}h</span></div>
+            <div class="data-row-card"><span class="data-label-card">ORDEN</span><span class="data-value-card">${l.orden||'—'}</span></div>
+            <div class="data-row-card"><span class="data-label-card">KG/H</span><span class="data-value-card">${fmt(l.kghPromedio,1)}</span></div>
+            <div class="data-row-card"><span class="data-label-card">KG PROD.</span><span class="data-value-card">${fmt(l.kgProd,0)}</span></div>
+            <div class="data-row-card"><span class="data-label-card">OEE</span><span class="data-value-card" style="color:${oeeColor};">${fmt(l.oeeLinea,1)}%</span></div>
+            <div class="data-row-card"><span class="data-label-card">% SCRAP</span><span class="data-value-card ${parseFloat(l.pctScrap)>3?'text-danger':''}">${fmt(l.pctScrap,1)}%</span></div>
+            <div class="data-row-card"><span class="data-label-card">ESTIM.</span><span class="data-value-card" style="font-size:.6rem;">${l.estimado||'—'}</span></div>
           </div>
           <div style="font-size:.55rem;color:#94a3b8;text-align:center;margin-top:2px;border-top:1px solid #f1f5f9;padding-top:2px;line-height:1.1;">
-            <div style="font-weight:700;">${horaStr}</div>
-            <div>${fechaStr}</div>
+            <div style="font-weight:700;">${horaStr}</div><div>${fechaStr}</div>
           </div>
         </div>
       </div>`;
-    container.appendChild(col);
-  });
-}
-
-// ══════════════════════════════════════════════════════════
-//  MODAL DETAIL
-// ══════════════════════════════════════════════════════════
-function showDetailModal(m){
-  const modal=bootstrap.Modal.getOrCreateInstance(document.getElementById('extMachineModal'));
-  const isOp=m.estado==='OPERATIVA';
-  const badgeColor=isOp?'#10b981':'#f43f5e';
-
-  document.getElementById('ext-modal-header').innerHTML=
-    `<i class="bi bi-cpu me-2"></i>${m.linea} — ${isOp?'OPERATIVA':'PARADA'}`;
-  document.getElementById('ext-modal-badge').innerHTML=
-    `<span class="status-badge ${isOp?'status-operativa':'status-parada'}" style="font-size:.8rem;padding:4px 18px;">${m.estado}</span>`;
-
-  // Gauge Kg/h
-  const teoKgh=m.cargaEstandar||250;
-  const realKgh=m.kghProm||0;
-  const pct=Math.min(Math.max(realKgh/teoKgh,0),1);
-  const angle=-90+(pct*180);
-  document.getElementById('ext-modal-val-kgh').textContent=fmt(realKgh,1);
-  document.getElementById('ext-modal-goal').innerHTML=`Meta Teórica: <span style="font-weight:800;color:#1a5a96;">${fmt(teoKgh,1)} Kg/h</span>`;
-  document.getElementById('ext-modal-needle').style.transform=`rotate(${angle}deg)`;
-  for(let i=0;i<=6;i++){
-    const el=document.getElementById('ext-lbl-'+i);
-    if(el) el.textContent=Math.round((teoKgh/6)*i);
-  }
-
-  // Especificaciones programadas
-  document.getElementById('ext-modal-specs').innerHTML=`
-    <div class="data-row-card"><span class="data-label-card">Orden Fab.</span><span class="data-value-card">${m.ordenFab||'—'}</span></div>
-    <div class="data-row-card"><span class="data-label-card">Producto</span><span class="data-value-card" style="font-size:.75rem;">${m.producto||'—'}</span></div>
-    <div class="data-row-card"><span class="data-label-card">Cód. SAP</span><span class="data-value-card">${m.codigoSAP||'—'}</span></div>
-    <div class="data-row-card"><span class="data-label-card">Espesor mín.</span><span class="data-value-card">${m.espesorMin||'—'} mm</span></div>
-    <div class="data-row-card"><span class="data-label-card">Diámetro</span><span class="data-value-card">${m.diametro||'—'} mm</span></div>
-    <div class="data-row-card"><span class="data-label-card">Peso estándar</span><span class="data-value-card">${m.pesoEstandar||'—'} kg/m</span></div>
-    <div class="data-row-card"><span class="data-label-card">Carga std.</span><span class="data-value-card">${fmt(m.cargaEstandar,1)} Kg/h</span></div>
-    <div class="data-row-card"><span class="data-label-card">Cant. orden</span><span class="data-value-card">${m.cantidadOrden||'—'} und</span></div>`;
-
-  // Condiciones reales
-  const oeeColor=m.oee>=80?'#10b981':m.oee>=60?'#f59e0b':'#f43f5e';
-  document.getElementById('ext-modal-reales').innerHTML=`
-    <div class="data-row-card"><span class="data-label-card">Kg/h real</span><span class="data-value-card">${fmt(m.kghProm,1)}</span></div>
-    <div class="data-row-card"><span class="data-label-card">Vel. línea (carga)</span><span class="data-value-card">${fmt(m.cargaLinea,1)} Kg/h</span></div>
-    <div class="data-row-card"><span class="data-label-card">Último espesor</span><span class="data-value-card">${m.ultimoEspesor||'—'} mm</span></div>
-    <div class="data-row-card"><span class="data-label-card">Último diámetro</span><span class="data-value-card">${m.ultimoDiametro||'—'} mm</span></div>
-    <div class="data-row-card"><span class="data-label-card">OEE</span><span style="font-weight:800;color:${oeeColor};">${fmt(m.oee,1)}%</span></div>
-    <div class="data-row-card"><span class="data-label-card">Tiempo muerto</span><span class="data-value-card ${m.tmHoras>2?'text-danger':''}">${fmt(m.tmHoras,1)} h (${Math.round(m.tmMin)} min)</span></div>
-    <div class="data-row-card"><span class="data-label-card">Horas registradas</span><span class="data-value-card">${m.horas||0} / 8</span></div>`;
-
-  // Personal
-  document.getElementById('ext-modal-personal').innerHTML=`
-    <div class="data-row-card"><span class="data-label-card">Supervisor</span><span class="data-value-card">${m.supervisor||'—'}</span></div>
-    <div class="data-row-card"><span class="data-label-card">Operario</span><span class="data-value-card">${m.operario||'—'}</span></div>
-    <div class="data-row-card"><span class="data-label-card">Coordinador</span><span class="data-value-card">${m.coordinador||'—'}</span></div>
-    <div class="data-row-card"><span class="data-label-card">Turno</span><span class="data-value-card">${m.turno||'—'}</span></div>`;
-
-  // Mini bar chart Kg/h por hora
-  buildModalKghChart(m.horasData||[]);
-  // Proyección
-  buildModalProjChart(m.kghProm||0);
-
-  modal.show();
-}
-
-function buildModalKghChart(horasData){
-  const sk=document.getElementById('ext-modal-chart-skeleton');
-  const cv=document.getElementById('extModalKghChart');
-  if(extModalKghChartInst){ extModalKghChartInst.destroy(); extModalKghChartInst=null; }
-  if(!horasData.length){ sk.style.display='flex'; cv.style.display='none'; return; }
-  sk.style.display='none'; cv.style.display='block';
-  const labels=horasData.map(h=>'H'+(h.Hora||h.hora));
-  const data=horasData.map(h=>parseFloat(h.PesoTotal_kg||h.pesoTotal||0));
-  const ctx=cv.getContext('2d');
-  const grad=ctx.createLinearGradient(0,0,0,130);
-  grad.addColorStop(0,'#1a5a96'); grad.addColorStop(1,'#3b82f6');
-  extModalKghChartInst=new Chart(ctx,{type:'bar',data:{labels,datasets:[{label:'Kg',data,backgroundColor:grad,borderRadius:4,barPercentage:.8}]},
-    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},
-      scales:{y:{beginAtZero:true,ticks:{font:{size:9,weight:'bold'},color:'#64748b'}},
-              x:{ticks:{font:{size:9,weight:'bold'},color:'#1a5a96'}}}}});
-}
-
-function buildModalProjChart(kghProm){
-  if(extModalProjChartInst){ extModalProjChartInst.destroy(); extModalProjChartInst=null; }
-  const ctx=document.getElementById('extModalProyeccionChart').getContext('2d');
-  const tonTurno=kghProm*8/1000; const tonDia=kghProm*24/1000;
-  extModalProjChartInst=new Chart(ctx,{type:'bar',
-    data:{labels:['Turno (8h)','Día (24h)'],datasets:[{label:'Proyección (Ton)',data:[tonTurno,tonDia],backgroundColor:['#10b981','#6366f1'],borderRadius:6,barPercentage:.5}]},
-    options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>` ${c.raw.toFixed(2)} Ton`}}},
-      scales:{x:{beginAtZero:true,ticks:{font:{size:9,weight:'bold'},color:'#64748b'}},y:{ticks:{font:{size:9,weight:'bold'},color:'#1a5a96'}}}}});
-}
-
-// ══════════════════════════════════════════════════════════
-//  MODAL RESUMEN GENERAL
-// ══════════════════════════════════════════════════════════
-function showSummaryModal(countOp, countPa, usoPct, avgKgh, totalKgh, maxKgh, maxSum){
-  const modal=bootstrap.Modal.getOrCreateInstance(document.getElementById('extSummaryModal'));
-  document.getElementById('sm-operativas').textContent=countOp;
-  document.getElementById('sm-paradas').textContent=countPa;
-  document.getElementById('sm-uso').textContent=usoPct+'%';
-
-  const pProm=Math.min(avgKgh/maxKgh,1); const pSum=Math.min(totalKgh/maxSum,1);
-  const aProm=-90+(pProm*180); const aSum=-90+(pSum*180);
-  document.getElementById('sm-val-prom').textContent=fmt(avgKgh,1);
-  document.getElementById('sm-val-sum').textContent=Math.round(totalKgh);
-  document.getElementById('sm-needle-prom').style.transform=`rotate(${aProm}deg)`;
-  document.getElementById('sm-needle-sum').style.transform=`rotate(${aSum}deg)`;
-
-  const tonTurno=totalKgh*8/1000; const tonDia=totalKgh*24/1000;
-  document.getElementById('sm-proj-turno').textContent=fmt(tonTurno,2)+' Ton';
-  document.getElementById('sm-proj-dia').textContent=fmt(tonDia,2)+' Ton';
-
-  if(smProjChartInst){ smProjChartInst.destroy(); smProjChartInst=null; }
-  const ctx=document.getElementById('smProyeccionChart').getContext('2d');
-  smProjChartInst=new Chart(ctx,{type:'bar',
-    data:{labels:['Turno (8h)','Día (24h)'],datasets:[{label:'Proy. (Ton)',data:[tonTurno,tonDia],backgroundColor:['#10b981','#6366f1'],borderRadius:8,barPercentage:.5}]},
-    options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},
-      scales:{x:{beginAtZero:true,ticks:{font:{size:9,weight:'bold'},color:'#64748b'}},
-              y:{ticks:{font:{size:10,weight:'bold'},color:'#1a5a96'}}}}});
-  modal.show();
-}
-
-// ══════════════════════════════════════════════════════════
-//  BOTTOM CHARTS
-// ══════════════════════════════════════════════════════════
-function renderCharts(maquinas, turnos, horas){
-  const fecIni=document.getElementById('filter-fecha-inicio').value;
-  const fecFin=document.getElementById('filter-fecha-fin').value;
-
-  // Generar días entre rango
-  const days=[];
-  let cur=new Date(fecIni+'T00:00:00');
-  const end=new Date(fecFin+'T00:00:00');
-  while(cur<=end){ days.push(cur.toISOString().split('T')[0]); cur.setDate(cur.getDate()+1); }
-
-  const labels=[]; const dprom=[]; const dsum=[]; const dop=[]; const mezclaMap={};
-  days.forEach(d=>{
-    ['A','B','C'].forEach(tr=>{
-      labels.push(tr);
-      const turnosDelDia=turnos.filter(t=>{
-        const tf=String(t.Fecha||''); const tt=String(t.Turno||'').toUpperCase();
-        const dFmt=d.split('-'); const dStr=dFmt[2]+'/'+dFmt[1]+'/'+dFmt[0];
-        return (tf===d||tf===dStr) && tt===tr;
-      });
-      const tids=new Set(turnosDelDia.map(t=>String(t.TurnoID||'')));
-      const horasFiltradas=horas.filter(h=>tids.has(String(h.TurnoID||'')));
-      const kgTotal=horasFiltradas.reduce((s,h)=>s+(parseFloat(h.PesoTotal_kg)||0),0);
-      const countL=turnosDelDia.length||1;
-      dprom.push(countL>0?kgTotal/countL:0);
-      dsum.push(kgTotal);
-      dop.push(turnosDelDia.filter(t=>t.Estado==='Abierto').length);
-      // Mezclas
-      horasFiltradas.forEach(h=>{ const cod=h.CodigoMezcla||'N/A'; mezclaMap[cod]=(mezclaMap[cod]||0)+(parseFloat(h.CantidadKgMezcla)||0); });
-    });
+    grid.appendChild(col);
   });
 
-  buildBarChart('extKghPromedioChart','extChartProm',labels,dprom,'Kg/h Prom.','#1a5a96','#3b82f6',extChartProm,c=>extChartProm=c);
-  buildBarChart('extKghSumatoriaChart','extChartSum',labels,dsum,'Σ Kg/h','#10b981','#34d399',extChartSum,c=>extChartSum=c);
-  buildBarChart('extOperativasChart','extChartOp',labels,dop,'Operativas','#f59e0b','#fbbf24',extChartOp,c=>extChartOp=c);
-
-  // Mezclas chart (pie)
-  if(extChartMez){ extChartMez.destroy(); extChartMez=null; }
-  const mezLabels=Object.keys(mezclaMap); const mezData=Object.values(mezclaMap);
-  const palette=['#1a5a96','#10b981','#f59e0b','#8b5cf6','#f43f5e','#06b6d4','#84cc16','#f97316'];
-  if(mezLabels.length){
-    const ctx=document.getElementById('extMezclasChart').getContext('2d');
-    extChartMez=new Chart(ctx,{type:'doughnut',
-      data:{labels:mezLabels,datasets:[{data:mezData,backgroundColor:palette.slice(0,mezLabels.length),borderWidth:2,borderColor:'#fff'}]},
-      options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'bottom',labels:{font:{size:9,weight:'bold'},padding:6}}}}});
+  if(!lineas.length){
+    const empty=document.createElement('div');
+    empty.className='col-12 text-center py-5';
+    empty.innerHTML='<i class="bi bi-inbox fs-2 text-muted d-block mb-2"></i><div style="color:#94a3b8;font-weight:700;">No hay turnos activos para esta fecha.<br><small>Verifica el rango de fecha o crea un turno en la App de Producción.</small></div>';
+    grid.appendChild(empty);
   }
+
+  renderCharts(lineas);
 }
 
-function buildBarChart(canvasId, ref, labels, data, label, c1, c2, existing, setter){
-  if(existing){ existing.destroy(); }
+// ══════════════════════════════════════════════════════════════
+//  CHARTS
+// ══════════════════════════════════════════════════════════════
+function renderCharts(lineas){
+  const labels=lineas.map(l=>l.linea);
+  const dprom=lineas.map(l=>parseFloat(l.kghPromedio)||0);
+  const dsum=lineas.map(l=>parseFloat(l.kgProd)||0);
+  const doee=lineas.map(l=>parseFloat(l.oeeLinea)||0);
+  const dscrap=lineas.map(l=>parseFloat(l.pctScrap)||0);
+
+  buildBar('chartProm','_chProm',labels,dprom,'Kg/h','#1a5a96','#3b82f6',c=>_chProm=c);
+  buildBar('chartSum','_chSum',labels,dsum,'Kg','#10b981','#34d399',c=>_chSum=c);
+  buildBar('chartOEE','_chOEE',labels,doee,'OEE %','#f59e0b','#fbbf24',c=>_chOEE=c,100);
+  buildBar('chartScrap','_chScrap',labels,dscrap,'Scrap %','#8b5cf6','#a78bfa',c=>_chScrap=c);
+}
+
+function buildBar(canvasId,ref,labels,data,label,c1,c2,setter,maxY){
+  const old=window[ref]; if(old){old.destroy();}
   const ctx=document.getElementById(canvasId).getContext('2d');
   const grad=ctx.createLinearGradient(0,0,0,200);
   grad.addColorStop(0,c1); grad.addColorStop(1,c2);
   const chart=new Chart(ctx,{type:'bar',
     data:{labels,datasets:[{label,data,backgroundColor:grad,borderRadius:5,barPercentage:.8,categoryPercentage:.9}]},
-    options:{responsive:true,maintainAspectRatio:false,layout:{padding:{top:18}},
-      plugins:{legend:{display:false},tooltip:{callbacks:{title:items=>{const i=items[0].dataIndex; return `Turno ${labels[i]}`;} }}},
-      scales:{y:{beginAtZero:true,grid:{color:'#e2e8f0'},ticks:{font:{weight:'bold',size:10},color:'#64748b'}},
-              x:{grid:{display:false},ticks:{font:{weight:'bold',size:8},color:'#64748b',maxRotation:0,autoSkip:false}}}}});
+    options:{responsive:true,maintainAspectRatio:false,layout:{padding:{top:20}},
+      plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>` ${c.raw.toFixed(1)} ${label}`}}},
+      scales:{y:{beginAtZero:true,max:maxY||undefined,
+               ticks:{font:{weight:'bold',size:9},color:'#64748b'},grid:{color:'#e2e8f0'}},
+              x:{ticks:{font:{weight:'bold',size:8},color:'#64748b',maxRotation:45,autoSkip:true,maxTicksLimit:12},
+                 grid:{display:false}}}}});
   setter(chart);
+  window[ref]=chart;
 }
 
-// ══════════════════════════════════════════════════════════
-//  EXPAND CHART
-// ══════════════════════════════════════════════════════════
+// ══════════════════════════════════════════════════════════════
+//  MODALES
+// ══════════════════════════════════════════════════════════════
+function showDetalle(idx){
+  const l=_lastPorLinea[idx]; if(!l) return;
+  const isOp=parseFloat(l.kghPromedio)>0;
+  const kgh=parseFloat(l.kghPromedio)||0;
+  const meta=parseFloat(l.kgEstandar)||300;
+
+  document.getElementById('modal-header').innerHTML=`<i class="bi bi-cpu me-2"></i>${l.linea} — ${l.producto||'SIN PRODUCTO'}`;
+  document.getElementById('modal-badge').innerHTML=
+    `<span class="status-badge ${isOp?'status-operativa':'status-parada'}" style="font-size:.8rem;padding:4px 18px;">${isOp?'OPERATIVA':'PARADA'}</span>`;
+
+  // Gauge
+  const pct=Math.min(Math.max(kgh/meta,0),1);
+  const angle=-90+(pct*180);
+  document.getElementById('modal-val-kgh').textContent=fmt(kgh,1);
+  document.getElementById('modal-goal').innerHTML=`Meta estándar: <strong style="color:#1a5a96;">${fmt(meta,0)} Kg/h</strong>`;
+  document.getElementById('modal-needle').style.transform=`rotate(${angle}deg)`;
+  for(let i=0;i<=6;i++){const el=document.getElementById('gl-'+i);if(el)el.textContent=Math.round((meta/6)*i);}
+
+  // Specs programadas
+  document.getElementById('modal-specs').innerHTML=`
+    <div class="data-row-card"><span class="data-label-card">Orden Fab.</span><span class="data-value-card">${l.orden||'—'}</span></div>
+    <div class="data-row-card"><span class="data-label-card">Producto</span><span class="data-value-card" style="font-size:.72rem;">${l.producto||'—'}</span></div>
+    <div class="data-row-card"><span class="data-label-card">Carga estándar</span><span class="data-value-card">${fmt(l.kgEstandar,0)} Kg/h</span></div>
+    <div class="data-row-card"><span class="data-label-card">Cant. orden</span><span class="data-value-card">${l.cantOrden||'—'} und</span></div>
+    <div class="data-row-card"><span class="data-label-card">Estimado fin</span><span class="data-value-card">${l.estimado||'—'}</span></div>`;
+
+  // Condiciones reales
+  const oeeColor=parseFloat(l.oeeLinea)>=80?'#10b981':parseFloat(l.oeeLinea)>=60?'#f59e0b':'#f43f5e';
+  document.getElementById('modal-reales').innerHTML=`
+    <div class="data-row-card"><span class="data-label-card">Kg/h promedio</span><span class="data-value-card">${fmt(l.kghPromedio,1)}</span></div>
+    <div class="data-row-card"><span class="data-label-card">Kg producidos</span><span class="data-value-card">${fmt(l.kgProd,1)}</span></div>
+    <div class="data-row-card"><span class="data-label-card">Kg scrap</span><span class="data-value-card text-danger">${fmt(l.kgScrap,1)}</span></div>
+    <div class="data-row-card"><span class="data-label-card">% Scrap</span><span class="data-value-card ${parseFloat(l.pctScrap)>3?'text-danger':''}">${fmt(l.pctScrap,1)}%</span></div>
+    <div class="data-row-card"><span class="data-label-card">Tubos prod.</span><span class="data-value-card">${l.tubos||0}</span></div>
+    <div class="data-row-card"><span class="data-label-card">OEE</span><span class="data-value-card" style="color:${oeeColor};">${fmt(l.oeeLinea,1)}%</span></div>
+    <div class="data-row-card"><span class="data-label-card">Kg acum. orden</span><span class="data-value-card">${fmt(l.kgOrden,1)}</span></div>
+    <div class="data-row-card"><span class="data-label-card">Kg faltantes</span><span class="data-value-card">${fmt(l.kgFaltantes,1)}</span></div>`;
+
+  document.getElementById('modal-personal').innerHTML=`
+    <div class="data-row-card"><span class="data-label-card">Supervisor</span><span class="data-value-card">${l.supervisor||'—'}</span></div>
+    <div class="data-row-card"><span class="data-label-card">Operario</span><span class="data-value-card">${l.operario||'—'}</span></div>
+    <div class="data-row-card"><span class="data-label-card">Turno</span><span class="data-value-card">${l.turno||'—'}</span></div>`;
+
+  // Gráfica proyección
+  if(_chModalProj){_chModalProj.destroy();_chModalProj=null;}
+  const ctx=document.getElementById('modalProjChart').getContext('2d');
+  const tonT=kgh*8/1000; const tonD=kgh*24/1000;
+  _chModalProj=new Chart(ctx,{type:'bar',
+    data:{labels:['Turno (8h)','Día (24h)'],
+          datasets:[{data:[tonT,tonD],backgroundColor:['#10b981','#6366f1'],borderRadius:6,barPercentage:.5}]},
+    options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>` ${c.raw.toFixed(2)} Ton`}}},
+      scales:{x:{beginAtZero:true,ticks:{font:{size:9,weight:'bold'},color:'#64748b'}},
+              y:{ticks:{font:{size:9,weight:'bold'},color:'#1a5a96'}}}}});
+
+  bootstrap.Modal.getOrCreateInstance(document.getElementById('modalDetalle')).show();
+}
+
+function showResumen(op,pa,uso,avgKgh,totalKg,maxKgh,tonT,tonD){
+  document.getElementById('sm-op').textContent=op;
+  document.getElementById('sm-pa').textContent=pa;
+  document.getElementById('sm-uso').textContent=uso+'%';
+  document.getElementById('sm-val-prom').textContent=fmt(avgKgh,0);
+  document.getElementById('sm-val-sum').textContent=Math.round(totalKg);
+  document.getElementById('sm-proj-turno').textContent=fmt(tonT,2)+' Ton';
+  document.getElementById('sm-proj-dia').textContent=fmt(tonD,2)+' Ton';
+  const pP=Math.min(avgKgh/Math.max(maxKgh,1),1);
+  const pS=Math.min(totalKg/Math.max(totalKg*1.5,1),1);
+  document.getElementById('sm-needle-prom').style.transform=`rotate(${-90+pP*180}deg)`;
+  document.getElementById('sm-needle-sum').style.transform=`rotate(${-90+pS*180}deg)`;
+  bootstrap.Modal.getOrCreateInstance(document.getElementById('modalResumen')).show();
+}
+
 function expandChart(type){
   const map={
-    promedio:{chart:extChartProm, title:'Kg/h Prom. Turno — Detalle Ampliado', bg:'#1a5a96'},
-    sumatoria:{chart:extChartSum, title:'Sumatoria Kg/h — Detalle Ampliado', bg:'#10b981'},
-    operativas:{chart:extChartOp, title:'Operativas/Turno — Detalle Ampliado', bg:'#f59e0b'},
-    mezclas:{chart:extChartMez, title:'Mezcla de Materiales — Detalle Ampliado', bg:'#8b5cf6'}
+    promedio:{chart:_chProm,title:'Kg/h Promedio por Línea',bg:'#1a5a96'},
+    sumatoria:{chart:_chSum,title:'Kg Producidos Hoy por Línea',bg:'#10b981'},
+    oee:{chart:_chOEE,title:'OEE por Línea (%)',bg:'#f59e0b'},
+    scrap:{chart:_chScrap,title:'% Scrap por Línea',bg:'#8b5cf6'}
   };
-  const entry=map[type]; if(!entry||!entry.chart) return;
-  document.getElementById('ext-expand-title').textContent=entry.title;
-  document.getElementById('ext-expand-header').style.backgroundColor=entry.bg;
-  if(extExpandedChartInst){ extExpandedChartInst.destroy(); extExpandedChartInst=null; }
-  const ctx=document.getElementById('extExpandedCanvas').getContext('2d');
-  const src=entry.chart;
-  extExpandedChartInst=new Chart(ctx,{
-    type:src.config.type,
+  const e=map[type]; if(!e||!e.chart) return;
+  document.getElementById('expand-title').textContent=e.title;
+  document.getElementById('expand-header').style.backgroundColor=e.bg;
+  if(_chExpand){_chExpand.destroy();_chExpand=null;}
+  const ctx=document.getElementById('expandCanvas').getContext('2d');
+  const src=e.chart;
+  _chExpand=new Chart(ctx,{type:src.config.type,
     data:JSON.parse(JSON.stringify(src.data)),
-    options:{...JSON.parse(JSON.stringify(src.options)), maintainAspectRatio:false, responsive:true}
-  });
-  bootstrap.Modal.getOrCreateInstance(document.getElementById('extChartExpandModal')).show();
+    options:{...JSON.parse(JSON.stringify(src.options)),maintainAspectRatio:false,responsive:true}});
+  bootstrap.Modal.getOrCreateInstance(document.getElementById('modalExpand')).show();
 }
 
-// ══════════════════════════════════════════════════════════
-//  BACKEND: add needed actions to Apps Script
-//  These are read from the SAME Sheets as TUBOSA_App
-//  The following actions must be supported by your Apps Script:
-//    getRegistroTurnos   → returns RegistroTurno sheet data
-//    getRegistroHoras    → returns RegistroHora sheet data
-//    getTiemposMuertosDash → returns TiemposMuertos data
-//    getPesajeDash       → returns PesajeRendimiento data
-//    getLineas           → already exists
-//
-//  If those actions don't exist yet, we fall back to the
-//  generic getSheetData action below:
-// ══════════════════════════════════════════════════════════
-
-// ── INIT
-setDefaultDates();
+// ── INIT ──────────────────────────────────────────────────────
+document.getElementById('filter-fecha').value=today();
 loadDashboard();
-setInterval(loadDashboard, 60000); // Auto-refresh cada 60 seg
-
-// ── Watch date inputs
-document.getElementById('filter-fecha-inicio').addEventListener('change', loadDashboard);
-document.getElementById('filter-fecha-fin').addEventListener('change', loadDashboard);
+setInterval(loadDashboard,60000);
+document.getElementById('filter-fecha').addEventListener('change',loadDashboard);
 </script>
 </body>
 </html>
