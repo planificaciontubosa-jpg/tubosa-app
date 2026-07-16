@@ -376,7 +376,8 @@ function api(params){
 //  LOAD DASHBOARD
 // ══════════════════════════════════════════════════════════════
 async function loadDashboard(){
-  document.getElementById('ext-spinner').style.display='block';
+  const spinner = document.getElementById('ext-spinner');
+  if(spinner) spinner.style.display='block';
   const ini=document.getElementById('filter-inicio').value||today();
   const fin=document.getElementById('filter-fin').value||today();
 
@@ -396,13 +397,13 @@ async function loadDashboard(){
       params={action:'getDashboard', fecha:toDMY(fin), fecha_inicio:ini, fecha_fin:fin};
     }
     const r=await api(params);
-    document.getElementById('ext-spinner').style.display='none';
+    const _sp=document.getElementById('ext-spinner');if(_sp)_sp.style.display='none';
     if(!r.ok){showError('Error del servidor: '+(r.msg||'desconocido'));return;}
     renderDashboard(r,rangoStr);
     document.getElementById('last-update-lbl').innerText=
       'Act: '+new Date().toLocaleTimeString('es-CO',{hour:'2-digit',minute:'2-digit'});
   }catch(e){
-    document.getElementById('ext-spinner').style.display='none';
+    const _sp=document.getElementById('ext-spinner');if(_sp)_sp.style.display='none';
     showError(`No se pudo conectar al Apps Script.<br>
       <small>${e.message}</small><br><br>
       <strong>Verifica:</strong> que el Apps Script esté re-desplegado con la última versión.`);
