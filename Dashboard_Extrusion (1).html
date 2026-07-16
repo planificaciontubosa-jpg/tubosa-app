@@ -686,8 +686,10 @@ function expandChart(type){
 }
 
 // ── INIT ──────────────────────────────────────────────────────
-setQuick('hoy');
-setInterval(loadDashboard,60000);
+document.addEventListener('DOMContentLoaded', function(){
+  setQuick('hoy');
+  setInterval(loadDashboard, 60000);
+});
 </script>
 </body>
 </html>
