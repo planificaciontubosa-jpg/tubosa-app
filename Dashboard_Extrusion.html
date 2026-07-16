@@ -531,7 +531,7 @@ function renderDashboard(r, rangoStr){
   // ── Una tarjeta por línea ─────────────────────────────────
   lineas.forEach((l,idx)=>{
     const kgh=parseFloat(l.kghPromedio)||0;
-    const isOp=kgh>0;
+    const isOp=String(l.estado||'').trim()==='Abierto'||kgh>0;
     const border=isOp?'#10b981':'#f43f5e';
     const oeeC=parseFloat(l.oeeLinea)>=80?'#10b981':parseFloat(l.oeeLinea)>=60?'#f59e0b':'#f43f5e';
     const now=new Date();
