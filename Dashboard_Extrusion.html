@@ -398,6 +398,7 @@ async function loadDashboard(){
     console.log('[EXT] Enviando:', JSON.stringify(params));
     const r=await api(params);
     console.log('[EXT] ok:', r.ok, '| porLinea:', r.porLinea?.length, '| kpis.lineasActivas:', r.kpis?.lineasActivas);
+    console.log('[EXT] debug:', JSON.stringify(r.debug||{}));
     const _sp=document.getElementById('ext-spinner');if(_sp)_sp.style.display='none';
     if(!r.ok){showError('Error del servidor: '+(r.msg||'desconocido'));return;}
     if(!r.porLinea || r.porLinea.length===0){
