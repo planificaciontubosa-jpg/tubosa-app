@@ -389,16 +389,31 @@ async function loadDashboard(){
     `<i class="bi bi-calendar3 me-1"></i>Mostrando datos: <strong>${rangoStr}</strong>`;
 
   try{
-    // Si es un día, usar fecha simple; si es rango, pasar fecha_inicio y fecha_fin
     let params;
     if(ini===fin){
       params={action:'getDashboard', fecha:toDMY(ini)};
     } else {
       params={action:'getDashboard', fecha:toDMY(fin), fecha_inicio:ini, fecha_fin:fin};
     }
+    console.log('[EXT] Enviando:', JSON.stringify(params));
     const r=await api(params);
+    console.log('[EXT] ok:', r.ok, '| porLinea:', r.porLinea?.length, '| kpis.lineasActivas:', r.kpis?.lineasActivas);
     const _sp=document.getElementById('ext-spinner');if(_sp)_sp.style.display='none';
     if(!r.ok){showError('Error del servidor: '+(r.msg||'desconocido'));return;}
+    if(!r.porLinea || r.porLinea.length===0){
+      const grid=document.getElementById('ext-grid');
+      if(grid) grid.innerHTML=`<div class="col-12 p-4" style="font-size:12px;background:#f8fafc;border-radius:8px;border:1px solid #e2e8f0;">
+        <strong style="color:#1a5a96;">Sin datos para este período — Diagnóstico:</strong><br><br>
+        Fecha ini: <code>${ini}</code> &nbsp;|&nbsp; fin: <code>${fin}</code><br>
+        Params: <code>${JSON.stringify(params)}</code><br>
+        kpis: <code>${JSON.stringify(r.kpis||{})}</code><br><br>
+        <a href="${AS_URL}?action=debugDashboard&callback=test" target="_blank"
+           style="color:#1a5a96;font-weight:700;text-decoration:underline;">
+          → Ver diagnóstico del backend (click aquí)
+        </a>
+      </div>`;
+      return;
+    }
     renderDashboard(r,rangoStr);
     document.getElementById('last-update-lbl').innerText=
       'Act: '+new Date().toLocaleTimeString('es-CO',{hour:'2-digit',minute:'2-digit'});
