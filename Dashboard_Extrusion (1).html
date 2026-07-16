@@ -19,8 +19,7 @@ body{font-family:'Outfit',sans-serif;background:#f1f5f9;}
   margin-bottom:4px;font-size:.65rem;letter-spacing:.04em;}
 .status-operativa{background:#10b981!important;color:#fff!important;}
 .status-parada{background:#f43f5e!important;color:#fff!important;}
-.data-row-card{display:flex;justify-content:space-between;align-items:center;
-  padding:2px 10px;font-size:.68rem;}
+.data-row-card{display:flex;justify-content:space-between;align-items:center;padding:2px 10px;font-size:.68rem;}
 .data-label-card{font-weight:600;color:#64748b;text-transform:uppercase;}
 .data-value-card{font-weight:800;color:#1a5a96;text-align:right;}
 .summary-box{width:39px;height:28px;border-radius:6px;display:flex;align-items:center;
@@ -47,6 +46,14 @@ body{font-family:'Outfit',sans-serif;background:#f1f5f9;}
 .back-btn{background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.3);
   color:#fff;font-size:.8rem;font-weight:700;border-radius:8px;padding:5px 14px;cursor:pointer;transition:.2s;}
 .back-btn:hover{background:rgba(255,255,255,.3);}
+/* Filtros rápidos */
+.quick-btn{background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.25);
+  color:#fff;font-size:.72rem;font-weight:700;border-radius:6px;padding:4px 10px;cursor:pointer;transition:.2s;white-space:nowrap;}
+.quick-btn:hover,.quick-btn.active{background:rgba(255,255,255,.35);border-color:rgba(255,255,255,.6);}
+/* KPI bar */
+.kpi-bar{background:rgba(255,255,255,.1);border-radius:8px;padding:6px 14px;font-size:.75rem;text-align:center;}
+.kpi-bar .val{font-size:1.2rem;font-weight:900;line-height:1.1;}
+.kpi-bar .lbl{font-size:.6rem;text-transform:uppercase;opacity:.8;letter-spacing:.05em;}
 @media(max-width:1200px){.col-xl-2{width:33.333%!important;}}
 @media(max-width:768px){.col-xl-2{width:50%!important;}}
 </style>
@@ -55,34 +62,53 @@ body{font-family:'Outfit',sans-serif;background:#f1f5f9;}
 
 <!-- TOP BAR -->
 <div class="topbar-ext">
-  <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
+  <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
     <button class="back-btn" onclick="goBack()"><i class="bi bi-arrow-left me-1"></i>App Producción</button>
     <div>
-      <div style="font-size:1.1rem;font-weight:900;line-height:1;">Dashboard Extrusión</div>
-      <div style="font-size:.72rem;opacity:.75;">TUBOSA S.A. — Control de Líneas de Producción</div>
+      <div style="font-size:1.05rem;font-weight:900;line-height:1.1;">Dashboard Extrusión</div>
+      <div style="font-size:.68rem;opacity:.7;">TUBOSA S.A. — Control de Líneas</div>
     </div>
-    <span style="background:rgba(255,255,255,.2);color:#fff;font-size:.75rem;font-weight:700;padding:4px 12px;border-radius:20px;">
-      TOTAL EXTRUSORAS: <span id="count-total-ext">—</span>
-    </span>
-    <span style="font-size:.75rem;opacity:.85;">
-      <span id="count-operativa" style="color:#6ee7b7;font-weight:800;">—</span> operativas &nbsp;·&nbsp;
-      <span id="count-parada" style="color:#fca5a5;font-weight:800;">—</span> paradas
+    <span style="background:rgba(255,255,255,.2);font-size:.72rem;font-weight:700;padding:3px 10px;border-radius:20px;">
+      <span id="count-total-ext">—</span> líneas &nbsp;·&nbsp;
+      <span id="count-operativa" style="color:#6ee7b7;font-weight:900;">—</span> oper. &nbsp;·&nbsp;
+      <span id="count-parada" style="color:#fca5a5;font-weight:900;">—</span> par.
     </span>
   </div>
-  <div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap;">
-    <div class="input-group input-group-sm" style="width:auto;border-radius:10px;overflow:hidden;">
-      <span class="input-group-text" style="background:#f0f6ff;border-color:#d0e4f7;"><i class="bi bi-calendar-range" style="color:#1a5a96;"></i></span>
-      <input type="date" id="filter-fecha" class="form-control" style="border-color:#d0e4f7;font-size:.82rem;">
-      <button onclick="loadDashboard()" class="btn" style="background:#1a5a96;color:#fff;border-color:#1a5a96;"><i class="bi bi-search"></i></button>
-      <button onclick="resetDate()" class="btn" style="background:#475569;color:#fff;border-color:#475569;" title="Hoy"><i class="bi bi-arrow-counterclockwise"></i></button>
+
+  <!-- KPIs resumen en topbar -->
+  <div style="display:flex;gap:6px;flex-wrap:wrap;" id="kpi-topbar">
+    <div class="kpi-bar"><div class="val" id="kpi-oee">—%</div><div class="lbl">OEE</div></div>
+    <div class="kpi-bar"><div class="val" id="kpi-scrap">—%</div><div class="lbl">Scrap</div></div>
+    <div class="kpi-bar"><div class="val" id="kpi-kg">— kg</div><div class="lbl">Producción</div></div>
+    <div class="kpi-bar"><div class="val" id="kpi-tm">—h</div><div class="lbl">T.Muerto</div></div>
+  </div>
+
+  <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+    <!-- Filtros rápidos -->
+    <div style="display:flex;gap:4px;flex-wrap:wrap;">
+      <button class="quick-btn active" id="qb-hoy"    onclick="setQuick('hoy')">Hoy</button>
+      <button class="quick-btn"        id="qb-ayer"   onclick="setQuick('ayer')">Ayer</button>
+      <button class="quick-btn"        id="qb-semana" onclick="setQuick('semana')">Semana</button>
+      <button class="quick-btn"        id="qb-mes"    onclick="setQuick('mes')">Mes</button>
     </div>
-    <div style="font-size:.85rem;font-weight:700;color:rgba(255,255,255,.85);"><i class="bi bi-clock me-1"></i><span id="live-clock">--:--:--</span></div>
-    <div style="font-size:.7rem;opacity:.6;" id="last-update-lbl"></div>
+    <!-- Rango manual -->
+    <div class="input-group input-group-sm" style="width:auto;border-radius:10px;overflow:hidden;">
+      <span class="input-group-text" style="background:#f0f6ff;border-color:#d0e4f7;font-size:.75rem;">De</span>
+      <input type="date" id="filter-inicio" class="form-control" style="border-color:#d0e4f7;font-size:.8rem;">
+      <span class="input-group-text" style="padding:0 6px;background:#f0f6ff;border-color:#d0e4f7;font-size:.75rem;">a</span>
+      <input type="date" id="filter-fin"    class="form-control" style="border-color:#d0e4f7;font-size:.8rem;">
+      <button onclick="applyRange()" class="btn" style="background:#1a5a96;color:#fff;border-color:#1a5a96;" title="Aplicar"><i class="bi bi-search"></i></button>
+    </div>
+    <div style="font-size:.82rem;font-weight:700;color:rgba(255,255,255,.85);"><i class="bi bi-clock me-1"></i><span id="live-clock"></span></div>
+    <div style="font-size:.65rem;opacity:.55;" id="last-update-lbl"></div>
   </div>
 </div>
 
 <!-- MAIN -->
 <div class="container-fluid px-3 py-3">
+  <!-- Rango activo label -->
+  <div id="rango-label" class="mb-2" style="font-size:.78rem;font-weight:700;color:#475569;"></div>
+
   <div class="dash-section-card mb-3">
     <ul class="nav nav-tabs nav-tabs-custom mb-4" role="tablist">
       <li class="nav-item">
@@ -99,6 +125,7 @@ body{font-family:'Outfit',sans-serif;background:#f1f5f9;}
             <div style="font-weight:700;color:#64748b;">Cargando datos de extrusión...</div>
           </div>
         </div>
+        <!-- 4 Charts -->
         <div class="row g-2 mt-4 pt-3 border-top">
           <div class="col-6 col-xl-3 mb-1">
             <div style="cursor:pointer;" onclick="expandChart('promedio')">
@@ -108,7 +135,7 @@ body{font-family:'Outfit',sans-serif;background:#f1f5f9;}
           </div>
           <div class="col-6 col-xl-3 mb-1">
             <div style="cursor:pointer;" onclick="expandChart('sumatoria')">
-              <div class="text-center mb-1"><span class="chart-title-badge badge-sumatoria">Kg Producidos Hoy</span></div>
+              <div class="text-center mb-1"><span class="chart-title-badge badge-sumatoria">Kg Producidos</span></div>
               <div class="chart-wrapper"><canvas id="chartSum"></canvas></div>
             </div>
           </div>
@@ -134,12 +161,12 @@ body{font-family:'Outfit',sans-serif;background:#f1f5f9;}
 <div class="modal fade" id="modalDetalle" tabindex="-1" aria-hidden="true">
   <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
     <div class="modal-content modal-content-custom">
-      <div id="modal-header" class="card-header-custom py-3 ps-3" style="font-size:1.4rem;background:#1a5a96;"></div>
+      <div id="modal-header" class="card-header-custom py-3 ps-3" style="font-size:1.3rem;background:#1a5a96;"></div>
       <div class="modal-body p-4 bg-white">
         <div class="row">
           <div class="col-md-5 text-center">
             <div id="modal-badge" class="mb-3"></div>
-            <svg viewBox="0 0 240 180" class="gauge-svg" id="modal-gauge" style="width:100%;max-width:280px;">
+            <svg viewBox="0 0 240 180" style="width:100%;max-width:270px;overflow:visible;">
               <g stroke-width="20" fill="none">
                 <path d="M 50 140 A 70 70 0 0 1 58 94" stroke="#b20000"/>
                 <path d="M 64 87 A 70 70 0 0 1 89 63" stroke="#ff0000"/>
@@ -155,32 +182,26 @@ body{font-family:'Outfit',sans-serif;background:#f1f5f9;}
                 <text id="gl-6" x="205" y="145">300</text>
               </g>
               <text id="modal-val-kgh" x="120" y="170" font-size="30" font-weight="900" fill="#0f172a" text-anchor="middle">0</text>
-              <g class="gauge-needle" id="modal-needle" style="transform:rotate(-90deg);transform-origin:120px 140px;transition:transform .8s cubic-bezier(.65,0,.35,1);">
+              <g id="modal-needle" style="transform:rotate(-90deg);transform-origin:120px 140px;transition:transform .8s cubic-bezier(.65,0,.35,1);">
                 <path d="M 120 140 L 120 50" stroke="#000" stroke-width="2.5" stroke-linecap="round"/>
                 <circle cx="120" cy="140" r="4" fill="#000"/>
               </g>
             </svg>
-            <div style="font-size:.85rem;color:#1a5a96;font-weight:800;">Kg/h Promedio</div>
-            <div id="modal-goal" style="font-size:.75rem;color:#64748b;font-weight:600;margin-bottom:12px;"></div>
-            <div class="chart-wrapper" style="height:140px;"><canvas id="modalProjChart"></canvas></div>
+            <div style="font-size:.82rem;color:#1a5a96;font-weight:800;">Kg/h Promedio</div>
+            <div id="modal-goal" style="font-size:.72rem;color:#64748b;font-weight:600;margin-bottom:10px;"></div>
+            <div style="height:130px;"><canvas id="modalProjChart"></canvas></div>
           </div>
           <div class="col-md-7">
             <div class="p-3 mb-3 rounded border" style="background:#f0f6ff;">
-              <h6 style="color:#1a5a96;font-size:.82rem;font-weight:800;text-transform:uppercase;">
-                <i class="bi bi-clipboard-check me-1"></i>Especificaciones Programadas
-              </h6>
+              <h6 style="color:#1a5a96;font-size:.8rem;font-weight:800;text-transform:uppercase;"><i class="bi bi-clipboard-check me-1"></i>Especificaciones Programadas</h6>
               <div id="modal-specs"></div>
             </div>
             <div class="p-3 mb-3 rounded border" style="background:#f0fdf4;">
-              <h6 style="color:#1a5a96;font-size:.82rem;font-weight:800;text-transform:uppercase;">
-                <i class="bi bi-activity me-1"></i>Condiciones Reales de Proceso
-              </h6>
+              <h6 style="color:#1a5a96;font-size:.8rem;font-weight:800;text-transform:uppercase;"><i class="bi bi-activity me-1"></i>Condiciones Reales</div>
               <div id="modal-reales"></div>
             </div>
             <div class="p-3 rounded border" style="background:#fefce8;">
-              <h6 style="color:#1a5a96;font-size:.82rem;font-weight:800;text-transform:uppercase;">
-                <i class="bi bi-person-badge me-1"></i>Responsables del Turno
-              </h6>
+              <h6 style="color:#1a5a96;font-size:.8rem;font-weight:800;text-transform:uppercase;"><i class="bi bi-person-badge me-1"></i>Responsables</h6>
               <div id="modal-personal"></div>
             </div>
           </div>
@@ -197,18 +218,20 @@ body{font-family:'Outfit',sans-serif;background:#f1f5f9;}
 <div class="modal fade" id="modalResumen" tabindex="-1" aria-hidden="true">
   <div class="modal-dialog modal-lg modal-dialog-centered">
     <div class="modal-content border-0 shadow-lg rounded-4">
-      <div class="card-header-custom py-3 ps-3" style="font-size:1.2rem;background:#1a5a96;border-radius:12px 12px 0 0;">
-        <i class="bi bi-graph-up me-2"></i>Resumen General — Extrusión
+      <div class="card-header-custom py-3 ps-3" style="font-size:1.1rem;background:#1a5a96;border-radius:12px 12px 0 0;">
+        <i class="bi bi-graph-up me-2"></i>Resumen General — <span id="sm-rango-titulo"></span>
       </div>
       <div class="modal-body p-4 bg-white">
-        <div class="d-flex gap-4 justify-content-center mb-4">
+        <div class="d-flex gap-4 justify-content-center mb-4 flex-wrap">
           <div class="text-center"><div class="summary-label--lg">OPERATIVAS</div><div class="summary-box summary-box--lg box-operativas" id="sm-op">0</div></div>
           <div class="text-center"><div class="summary-label--lg">PARADAS</div><div class="summary-box summary-box--lg box-paradas" id="sm-pa">0</div></div>
           <div class="text-center"><div class="summary-label--lg">% DE USO</div><div class="summary-box summary-box--lg box-uso" id="sm-uso">0%</div></div>
+          <div class="text-center"><div class="summary-label--lg">OEE MES</div><div class="summary-box summary-box--lg" style="background:#1a5a96;" id="sm-oee">—%</div></div>
+          <div class="text-center"><div class="summary-label--lg">% SCRAP</div><div class="summary-box summary-box--lg" style="background:#8b5cf6;" id="sm-scrap">—%</div></div>
         </div>
-        <div class="d-flex justify-content-center gap-4 mb-3">
+        <div class="d-flex justify-content-center gap-4 mb-3 flex-wrap">
           <div class="text-center">
-            <svg viewBox="0 0 240 180" style="width:150px;">
+            <svg viewBox="0 0 240 180" style="width:140px;overflow:visible;">
               <g stroke-width="20" fill="none">
                 <path d="M 50 140 A 70 70 0 0 1 58 94" stroke="#b20000"/>
                 <path d="M 64 87 A 70 70 0 0 1 89 63" stroke="#ff0000"/>
@@ -217,16 +240,16 @@ body{font-family:'Outfit',sans-serif;background:#f1f5f9;}
                 <path d="M 151 63 A 70 70 0 0 1 176 87" stroke="#92d050"/>
                 <path d="M 182 94 A 70 70 0 0 1 190 140" stroke="#38761d"/>
               </g>
-              <text id="sm-val-prom" x="120" y="170" font-size="30" font-weight="900" fill="#0f172a" text-anchor="middle">0</text>
+              <text id="sm-val-prom" x="120" y="170" font-size="28" font-weight="900" fill="#0f172a" text-anchor="middle">0</text>
               <g id="sm-needle-prom" style="transform:rotate(-90deg);transform-origin:120px 140px;transition:transform .8s cubic-bezier(.65,0,.35,1);">
                 <path d="M 120 140 L 120 50" stroke="#000" stroke-width="2.5" stroke-linecap="round"/>
                 <circle cx="120" cy="140" r="4" fill="#000"/>
               </g>
             </svg>
-            <div style="font-size:.72rem;font-weight:700;color:#64748b;margin-top:2px;">Kg/h Prom.</div>
+            <div style="font-size:.7rem;font-weight:700;color:#64748b;">Kg/h Prom.</div>
           </div>
           <div class="text-center">
-            <svg viewBox="0 0 240 180" style="width:150px;">
+            <svg viewBox="0 0 240 180" style="width:140px;overflow:visible;">
               <g stroke-width="20" fill="none">
                 <path d="M 50 140 A 70 70 0 0 1 58 94" stroke="#b20000"/>
                 <path d="M 64 87 A 70 70 0 0 1 89 63" stroke="#ff0000"/>
@@ -235,17 +258,17 @@ body{font-family:'Outfit',sans-serif;background:#f1f5f9;}
                 <path d="M 151 63 A 70 70 0 0 1 176 87" stroke="#92d050"/>
                 <path d="M 182 94 A 70 70 0 0 1 190 140" stroke="#38761d"/>
               </g>
-              <text id="sm-val-sum" x="120" y="170" font-size="28" font-weight="900" fill="#0f172a" text-anchor="middle">0</text>
+              <text id="sm-val-sum" x="120" y="170" font-size="24" font-weight="900" fill="#0f172a" text-anchor="middle">0</text>
               <g id="sm-needle-sum" style="transform:rotate(-90deg);transform-origin:120px 140px;transition:transform .8s cubic-bezier(.65,0,.35,1);">
                 <path d="M 120 140 L 120 50" stroke="#000" stroke-width="2.5" stroke-linecap="round"/>
                 <circle cx="120" cy="140" r="4" fill="#000"/>
               </g>
             </svg>
-            <div style="font-size:.72rem;font-weight:700;color:#64748b;margin-top:2px;">Σ Kg Hoy</div>
+            <div style="font-size:.7rem;font-weight:700;color:#64748b;">Σ Kg Período</div>
           </div>
         </div>
         <div class="p-3 rounded" style="background:#f0fdf4;border:1px solid #bbf7d0;">
-          <div class="d-flex justify-content-around">
+          <div class="d-flex justify-content-around flex-wrap gap-3">
             <div class="text-center">
               <div style="font-size:.7rem;font-weight:700;color:#64748b;text-transform:uppercase;">Proy. Turno (8h)</div>
               <div style="font-size:1.4rem;font-weight:900;color:#10b981;" id="sm-proj-turno">— Ton</div>
@@ -254,6 +277,11 @@ body{font-family:'Outfit',sans-serif;background:#f1f5f9;}
             <div class="text-center">
               <div style="font-size:.7rem;font-weight:700;color:#64748b;text-transform:uppercase;">Proy. Día (24h)</div>
               <div style="font-size:1.4rem;font-weight:900;color:#6366f1;" id="sm-proj-dia">— Ton</div>
+            </div>
+            <div style="width:1px;background:#bbf7d0;"></div>
+            <div class="text-center">
+              <div style="font-size:.7rem;font-weight:700;color:#64748b;text-transform:uppercase;">T. Muerto</div>
+              <div style="font-size:1.4rem;font-weight:900;color:#f43f5e;" id="sm-tm">—h</div>
             </div>
           </div>
         </div>
@@ -265,7 +293,7 @@ body{font-family:'Outfit',sans-serif;background:#f1f5f9;}
   </div>
 </div>
 
-<!-- MODAL GRÁFICA EXPANDIDA -->
+<!-- MODAL EXPAND -->
 <div class="modal fade" id="modalExpand" tabindex="-1" aria-hidden="true">
   <div class="modal-dialog modal-lg modal-dialog-centered">
     <div class="modal-content border-0 shadow-lg rounded-4">
@@ -287,44 +315,60 @@ body{font-family:'Outfit',sans-serif;background:#f1f5f9;}
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
 <script>
-// ── CONFIG ─────────────────────────────────────────────────────
 const AS_URL='https://script.google.com/macros/s/AKfycbykdmPFuhuA94oKM0TmzAb67zxpdHmskQaN-AyH6gM4-4wOui8J4Bs0H4BZtEqtKCmv/exec';
-
 let _chProm=null,_chSum=null,_chOEE=null,_chScrap=null,_chModalProj=null,_chExpand=null;
-let _lastPorLinea=[];
+let _lastPorLinea=[], _lastKpis={};
+let _activeQuick='hoy';
 
-// ── Helpers ────────────────────────────────────────────────────
+// ── Helpers ──────────────────────────────────────────────────
 const fmt=(v,d=1)=>{const n=parseFloat(v);return isNaN(n)?'—':n.toFixed(d).replace('.',',');};
+const toISO=dmy=>{if(!dmy)return '';if(/^\d{4}/.test(dmy))return dmy;const p=dmy.split('/');return p[2]+'-'+p[1].padStart(2,'0')+'-'+p[0].padStart(2,'0');};
+const toDMY=iso=>{if(!iso)return '';const p=iso.split('-');return p[2]+'/'+p[1]+'/'+p[0];};
 const today=()=>new Date().toISOString().split('T')[0];
+const addDays=(iso,n)=>{const d=new Date(iso+'T00:00:00');d.setDate(d.getDate()+n);return d.toISOString().split('T')[0];};
 
-function goBack(){
-  if(document.referrer) history.back();
-  else window.location.href='TUBOSA_App.html';
-}
+function goBack(){if(document.referrer)history.back();else window.location.href='TUBOSA_App.html';}
 
-// ── Clock ──────────────────────────────────────────────────────
+// ── Clock ─────────────────────────────────────────────────────
 setInterval(()=>{
   const el=document.getElementById('live-clock');
   if(el) el.innerText=new Date().toLocaleTimeString('es-CO',{hour:'2-digit',minute:'2-digit',second:'2-digit'});
 },1000);
 
-// ── Date ──────────────────────────────────────────────────────
-function resetDate(){
-  document.getElementById('filter-fecha').value=today();
+// ── Quick filters ─────────────────────────────────────────────
+function setQuick(tipo){
+  _activeQuick=tipo;
+  ['hoy','ayer','semana','mes'].forEach(t=>document.getElementById('qb-'+t).classList.remove('active'));
+  document.getElementById('qb-'+tipo).classList.add('active');
+  const hoy=today();
+  let ini=hoy, fin=hoy;
+  if(tipo==='ayer'){ini=fin=addDays(hoy,-1);}
+  else if(tipo==='semana'){ini=addDays(hoy,-6);}
+  else if(tipo==='mes'){
+    const d=new Date(); ini=new Date(d.getFullYear(),d.getMonth(),1).toISOString().split('T')[0];
+  }
+  document.getElementById('filter-inicio').value=ini;
+  document.getElementById('filter-fin').value=fin;
   loadDashboard();
 }
 
-// ── JSONP API ─────────────────────────────────────────────────
+function applyRange(){
+  // Al usar rango manual, desactivar quick buttons
+  ['hoy','ayer','semana','mes'].forEach(t=>document.getElementById('qb-'+t).classList.remove('active'));
+  _activeQuick='manual';
+  loadDashboard();
+}
+
+// ── JSONP ─────────────────────────────────────────────────────
 function api(params){
   return new Promise((resolve,reject)=>{
-    const cb='_ext_cb_'+Date.now()+'_'+Math.random().toString(36).slice(2);
+    const cb='_ext_'+Date.now()+'_'+Math.random().toString(36).slice(2);
     const url=AS_URL+'?callback='+cb+'&'+new URLSearchParams(params).toString();
     const s=document.createElement('script');
-    s.src=url;
-    s.onerror=()=>reject(new Error('Script error'));
-    window[cb]=data=>{resolve(data);delete window[cb];try{document.head.removeChild(s);}catch(e){}};
+    s.src=url; s.onerror=()=>reject(new Error('Error de red'));
+    window[cb]=d=>{resolve(d);delete window[cb];try{document.head.removeChild(s);}catch(e){}};
     document.head.appendChild(s);
-    setTimeout(()=>{if(window[cb]){delete window[cb];try{document.head.removeChild(s);}catch(e){}reject(new Error('Timeout'));}},20000);
+    setTimeout(()=>{if(window[cb]){delete window[cb];try{document.head.removeChild(s);}catch(e){}reject(new Error('Timeout 20s'));}},20000);
   });
 }
 
@@ -333,72 +377,100 @@ function api(params){
 // ══════════════════════════════════════════════════════════════
 async function loadDashboard(){
   document.getElementById('ext-spinner').style.display='block';
-  const fecha=document.getElementById('filter-fecha').value||today();
+  const ini=document.getElementById('filter-inicio').value||today();
+  const fin=document.getElementById('filter-fin').value||today();
+
+  // Label del rango activo
+  const meses=['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
+  function fmtLabel(iso){const p=iso.split('-');return p[2]+' '+meses[parseInt(p[1])-1]+' '+p[0];}
+  const rangoStr=ini===fin?fmtLabel(ini):fmtLabel(ini)+' → '+fmtLabel(fin);
+  document.getElementById('rango-label').innerHTML=
+    `<i class="bi bi-calendar3 me-1"></i>Mostrando datos: <strong>${rangoStr}</strong>`;
+
   try{
-    const r=await api({action:'getDashboard', fecha:fecha.split('-').reverse().join('/')});
-    document.getElementById('ext-spinner').style.display='none';
-    if(!r.ok){
-      showError('El Apps Script respondió con error: '+(r.msg||'desconocido'));
-      return;
+    // Si es un día, usar fecha simple; si es rango, pasar fecha_inicio y fecha_fin
+    let params;
+    if(ini===fin){
+      params={action:'getDashboard', fecha:toDMY(ini)};
+    } else {
+      params={action:'getDashboard', fecha:toDMY(fin), fecha_inicio:ini, fecha_fin:fin};
     }
-    renderDashboard(r);
+    const r=await api(params);
+    document.getElementById('ext-spinner').style.display='none';
+    if(!r.ok){showError('Error del servidor: '+(r.msg||'desconocido'));return;}
+    renderDashboard(r,rangoStr);
     document.getElementById('last-update-lbl').innerText=
       'Act: '+new Date().toLocaleTimeString('es-CO',{hour:'2-digit',minute:'2-digit'});
   }catch(e){
     document.getElementById('ext-spinner').style.display='none';
-    showError('No se pudo conectar al Apps Script. Verifica que esté desplegado.<br><small>'+e.message+'</small>');
+    showError(`No se pudo conectar al Apps Script.<br>
+      <small>${e.message}</small><br><br>
+      <strong>Verifica:</strong> que el Apps Script esté re-desplegado con la última versión.`);
   }
 }
 
 function showError(msg){
   document.getElementById('ext-grid').innerHTML=
-    '<div class="col-12 text-center py-5 text-danger"><i class="bi bi-exclamation-triangle fs-2 d-block mb-2"></i>'+msg+'</div>';
+    `<div class="col-12 text-center py-5 text-danger">
+      <i class="bi bi-exclamation-triangle fs-2 d-block mb-2"></i>${msg}
+    </div>`;
 }
 
 // ══════════════════════════════════════════════════════════════
 //  RENDER
 // ══════════════════════════════════════════════════════════════
-function renderDashboard(r){
+function renderDashboard(r, rangoStr){
   const lineas=r.porLinea||[];
   const kpis=r.kpis||{};
-  _lastPorLinea=lineas;
+  _lastPorLinea=lineas; _lastKpis=kpis;
 
   const countOp=parseInt(kpis.lineasActivas)||0;
   const countPa=parseInt(kpis.lineasInactivas)||0;
   const totalM=countOp+countPa;
   const usoPct=totalM>0?Math.round(countOp/totalM*100):0;
   const totalKg=parseFloat(kpis.kgEntregadosHoy)||0;
-  const avgKgh=lineas.length?lineas.reduce((s,l)=>s+(parseFloat(l.kghPromedio)||0),0)/lineas.length:0;
-  const maxKgh=Math.max(300, avgKgh*1.5);
+  const tmH=parseFloat(kpis.tiempoMuertoHoyHoras)||0;
+  const avgKgh=countOp>0&&lineas.length?lineas.filter(l=>parseFloat(l.kghPromedio)>0).reduce((s,l)=>s+(parseFloat(l.kghPromedio)||0),0)/Math.max(1,lineas.filter(l=>parseFloat(l.kghPromedio)>0).length):0;
+  const maxKgh=Math.max(300,avgKgh*1.5);
   const tonTurno=avgKgh*8*countOp/1000;
   const tonDia=avgKgh*24*countOp/1000;
 
+  // Update topbar counters
   document.getElementById('count-total-ext').innerText=totalM;
   document.getElementById('count-operativa').innerText=countOp;
   document.getElementById('count-parada').innerText=countPa;
 
+  // KPI topbar
+  const oeeColor=parseFloat(kpis.oeeMes)>=80?'#6ee7b7':parseFloat(kpis.oeeMes)>=60?'#fde68a':'#fca5a5';
+  document.getElementById('kpi-oee').textContent=(kpis.oeeMes||'—')+'%';
+  document.getElementById('kpi-oee').style.color=oeeColor;
+  document.getElementById('kpi-scrap').textContent=(kpis.pctScrapHoy||'—')+'%';
+  document.getElementById('kpi-kg').textContent=totalKg>=1000?fmt(totalKg/1000,1)+' Ton':Math.round(totalKg)+' kg';
+  document.getElementById('kpi-tm').textContent=fmt(tmH,1)+'h';
+
   const grid=document.getElementById('ext-grid');
   grid.innerHTML='';
 
-  // ── Resumen card ──────────────────────────────────────────
+  // ── Tarjeta Resumen ──────────────────────────────────────
   const pProm=Math.min(avgKgh/maxKgh,1);
+  const aProm=-90+(pProm*180);
   const pSum=Math.min(totalKg/Math.max(totalKg*1.5,1),1);
-  const aProm=-90+(pProm*180); const aSum=-90+(pSum*180);
+  const aSum=-90+(pSum*180);
 
   const kpiCol=document.createElement('div');
   kpiCol.className='col-6 col-md-4 col-xl-2 px-1';
   kpiCol.innerHTML=`
     <div class="machine-card h-100" style="min-height:220px;border-top:3px solid #1a5a96;"
-         onclick="showResumen(${countOp},${countPa},${usoPct},${avgKgh},${totalKg},${maxKgh},${tonTurno},${tonDia})">
+         onclick="showResumen(${countOp},${countPa},${usoPct},${avgKgh},${totalKg},${maxKgh},${tonTurno},${tonDia},${tmH},'${rangoStr}')">
       <div class="card-header-custom">Resumen</div>
       <div class="d-flex flex-column align-items-center justify-content-between flex-grow-1 py-1 w-100 px-1">
         <div class="d-flex gap-1 justify-content-center w-100 mt-1">
           <div class="text-center"><div class="summary-label">OPER.</div><div class="summary-box box-operativas">${countOp}</div></div>
           <div class="text-center"><div class="summary-label">PARAD.</div><div class="summary-box box-paradas">${countPa}</div></div>
-          <div class="text-center"><div class="summary-label">% USO</div><div class="summary-box box-uso">${usoPct}%</div></div>
+          <div class="text-center"><div class="summary-label">%USO</div><div class="summary-box box-uso">${usoPct}%</div></div>
         </div>
         <div class="d-flex flex-column align-items-center w-100">
-          <svg viewBox="0 0 240 180" style="width:110px;overflow:visible;">
+          <svg viewBox="0 0 240 180" style="width:108px;overflow:visible;">
             <g stroke-width="20" fill="none">
               <path d="M 50 140 A 70 70 0 0 1 58 94" stroke="#b20000"/>
               <path d="M 64 87 A 70 70 0 0 1 89 63" stroke="#ff0000"/>
@@ -413,8 +485,8 @@ function renderDashboard(r){
               <circle cx="120" cy="140" r="4" fill="#000"/>
             </g>
           </svg>
-          <div style="font-size:.6rem;font-weight:800;color:#1a5a96;">Kg/h Prom.</div>
-          <svg viewBox="0 0 240 180" style="width:110px;overflow:visible;margin-top:4px;">
+          <div style="font-size:.58rem;font-weight:800;color:#1a5a96;">Kg/h Prom.</div>
+          <svg viewBox="0 0 240 180" style="width:108px;overflow:visible;margin-top:2px;">
             <g stroke-width="20" fill="none">
               <path d="M 50 140 A 70 70 0 0 1 58 94" stroke="#b20000"/>
               <path d="M 64 87 A 70 70 0 0 1 89 63" stroke="#ff0000"/>
@@ -423,30 +495,30 @@ function renderDashboard(r){
               <path d="M 151 63 A 70 70 0 0 1 176 87" stroke="#92d050"/>
               <path d="M 182 94 A 70 70 0 0 1 190 140" stroke="#38761d"/>
             </g>
-            <text x="120" y="170" font-size="22" font-weight="900" fill="#0f172a" text-anchor="middle">${Math.round(totalKg)}</text>
+            <text x="120" y="170" font-size="20" font-weight="900" fill="#0f172a" text-anchor="middle">${Math.round(totalKg)}</text>
             <g style="transform:rotate(${aSum}deg);transform-origin:120px 140px;transition:transform .8s cubic-bezier(.65,0,.35,1);">
               <path d="M 120 140 L 120 50" stroke="#000" stroke-width="2.5" stroke-linecap="round"/>
               <circle cx="120" cy="140" r="4" fill="#000"/>
             </g>
           </svg>
-          <div style="font-size:.6rem;font-weight:800;color:#1a5a96;">Σ Kg Hoy</div>
+          <div style="font-size:.58rem;font-weight:800;color:#1a5a96;">Σ Kg Período</div>
         </div>
-        <div style="font-size:.55rem;color:#10b981;text-align:center;border-top:1px solid #f1f5f9;padding:3px 4px;line-height:1.3;font-weight:700;width:100%;">
-          <div>PROY. TURNO: ${fmt(tonTurno,2)} Ton</div>
-          <div>PROY. DÍA: ${fmt(tonDia,2)} Ton</div>
+        <div style="font-size:.52rem;color:#10b981;text-align:center;border-top:1px solid #f1f5f9;padding:3px 2px;line-height:1.35;font-weight:700;width:100%;">
+          <div>PROY. T: ${fmt(tonTurno,2)} Ton</div>
+          <div>PROY. D: ${fmt(tonDia,2)} Ton</div>
+          <div style="color:${tmH>4?'#f43f5e':'#94a3b8'};">T.M: ${fmt(tmH,1)}h</div>
         </div>
       </div>
     </div>`;
   grid.appendChild(kpiCol);
 
-  // ── Tarjeta por línea ──────────────────────────────────────
+  // ── Una tarjeta por línea ─────────────────────────────────
   lineas.forEach((l,idx)=>{
-    const isOp=parseFloat(l.kghPromedio)>0;
+    const kgh=parseFloat(l.kghPromedio)||0;
+    const isOp=kgh>0;
     const border=isOp?'#10b981':'#f43f5e';
-    const oeeColor=parseFloat(l.oeeLinea)>=80?'#10b981':parseFloat(l.oeeLinea)>=60?'#f59e0b':'#f43f5e';
+    const oeeC=parseFloat(l.oeeLinea)>=80?'#10b981':parseFloat(l.oeeLinea)>=60?'#f59e0b':'#f43f5e';
     const now=new Date();
-    const horaStr=now.toLocaleTimeString('es-CO',{hour:'2-digit',minute:'2-digit',second:'2-digit'});
-    const fechaStr=now.toLocaleDateString('es-CO');
     const col=document.createElement('div');
     col.className='col-6 col-md-4 col-xl-2 px-1';
     col.innerHTML=`
@@ -454,28 +526,29 @@ function renderDashboard(r){
         <div class="card-header-custom">${l.linea||'LIN??'}</div>
         <div class="px-2 pt-1 pb-1">
           <div class="text-center mb-1">
-            <span class="status-badge ${isOp?'status-operativa':'status-parada'}">${isOp?'OPERATIVA':'PARADA'}</span>
-            <div style="font-size:.58rem;color:#64748b;font-weight:700;line-height:1;margin-top:1px;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;max-width:100%;padding:0 4px;">${l.producto||'SIN PROGRAMA'}</div>
+            <span class="status-badge ${isOp?'status-operativa':'status-parada'}">${isOp?'OPERATIVA':'SIN TURNO'}</span>
+            <div style="font-size:.56rem;color:#64748b;font-weight:700;line-height:1.1;margin-top:1px;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;max-width:100%;padding:0 4px;">${l.producto||'—'}</div>
           </div>
           <div class="text-center mb-1">
-            <svg viewBox="0 0 120 40" width="80" height="28" style="display:block;margin:auto;">
-              <rect x="2" y="6" width="116" height="28" rx="5" fill="#e2e8f0"/>
-              <rect x="10" y="12" width="100" height="16" rx="3" fill="#cbd5e1"/>
-              <circle cx="10" cy="20" r="6" fill="#475569"/>
-              <circle cx="110" cy="20" r="6" fill="#475569"/>
-              <text x="60" y="24" text-anchor="middle" font-size="8" font-weight="800" fill="#1a5a96">TUBERÍA PVC</text>
+            <svg viewBox="0 0 120 38" width="78" height="26" style="display:block;margin:auto;">
+              <rect x="2" y="5" width="116" height="28" rx="4" fill="#e2e8f0"/>
+              <rect x="10" y="11" width="100" height="16" rx="3" fill="#cbd5e1"/>
+              <circle cx="10" cy="19" r="5" fill="#475569"/>
+              <circle cx="110" cy="19" r="5" fill="#475569"/>
+              <text x="60" y="23" text-anchor="middle" font-size="7" font-weight="800" fill="#1a5a96">TUBERÍA PVC</text>
             </svg>
           </div>
           <div class="w-100">
-            <div class="data-row-card"><span class="data-label-card">ORDEN</span><span class="data-value-card">${l.orden||'—'}</span></div>
-            <div class="data-row-card"><span class="data-label-card">KG/H</span><span class="data-value-card">${fmt(l.kghPromedio,1)}</span></div>
+            <div class="data-row-card"><span class="data-label-card">ORDEN</span><span class="data-value-card" style="font-size:.62rem;">${l.orden||'—'}</span></div>
+            <div class="data-row-card"><span class="data-label-card">KG/H</span><span class="data-value-card">${fmt(kgh,1)}</span></div>
             <div class="data-row-card"><span class="data-label-card">KG PROD.</span><span class="data-value-card">${fmt(l.kgProd,0)}</span></div>
-            <div class="data-row-card"><span class="data-label-card">OEE</span><span class="data-value-card" style="color:${oeeColor};">${fmt(l.oeeLinea,1)}%</span></div>
-            <div class="data-row-card"><span class="data-label-card">% SCRAP</span><span class="data-value-card ${parseFloat(l.pctScrap)>3?'text-danger':''}">${fmt(l.pctScrap,1)}%</span></div>
-            <div class="data-row-card"><span class="data-label-card">ESTIM.</span><span class="data-value-card" style="font-size:.6rem;">${l.estimado||'—'}</span></div>
+            <div class="data-row-card"><span class="data-label-card">OEE</span><span class="data-value-card" style="color:${oeeC};">${fmt(l.oeeLinea,1)}%</span></div>
+            <div class="data-row-card"><span class="data-label-card">SCRAP</span><span class="data-value-card ${parseFloat(l.pctScrap)>3?'text-danger':''}">${fmt(l.pctScrap,1)}%</span></div>
+            <div class="data-row-card"><span class="data-label-card">ESTIM.</span><span class="data-value-card" style="font-size:.6rem;color:${l.estimado==='✓ Completa'?'#10b981':'#1a5a96'};">${l.estimado||'—'}</span></div>
           </div>
-          <div style="font-size:.55rem;color:#94a3b8;text-align:center;margin-top:2px;border-top:1px solid #f1f5f9;padding-top:2px;line-height:1.1;">
-            <div style="font-weight:700;">${horaStr}</div><div>${fechaStr}</div>
+          <div style="font-size:.52rem;color:#94a3b8;text-align:center;margin-top:2px;border-top:1px solid #f1f5f9;padding-top:2px;line-height:1.1;">
+            <div style="font-weight:700;">${now.toLocaleTimeString('es-CO',{hour:'2-digit',minute:'2-digit',second:'2-digit'})}</div>
+            <div>${now.toLocaleDateString('es-CO')}</div>
           </div>
         </div>
       </div>`;
@@ -485,7 +558,9 @@ function renderDashboard(r){
   if(!lineas.length){
     const empty=document.createElement('div');
     empty.className='col-12 text-center py-5';
-    empty.innerHTML='<i class="bi bi-inbox fs-2 text-muted d-block mb-2"></i><div style="color:#94a3b8;font-weight:700;">No hay turnos activos para esta fecha.<br><small>Verifica el rango de fecha o crea un turno en la App de Producción.</small></div>';
+    empty.innerHTML=`<i class="bi bi-inbox fs-2 text-muted d-block mb-2"></i>
+      <div style="color:#94a3b8;font-weight:700;">No hay turnos registrados para el período seleccionado.</div>
+      <div style="font-size:.8rem;color:#cbd5e1;margin-top:4px;">Prueba con otra fecha o verifica que existan registros en la app de producción.</div>`;
     grid.appendChild(empty);
   }
 
@@ -497,32 +572,26 @@ function renderDashboard(r){
 // ══════════════════════════════════════════════════════════════
 function renderCharts(lineas){
   const labels=lineas.map(l=>l.linea);
-  const dprom=lineas.map(l=>parseFloat(l.kghPromedio)||0);
-  const dsum=lineas.map(l=>parseFloat(l.kgProd)||0);
-  const doee=lineas.map(l=>parseFloat(l.oeeLinea)||0);
-  const dscrap=lineas.map(l=>parseFloat(l.pctScrap)||0);
-
-  buildBar('chartProm','_chProm',labels,dprom,'Kg/h','#1a5a96','#3b82f6',c=>_chProm=c);
-  buildBar('chartSum','_chSum',labels,dsum,'Kg','#10b981','#34d399',c=>_chSum=c);
-  buildBar('chartOEE','_chOEE',labels,doee,'OEE %','#f59e0b','#fbbf24',c=>_chOEE=c,100);
-  buildBar('chartScrap','_chScrap',labels,dscrap,'Scrap %','#8b5cf6','#a78bfa',c=>_chScrap=c);
+  buildBar('chartProm',labels,lineas.map(l=>parseFloat(l.kghPromedio)||0),'Kg/h','#1a5a96','#3b82f6',c=>_chProm=c,_chProm);
+  buildBar('chartSum', labels,lineas.map(l=>parseFloat(l.kgProd)||0),'Kg','#10b981','#34d399',c=>_chSum=c,_chSum);
+  buildBar('chartOEE', labels,lineas.map(l=>parseFloat(l.oeeLinea)||0),'OEE%','#f59e0b','#fbbf24',c=>_chOEE=c,_chOEE,100);
+  buildBar('chartScrap',labels,lineas.map(l=>parseFloat(l.pctScrap)||0),'Scrap%','#8b5cf6','#a78bfa',c=>_chScrap=c,_chScrap);
 }
 
-function buildBar(canvasId,ref,labels,data,label,c1,c2,setter,maxY){
-  const old=window[ref]; if(old){old.destroy();}
+function buildBar(canvasId,labels,data,label,c1,c2,setter,old,maxY){
+  if(old){old.destroy();}
   const ctx=document.getElementById(canvasId).getContext('2d');
   const grad=ctx.createLinearGradient(0,0,0,200);
-  grad.addColorStop(0,c1); grad.addColorStop(1,c2);
-  const chart=new Chart(ctx,{type:'bar',
+  grad.addColorStop(0,c1);grad.addColorStop(1,c2);
+  const ch=new Chart(ctx,{type:'bar',
     data:{labels,datasets:[{label,data,backgroundColor:grad,borderRadius:5,barPercentage:.8,categoryPercentage:.9}]},
-    options:{responsive:true,maintainAspectRatio:false,layout:{padding:{top:20}},
+    options:{responsive:true,maintainAspectRatio:false,layout:{padding:{top:18}},
       plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>` ${c.raw.toFixed(1)} ${label}`}}},
       scales:{y:{beginAtZero:true,max:maxY||undefined,
-               ticks:{font:{weight:'bold',size:9},color:'#64748b'},grid:{color:'#e2e8f0'}},
+                 ticks:{font:{weight:'bold',size:9},color:'#64748b'},grid:{color:'#e2e8f0'}},
               x:{ticks:{font:{weight:'bold',size:8},color:'#64748b',maxRotation:45,autoSkip:true,maxTicksLimit:12},
                  grid:{display:false}}}}});
-  setter(chart);
-  window[ref]=chart;
+  setter(ch);
 }
 
 // ══════════════════════════════════════════════════════════════
@@ -530,39 +599,35 @@ function buildBar(canvasId,ref,labels,data,label,c1,c2,setter,maxY){
 // ══════════════════════════════════════════════════════════════
 function showDetalle(idx){
   const l=_lastPorLinea[idx]; if(!l) return;
-  const isOp=parseFloat(l.kghPromedio)>0;
   const kgh=parseFloat(l.kghPromedio)||0;
   const meta=parseFloat(l.kgEstandar)||300;
+  const isOp=kgh>0;
 
   document.getElementById('modal-header').innerHTML=`<i class="bi bi-cpu me-2"></i>${l.linea} — ${l.producto||'SIN PRODUCTO'}`;
   document.getElementById('modal-badge').innerHTML=
-    `<span class="status-badge ${isOp?'status-operativa':'status-parada'}" style="font-size:.8rem;padding:4px 18px;">${isOp?'OPERATIVA':'PARADA'}</span>`;
+    `<span class="status-badge ${isOp?'status-operativa':'status-parada'}" style="font-size:.8rem;padding:4px 18px;">${isOp?'OPERATIVA':'SIN TURNO'}</span>`;
 
-  // Gauge
   const pct=Math.min(Math.max(kgh/meta,0),1);
-  const angle=-90+(pct*180);
   document.getElementById('modal-val-kgh').textContent=fmt(kgh,1);
   document.getElementById('modal-goal').innerHTML=`Meta estándar: <strong style="color:#1a5a96;">${fmt(meta,0)} Kg/h</strong>`;
-  document.getElementById('modal-needle').style.transform=`rotate(${angle}deg)`;
+  document.getElementById('modal-needle').style.transform=`rotate(${-90+(pct*180)}deg)`;
   for(let i=0;i<=6;i++){const el=document.getElementById('gl-'+i);if(el)el.textContent=Math.round((meta/6)*i);}
 
-  // Specs programadas
   document.getElementById('modal-specs').innerHTML=`
-    <div class="data-row-card"><span class="data-label-card">Orden Fab.</span><span class="data-value-card">${l.orden||'—'}</span></div>
-    <div class="data-row-card"><span class="data-label-card">Producto</span><span class="data-value-card" style="font-size:.72rem;">${l.producto||'—'}</span></div>
-    <div class="data-row-card"><span class="data-label-card">Carga estándar</span><span class="data-value-card">${fmt(l.kgEstandar,0)} Kg/h</span></div>
+    <div class="data-row-card"><span class="data-label-card">Orden</span><span class="data-value-card">${l.orden||'—'}</span></div>
+    <div class="data-row-card"><span class="data-label-card">Producto</span><span class="data-value-card" style="font-size:.7rem;">${l.producto||'—'}</span></div>
+    <div class="data-row-card"><span class="data-label-card">Carga std.</span><span class="data-value-card">${fmt(l.kgEstandar,0)} Kg/h</span></div>
     <div class="data-row-card"><span class="data-label-card">Cant. orden</span><span class="data-value-card">${l.cantOrden||'—'} und</span></div>
-    <div class="data-row-card"><span class="data-label-card">Estimado fin</span><span class="data-value-card">${l.estimado||'—'}</span></div>`;
+    <div class="data-row-card"><span class="data-label-card">Estimado fin</span><span class="data-value-card" style="color:${l.estimado==='✓ Completa'?'#10b981':'#1a5a96'};">${l.estimado||'—'}</span></div>`;
 
-  // Condiciones reales
-  const oeeColor=parseFloat(l.oeeLinea)>=80?'#10b981':parseFloat(l.oeeLinea)>=60?'#f59e0b':'#f43f5e';
+  const oeeC=parseFloat(l.oeeLinea)>=80?'#10b981':parseFloat(l.oeeLinea)>=60?'#f59e0b':'#f43f5e';
   document.getElementById('modal-reales').innerHTML=`
-    <div class="data-row-card"><span class="data-label-card">Kg/h promedio</span><span class="data-value-card">${fmt(l.kghPromedio,1)}</span></div>
+    <div class="data-row-card"><span class="data-label-card">Kg/h prom.</span><span class="data-value-card">${fmt(kgh,1)}</span></div>
     <div class="data-row-card"><span class="data-label-card">Kg producidos</span><span class="data-value-card">${fmt(l.kgProd,1)}</span></div>
     <div class="data-row-card"><span class="data-label-card">Kg scrap</span><span class="data-value-card text-danger">${fmt(l.kgScrap,1)}</span></div>
     <div class="data-row-card"><span class="data-label-card">% Scrap</span><span class="data-value-card ${parseFloat(l.pctScrap)>3?'text-danger':''}">${fmt(l.pctScrap,1)}%</span></div>
     <div class="data-row-card"><span class="data-label-card">Tubos prod.</span><span class="data-value-card">${l.tubos||0}</span></div>
-    <div class="data-row-card"><span class="data-label-card">OEE</span><span class="data-value-card" style="color:${oeeColor};">${fmt(l.oeeLinea,1)}%</span></div>
+    <div class="data-row-card"><span class="data-label-card">OEE</span><span class="data-value-card" style="color:${oeeC};">${fmt(l.oeeLinea,1)}%</span></div>
     <div class="data-row-card"><span class="data-label-card">Kg acum. orden</span><span class="data-value-card">${fmt(l.kgOrden,1)}</span></div>
     <div class="data-row-card"><span class="data-label-card">Kg faltantes</span><span class="data-value-card">${fmt(l.kgFaltantes,1)}</span></div>`;
 
@@ -571,7 +636,6 @@ function showDetalle(idx){
     <div class="data-row-card"><span class="data-label-card">Operario</span><span class="data-value-card">${l.operario||'—'}</span></div>
     <div class="data-row-card"><span class="data-label-card">Turno</span><span class="data-value-card">${l.turno||'—'}</span></div>`;
 
-  // Gráfica proyección
   if(_chModalProj){_chModalProj.destroy();_chModalProj=null;}
   const ctx=document.getElementById('modalProjChart').getContext('2d');
   const tonT=kgh*8/1000; const tonD=kgh*24/1000;
@@ -586,14 +650,18 @@ function showDetalle(idx){
   bootstrap.Modal.getOrCreateInstance(document.getElementById('modalDetalle')).show();
 }
 
-function showResumen(op,pa,uso,avgKgh,totalKg,maxKgh,tonT,tonD){
+function showResumen(op,pa,uso,avgKgh,totalKg,maxKgh,tonT,tonD,tmH,rangoStr){
   document.getElementById('sm-op').textContent=op;
   document.getElementById('sm-pa').textContent=pa;
   document.getElementById('sm-uso').textContent=uso+'%';
+  document.getElementById('sm-oee').textContent=(_lastKpis.oeeMes||'—')+'%';
+  document.getElementById('sm-scrap').textContent=(_lastKpis.pctScrapHoy||'—')+'%';
   document.getElementById('sm-val-prom').textContent=fmt(avgKgh,0);
   document.getElementById('sm-val-sum').textContent=Math.round(totalKg);
   document.getElementById('sm-proj-turno').textContent=fmt(tonT,2)+' Ton';
   document.getElementById('sm-proj-dia').textContent=fmt(tonD,2)+' Ton';
+  document.getElementById('sm-tm').textContent=fmt(tmH,1)+'h';
+  document.getElementById('sm-rango-titulo').textContent=rangoStr;
   const pP=Math.min(avgKgh/Math.max(maxKgh,1),1);
   const pS=Math.min(totalKg/Math.max(totalKg*1.5,1),1);
   document.getElementById('sm-needle-prom').style.transform=`rotate(${-90+pP*180}deg)`;
@@ -602,29 +670,24 @@ function showResumen(op,pa,uso,avgKgh,totalKg,maxKgh,tonT,tonD){
 }
 
 function expandChart(type){
-  const map={
-    promedio:{chart:_chProm,title:'Kg/h Promedio por Línea',bg:'#1a5a96'},
-    sumatoria:{chart:_chSum,title:'Kg Producidos Hoy por Línea',bg:'#10b981'},
-    oee:{chart:_chOEE,title:'OEE por Línea (%)',bg:'#f59e0b'},
-    scrap:{chart:_chScrap,title:'% Scrap por Línea',bg:'#8b5cf6'}
-  };
-  const e=map[type]; if(!e||!e.chart) return;
-  document.getElementById('expand-title').textContent=e.title;
+  const map={promedio:{ch:_chProm,t:'Kg/h Prom. por Línea',bg:'#1a5a96'},
+             sumatoria:{ch:_chSum,t:'Kg Producidos por Línea',bg:'#10b981'},
+             oee:{ch:_chOEE,t:'OEE por Línea (%)',bg:'#f59e0b'},
+             scrap:{ch:_chScrap,t:'% Scrap por Línea',bg:'#8b5cf6'}};
+  const e=map[type]; if(!e||!e.ch) return;
+  document.getElementById('expand-title').textContent=e.t;
   document.getElementById('expand-header').style.backgroundColor=e.bg;
   if(_chExpand){_chExpand.destroy();_chExpand=null;}
   const ctx=document.getElementById('expandCanvas').getContext('2d');
-  const src=e.chart;
-  _chExpand=new Chart(ctx,{type:src.config.type,
-    data:JSON.parse(JSON.stringify(src.data)),
-    options:{...JSON.parse(JSON.stringify(src.options)),maintainAspectRatio:false,responsive:true}});
+  _chExpand=new Chart(ctx,{type:e.ch.config.type,
+    data:JSON.parse(JSON.stringify(e.ch.data)),
+    options:{...JSON.parse(JSON.stringify(e.ch.options)),maintainAspectRatio:false,responsive:true}});
   bootstrap.Modal.getOrCreateInstance(document.getElementById('modalExpand')).show();
 }
 
 // ── INIT ──────────────────────────────────────────────────────
-document.getElementById('filter-fecha').value=today();
-loadDashboard();
+setQuick('hoy');
 setInterval(loadDashboard,60000);
-document.getElementById('filter-fecha').addEventListener('change',loadDashboard);
 </script>
 </body>
 </html>
