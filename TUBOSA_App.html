@@ -2862,6 +2862,7 @@ async function guardarTendCorr(){
     const int=avg(flt('tc-arr-int'),flt('tc-aba-int'),flt('tc-izq-int'),flt('tc-der-int'));
     const valle=avg(flt('tc-arr-val'),flt('tc-aba-val'),flt('tc-izq-val'),flt('tc-der-val'));
     const r=await api({action:'guardarTendCorrugada',turnoId:turnoActual.id,
+      fecha:turnoActual.fecha||'',turno:turnoActual.turno||'',linea:lineaActual.NombreLinea||'',orden:turnoActual.ordenFab||'',
       arribaExterno:flt('tc-arr-ext'),arribaInterno:flt('tc-arr-int'),arribaValle:flt('tc-arr-val'),
       abajoExterno:flt('tc-aba-ext'),abajoInterno:flt('tc-aba-int'),abajoValle:flt('tc-aba-val'),
       izqExterno:flt('tc-izq-ext'),izqInterno:flt('tc-izq-int'),izqValle:flt('tc-izq-val'),
@@ -3682,7 +3683,7 @@ function mez_editar(codigo){
   notify('Mezcla cargada para editar','ok');
 }
 
-// ── ADMIN LÍNEAS / CABEZALES ──────────────────────────────────
+// ── ADMIN LÍNEAS ──────────────────────────────────────────────
 var _lineasAdminData = [];
 
 async function cargarLineasAdmin(){
@@ -3694,38 +3695,59 @@ async function cargarLineasAdmin(){
   var div = document.getElementById('lineas-admin-tabla');
   var btn = document.getElementById('btn-guardar-cabezales');
   if(btn) btn.style.display='inline-flex';
-  div.innerHTML = '<table class="rt" style="font-size:13px"><thead><tr>'+
-    '<th>Línea</th><th>Tipo</th><th>Estado</th><th>Activa</th><th style="text-align:center">Cabezales</th></tr></thead>'+
-    '<tbody>'+r.data.map(function(l,i){
-      var cab = parseInt(l.Cabezales)||1;
-      return '<tr>'+
-        '<td><strong>'+l.NombreLinea+'</strong></td>'+
-        '<td>'+( l.Tipo||'—')+'</td>'+
-        '<td>'+( l.Estado||'—')+'</td>'+
-        '<td>'+( l.Activa||'—')+'</td>'+
-        '<td style="text-align:center">'+
-          '<select id="cab-sel-'+i+'" style="padding:4px 8px;border-radius:4px;border:1px solid var(--gr2);font-size:13px">'+
-            '<option value="1"'+(cab===1?' selected':'')+'>1 — Sencillo</option>'+
-            '<option value="2"'+(cab===2?' selected':'')+'>2 — Doble</option>'+
-          '</select>'+
-        '</td>'+
+
+  div.innerHTML = '<table class="rt" style="font-size:12px;min-width:700px"><thead><tr>'+
+    '<th>ID</th><th>Nombre Línea</th><th>Tipo</th><th style="text-align:center">Activa</th>'+
+    '<th>Estado</th><th style="text-align:center">Cabezales</th></tr></thead><tbody>'+
+    r.data.map(function(l,i){
+      var cab=parseInt(l.Cabezales)||1;
+      var activa=String(l.Activa||'Sí');
+      var tipo=String(l.Tipo||'Normal');
+      var estado=String(l.Estado||'Activa');
+      return '<tr style="border-bottom:1px solid var(--gr2)">'+
+        '<td style="color:var(--gr3);font-size:11px;">'+l.ID+'</td>'+
+        '<td><input type="text" id="lin-nombre-'+i+'" value="'+escHtml(l.NombreLinea||'')+'" '+
+          'style="width:90px;padding:3px 6px;border-radius:4px;border:1px solid var(--gr2);font-size:12px;font-weight:700;"></td>'+
+        '<td><select id="lin-tipo-'+i+'" style="padding:3px 6px;border-radius:4px;border:1px solid var(--gr2);font-size:12px;">'+
+          '<option value="Normal"'+(tipo==='Normal'?' selected':'')+'>Normal</option>'+
+          '<option value="Corrugada"'+(tipo==='Corrugada'?' selected':'')+'>Corrugada</option>'+
+          '<option value="Coextrusora"'+(tipo==='Coextrusora'?' selected':'')+'>Coextrusora</option>'+
+        '</select></td>'+
+        '<td style="text-align:center"><select id="lin-activa-'+i+'" style="padding:3px 6px;border-radius:4px;border:1px solid var(--gr2);font-size:12px;">'+
+          '<option value="Sí"'+(activa==='Sí'?' selected':'')+'>Sí</option>'+
+          '<option value="No"'+(activa==='No'?' selected':'')+'>No</option>'+
+        '</select></td>'+
+        '<td><input type="text" id="lin-estado-'+i+'" value="'+escHtml(estado)+'" '+
+          'style="width:140px;padding:3px 6px;border-radius:4px;border:1px solid var(--gr2);font-size:11px;"></td>'+
+        '<td style="text-align:center"><select id="cab-sel-'+i+'" style="padding:3px 6px;border-radius:4px;border:1px solid var(--gr2);font-size:12px;">'+
+          '<option value="1"'+(cab===1?' selected':'')+'>1 — Sencillo</option>'+
+          '<option value="2"'+(cab===2?' selected':'')+'>2 — Doble</option>'+
+        '</select></td>'+
       '</tr>';
     }).join('')+
   '</tbody></table>';
 }
 
+function escHtml(s){ return String(s).replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;'); }
+
 async function guardarCabezales(){
   var lineas = _lineasAdminData.map(function(l,i){
-    var sel = document.getElementById('cab-sel-'+i);
-    return {nombre:l.NombreLinea, cabezales:sel?parseInt(sel.value):1};
+    return {
+      id: l.ID,
+      nombre:    (document.getElementById('lin-nombre-'+i)||{}).value || l.NombreLinea,
+      tipo:      (document.getElementById('lin-tipo-'+i)||{}).value   || l.Tipo,
+      activa:    (document.getElementById('lin-activa-'+i)||{}).value || l.Activa,
+      estado:    (document.getElementById('lin-estado-'+i)||{}).value || l.Estado,
+      cabezales: parseInt((document.getElementById('cab-sel-'+i)||{}).value)||1
+    };
   });
   loader(true,'Guardando...');
-  var r = await api({action:'saveCabezales', lineas:lineas});
+  var r = await api({action:'saveLineas', lineas:lineas});
   loader(false);
   if(r.ok){
-    // Actualizar cache local
     await cargarMaestros();
-    notify('Cabezales guardados ✓','ok');
+    notify('Líneas guardadas ✓','ok');
+    cargarLineasAdmin();
   } else notify('Error guardando','err');
 }
 
@@ -4230,6 +4252,9 @@ async function dig_guardarTodo(){
       // Guardar tendencias si hay datos
       if(h.espL1||h.espL2){
         await api({action:'guardarTendencia', horaId:r.horaId, turnoId:_digTurnoId, hora:h.hora,
+          fecha:val('dig-fecha')||'', turno:val('dig-turno')||'',
+          linea:(document.getElementById('dig-linea')?document.getElementById('dig-linea').options[document.getElementById('dig-linea').selectedIndex]?.text:''),
+          orden:val('dig-orden')||'',
           espesorL1:flt('dh-espL1-'+h.hora), descalibreL1:flt('dh-descL1-'+h.hora),
           diamExtL1:flt('dh-diamL1-'+h.hora), ovalizacionL1:flt('dh-ovalL1-'+h.hora),
           espesorL2:flt('dh-espL2-'+h.hora), descalibreL2:flt('dh-descL2-'+h.hora),
@@ -5358,6 +5383,7 @@ async function guardarHoraCoext(){
     };
     if(val('coext-espL1')||val('coext-espL2')){
       await api({action:'guardarTendencia', horaId:r.horaId||horaIdExistente, turnoId:turnoActual.id, hora:horaActual,
+        fecha:turnoActual.fecha||'',turno:turnoActual.turno||'',linea:lineaActual.NombreLinea||'',orden:turnoActual.ordenFab||'',
         espesorL1:flt('coext-espL1'), descalibreL1:flt('coext-descL1'),
         diamExtL1:flt('coext-diamL1'), ovalizacionL1:flt('coext-ovalL1'),
         espesorL2:flt('coext-espL2'), descalibreL2:flt('coext-descL2'),
