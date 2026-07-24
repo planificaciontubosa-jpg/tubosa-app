@@ -2561,7 +2561,9 @@ async function guardarHora(){
     const hd={
       action: horaIdExistente ? 'actualizarHora' : 'guardarHora',
       horaId: horaIdExistente,
-      turnoId:turnoActual.id,hora:horaActual,
+      turnoId:turnoActual.id, hora:horaActual,
+      fecha:turnoActual.fecha||'', turno:turnoActual.turno||'',
+      linea:lineaActual.NombreLinea||'', orden:turnoActual.ordenFab||'',
       codigoMezcla:val('reg-codMezcla'),mezcla:val('reg-mezcla'),
       cantidadKgMezcla:flt('reg-kgMezcla'),nroTubos:parseInt(val('reg-nroTubos'))||0,
       pesoTotal:flt('reg-pesoTotal'),reprocesoKg:flt('reg-reproceso'),
@@ -2622,6 +2624,7 @@ async function guardarPosicionPesaje(pos){
   loader(true,'Guardando posición '+pos+'...');
   try{
     var r=await api({action:'guardarPesaje',turnoId:turnoActual.id,
+      fecha:turnoActual.fecha||'',turno:turnoActual.turno||'',linea:lineaActual.NombreLinea||'',orden:turnoActual.ordenFab||'',
       pesajes:[{posicion:pos,pesoKg:pesoKg,cargaLinea:cargaLinea,obs:val('p-obs-'+pos)}]
     });
     loader(false);
@@ -2649,6 +2652,7 @@ async function guardarPosicionPesajeCorr(pos){
   loader(true,'Guardando posición '+pos+'...');
   try{
     var r=await api({action:'guardarPesaje',turnoId:turnoActual.id,
+      fecha:turnoActual.fecha||'',turno:turnoActual.turno||'',linea:lineaActual.NombreLinea||'',orden:turnoActual.ordenFab||'',
       pesajes:[{posicion:pos,pesoKg:pesoKg,cargaLinea:cargaLinea,obs:val('p-obs-'+pos)}]
     });
     loader(false);
@@ -2805,6 +2809,8 @@ async function guardarHoraCorr(){
       action: horaIdExistente ? 'actualizarHora' : 'guardarHora',
       horaId: horaIdExistente,
       turnoId:turnoActual.id, hora:horaActual,
+      fecha:turnoActual.fecha||'', turno:turnoActual.turno||'',
+      linea:lineaActual.NombreLinea||'', orden:turnoActual.ordenFab||'',
       codigoMezcla:val('corr-codMezcla'), mezcla:val('corr-mezcla'),
       cantidadKgMezcla:flt('corr-kgMezcla'), nroTubos:parseInt(val('corr-nroTubos'))||0,
       pesoTotal:flt('corr-pesoTotal'), reprocesoKg:flt('corr-reproceso'),
@@ -2839,7 +2845,9 @@ async function guardarPesajeCorr(){
   if(!pesajes.length){notify('Ingresa al menos un pesaje','err');return;}
   loader(true);
   try{
-    const r=await api({action:'guardarPesaje',turnoId:turnoActual.id,pesajes});
+    const r=await api({action:'guardarPesaje',turnoId:turnoActual.id,
+      fecha:turnoActual.fecha||'',turno:turnoActual.turno||'',linea:lineaActual.NombreLinea||'',orden:turnoActual.ordenFab||'',
+      pesajes});
     loader(false);
     if(r.ok)notify('Pesaje guardado ✓','ok');
     else notify(r.msg,'err');
@@ -4271,7 +4279,10 @@ async function dig_guardarTodo(){
         pesajes.push({posicion:p, pesoKg:pesoKg, cargaLinea:cargaLinea, obs:val('dh-p-obs-'+p)});
       }
     }
-    if(pesajes.length) await api({action:'guardarPesaje', turnoId:_digTurnoId, pesajes:pesajes});
+    if(pesajes.length) await api({action:'guardarPesaje', turnoId:_digTurnoId,
+      fecha:val('dig-fecha')||'', turno:val('dig-turno')||'',
+      orden:val('dig-orden')||'',
+      pesajes:pesajes});
     // Cerrar turno
     await api({action:'cerrarTurno', turnoId:_digTurnoId});
     loader(false);
@@ -5343,6 +5354,8 @@ async function guardarHoraCoext(){
       action: horaIdExistente ? 'actualizarHoraCoext' : 'guardarHoraCoext',
       horaId: horaIdExistente,
       turnoId:turnoActual.id, hora:horaActual,
+      fecha:turnoActual.fecha||'', turno:turnoActual.turno||'',
+      linea:lineaActual.NombreLinea||'', orden:turnoActual.ordenFab||'',
       codigoMezcla80:val('coext-codMezcla80'), mezcla80:val('coext-mezcla80'),
       consecutivo80:val('coext-consec80'), cantidadKg80:flt('coext-kg80'),
       devolucion80:flt('coext-dev80'), motivoDev80:val('coext-motivoDev80'),
