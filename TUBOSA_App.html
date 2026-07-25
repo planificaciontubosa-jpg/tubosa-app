@@ -6395,6 +6395,16 @@ function generarPDFMarcadora(){
   doc.save('Marcadora_Turno'+turno+'_'+fecha.replace(/\//g,'-')+'.pdf');
   notify('PDF de marcadora generado ✓','ok',4000);
 }
+
+// Pre-poblar selectores de causales al cargar la página
+document.addEventListener('DOMContentLoaded', function(){
+  ['reg-causalScrap','corr-causalScrap'].forEach(function(id){
+    buildSelectCausales(id, id+'-info', 'scrap');
+  });
+  ['tm-causalParo','crear-tm-causal','edit-tm-causal'].forEach(function(id){
+    buildSelectCausales(id, id+'-info', 'paro');
+  });
+});
 </script>
 </body>
 </html>
