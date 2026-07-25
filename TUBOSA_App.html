@@ -544,8 +544,13 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:#EEF2F7;color:var(--
         <div class="campo"><label>Longitud (m)</label><input type="number" id="reg-longitud" placeholder="0.0" step="0.1"></div>
       </div>
       <div class="campo">
-        <label>Motivo Reproceso</label>
-        <input type="text" id="reg-motivoRep" placeholder="Describir si aplica">
+        <label>Causal de Scrap</label>
+        <select id="reg-causalScrap" style="width:100%"></select>
+        <div id="reg-causalScrap-info" style="display:none;"></div>
+      </div>
+      <div class="campo" style="margin-top:4px">
+        <label>Observación / Detalle scrap</label>
+        <input type="text" id="reg-motivoRep" placeholder="Detalle adicional (opcional)">
       </div>
       <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px">
         <div style="flex:1;background:var(--rd2);border:1px solid #e8a8a8;border-radius:var(--rad2);padding:8px 12px;display:flex;align-items:center;justify-content:space-between;gap:8px">
@@ -743,7 +748,8 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:#EEF2F7;color:var(--
       </div>
       <div class="fila fila-2">
         <div class="campo"><label>Diámetro Exterior 90° (mm)</label><input type="number" id="corr-diamExt90" placeholder="0.0" step="0.01"></div>
-        <div class="campo"><label>Motivo Reproceso</label><input type="text" id="corr-motivoRep"></div>
+        <div class="campo"><label>Causal Scrap</label><select id="corr-causalScrap" style="width:100%"></select><div id="corr-causalScrap-info" style="display:none;"></div></div>
+        <div class="campo"><label>Observación scrap</label><input type="text" id="corr-motivoRep"></div>
       </div>
       <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px">
         <div style="flex:1;background:var(--rd2);border:1px solid #e8a8a8;border-radius:var(--rad2);padding:8px 12px;display:flex;align-items:center;justify-content:space-between;gap:8px">
@@ -1281,7 +1287,8 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:#EEF2F7;color:var(--
         <div class="campo"><label>Hora Fin</label><input type="time" id="crear-tm-fin" oninput="calcDurCrear()"></div>
       </div>
       <div class="campo"><label>Duración (minutos)</label><input type="number" id="crear-tm-duracion" placeholder="0" readonly class="auto"></div>
-      <div class="campo"><label>Motivo</label><input type="text" id="crear-tm-motivo" placeholder="Describir motivo del tiempo muerto"></div>
+      <div class="campo"><label>Causal de Paro</label><select id="crear-tm-causal" style="width:100%"></select><div id="crear-tm-causal-info" style="display:none;"></div></div>
+      <div class="campo"><label>Observación</label><input type="text" id="crear-tm-motivo" placeholder="Detalle adicional (opcional)"></div>
       <div class="campo"><label>Estado</label>
         <select id="crear-tm-estado">
           <option value="Cerrado">Cerrado</option>
@@ -1320,7 +1327,8 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:#EEF2F7;color:var(--
         <div class="campo"><label>Hora Fin</label><input type="time" id="edit-tm-fin"></div>
       </div>
       <div class="campo"><label>Duración (minutos)</label><input type="number" id="edit-tm-duracion" placeholder="0" readonly class="auto"></div>
-      <div class="campo"><label>Motivo</label><input type="text" id="edit-tm-motivo" placeholder="Describir motivo"></div>
+      <div class="campo"><label>Causal de Paro</label><select id="edit-tm-causal" style="width:100%"></select><div id="edit-tm-causal-info" style="display:none;"></div></div>
+      <div class="campo"><label>Observación</label><input type="text" id="edit-tm-motivo" placeholder="Detalle adicional"></div>
       <div class="campo"><label>Estado</label>
         <select id="edit-tm-estado">
           <option value="Activo">Activo</option>
@@ -1573,9 +1581,14 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:#EEF2F7;color:var(--
     <div style="background:var(--az3);border-radius:var(--rad2);padding:10px;margin-bottom:10px;font-size:12px;color:var(--az)">
       ⏱ Duración: <strong id="tm-duracion">—</strong>
     </div>
+    <div class="campo" style="margin-bottom:10px">
+      <label>Causal de Paro *</label>
+      <select id="tm-causalParo" style="width:100%"></select>
+      <div id="tm-causalParo-info" style="display:none;"></div>
+    </div>
     <div class="campo" style="margin-bottom:14px">
-      <label>Motivo / Observación *</label>
-      <textarea id="tm-motivo" placeholder="Describir el motivo del paro..." rows="3"></textarea>
+      <label>Observación adicional</label>
+      <textarea id="tm-motivo" placeholder="Detalle adicional (opcional)..." rows="2"></textarea>
     </div>
     <div style="display:flex;gap:8px">
       <button class="btn btn-rd" style="flex:1;justify-content:center" onclick="guardarTiempoMuerto()">💾 Registrar Tiempo Muerto</button>
@@ -1682,6 +1695,213 @@ const API_URL_FIJA = 'https://script.google.com/macros/s/AKfycbykdmPFuhuA94oKM0T
 // Siempre usar URL fija — ignorar localStorage para evitar conflictos
 let API_URL = API_URL_FIJA;
 localStorage.setItem('tubosa_url', API_URL_FIJA); // Actualizar localStorage con la correcta
+// ── CAUSALES ──────────────────────────────────────────────────
+var CAUSALES_SCRAP=[
+  {proceso:"MANTENIMIENTO",codigo:"SM01",desc:"Falla de motor principal extrusora"},
+  {proceso:"MANTENIMIENTO",codigo:"SM02",desc:"Falla sistema de transmisión y reducción - Caja reductora"},
+  {proceso:"MANTENIMIENTO",codigo:"SM03",desc:"Falla de control de extrusora"},
+  {proceso:"MANTENIMIENTO",codigo:"SM04",desc:"Falla variador motor principal"},
+  {proceso:"MANTENIMIENTO",codigo:"SM05",desc:"Falla de sist. de alimentación"},
+  {proceso:"MANTENIMIENTO",codigo:"SM06",desc:"Falla motor del alimentador"},
+  {proceso:"MANTENIMIENTO",codigo:"SM07",desc:"Falla variador del alimentador"},
+  {proceso:"MANTENIMIENTO",codigo:"SM08",desc:"Falla tornillo sin fin de alimentador"},
+  {proceso:"MANTENIMIENTO",codigo:"SM09",desc:"Falla de sistema de desgasificación"},
+  {proceso:"MANTENIMIENTO",codigo:"SM10",desc:"Falla bomba de vacio desgasificador"},
+  {proceso:"MANTENIMIENTO",codigo:"SM11",desc:"Falla unidad de plastificación"},
+  {proceso:"MANTENIMIENTO",codigo:"SM12",desc:"Falla sistema de calent barril"},
+  {proceso:"MANTENIMIENTO",codigo:"SM13",desc:"Falla sistema de enfri-barril"},
+  {proceso:"MANTENIMIENTO",codigo:"SM14",desc:"Falla sistem de enfri-tornillo"},
+  {proceso:"MANTENIMIENTO",codigo:"SM15",desc:"Falla del tornillo extrusor (Husillos)"},
+  {proceso:"MANTENIMIENTO",codigo:"SM16",desc:"Falla sistema de calent-cabezal"},
+  {proceso:"MANTENIMIENTO",codigo:"SM17",desc:"Falla de cabezal o moldes"},
+  {proceso:"MANTENIMIENTO",codigo:"SM18",desc:"Falla de calibrador"},
+  {proceso:"MANTENIMIENTO",codigo:"SM19",desc:"Falla de tanque de calibración"},
+  {proceso:"MANTENIMIENTO",codigo:"SM20",desc:"Falla tanque de enfriamiento"},
+  {proceso:"MANTENIMIENTO",codigo:"SM21",desc:"Falla bomb vacío tque de calibración"},
+  {proceso:"MANTENIMIENTO",codigo:"SM22",desc:"Falla de bomba de aspersión"},
+  {proceso:"MANTENIMIENTO",codigo:"SM23",desc:"Falla de bomba de descarga"},
+  {proceso:"MANTENIMIENTO",codigo:"SM24",desc:"Falla sist control nivel y temp de tanque"},
+  {proceso:"MANTENIMIENTO",codigo:"SM25",desc:"Falla sellos de goma salida tanque"},
+  {proceso:"MANTENIMIENTO",codigo:"SM26",desc:"Falla de marcadora"},
+  {proceso:"MANTENIMIENTO",codigo:"SM27",desc:"Falla de puller"},
+  {proceso:"MANTENIMIENTO",codigo:"SM28",desc:"Falla de corrugador"},
+  {proceso:"MANTENIMIENTO",codigo:"SM29",desc:"Falla de molde"},
+  {proceso:"MANTENIMIENTO",codigo:"SM30",desc:"Falla de sistema de corte"},
+  {proceso:"MANTENIMIENTO",codigo:"SM31",desc:"Falla sistema de acampanado"},
+  {proceso:"MANTENIMIENTO",codigo:"SM32",desc:"Falla aliment de la acamp"},
+  {proceso:"MANTENIMIENTO",codigo:"SM33",desc:"Falla de horno de acampanadora"},
+  {proceso:"MANTENIMIENTO",codigo:"SM34",desc:"Falla rotación de tubos acampanadora"},
+  {proceso:"MANTENIMIENTO",codigo:"SM35",desc:"Falla transporte de tubo acampanadora"},
+  {proceso:"MANTENIMIENTO",codigo:"SM36",desc:"Falla de amarradora"},
+  {proceso:"MANTENIMIENTO",codigo:"SM37",desc:"Falla de elevador de tubos (LIN 13 Y LIN14)"},
+  {proceso:"MANTENIMIENTO",codigo:"SM38",desc:"Falla de banda trasportadora (LIN 13 Y LIN14)"},
+  {proceso:"MANTENIMIENTO",codigo:"SM39",desc:"Falla de sistema de bombeo a agua principal"},
+  {proceso:"MANTENIMIENTO",codigo:"SM40",desc:"Falla de sist. de enfriamiento del chiller"},
+  {proceso:"MANTENIMIENTO",codigo:"SM41",desc:"Falla sist. de aire comprimido"},
+  {proceso:"MANTENIMIENTO",codigo:"SM42",desc:"Calidad de agua"},
+  {proceso:"MANTENIMIENTO",codigo:"SM43",desc:"Gerenciamiento Mantenimiento"},
+  {proceso:"MANTENIMIENTO",codigo:"SM44",desc:"Mtto programado"},
+  {proceso:"MANTENIMIENTO",codigo:"SM45",desc:"Diseño del equipo o herramiental"},
+  {proceso:"MANTENIMIENTO",codigo:"SM46",desc:"Reinstalación de equipos o mejoras"},
+  {proceso:"MANTENIMIENTO",codigo:"SM47",desc:"Falla Eléctrica Externa"},
+  {proceso:"MANTENIMIENTO",codigo:"SM48",desc:"Otros Externos - Parada por Emergencia"},
+  {proceso:"MANTENIMIENTO",codigo:"SM49",desc:"Falla en Suminist. y Repuestos"},
+  {proceso:"MANTENIMIENTO",codigo:"SM50",desc:"Falla o falta de montacargas"},
+  {proceso:"MEZCLAS",codigo:"ME01",desc:"Calidad de recuperado"},
+  {proceso:"MEZCLAS",codigo:"ME02",desc:"Calidad de compuesto"},
+  {proceso:"MEZCLAS",codigo:"ME03",desc:"Contaminación del compuesto"},
+  {proceso:"MEZCLAS",codigo:"ME04",desc:"Contaminación del recuperado"},
+  {proceso:"MEZCLAS",codigo:"ME05",desc:"Insuficiencia de Materia Prima - Falta de Material"},
+  {proceso:"MEZCLAS",codigo:"ME06",desc:"Contaminación de materias primas"},
+  {proceso:"MEZCLAS",codigo:"ME07",desc:"Calidad Materia Prima Virgen"},
+  {proceso:"PRODUCCIÓN",codigo:"S001",desc:"Gerenciamiento Producción"},
+  {proceso:"PRODUCCIÓN",codigo:"S002",desc:"Insuficiencia de Personal/Plan"},
+  {proceso:"PRODUCCIÓN",codigo:"S003",desc:"Errores o descuidos humanos"},
+  {proceso:"PRODUCCIÓN",codigo:"S004",desc:"No se aplica método"},
+  {proceso:"PRODUCCIÓN",codigo:"S005",desc:"Errores en data"},
+  {proceso:"PRODUCCIÓN",codigo:"S006",desc:"Gerenciamiento Control. Calidad"},
+  {proceso:"PRODUCCIÓN",codigo:"S007",desc:"Rechazo por marcaje"},
+  {proceso:"PRODUCCIÓN",codigo:"S008",desc:"Rechazo por dimensiones"},
+  {proceso:"PRODUCCIÓN",codigo:"S009",desc:"Rechazo por aspecto"},
+  {proceso:"PRODUCCIÓN",codigo:"S010",desc:"Rechazo por ensayo"},
+  {proceso:"PRODUCCIÓN",codigo:"S011",desc:"Rechazo por empaque"},
+  {proceso:"PRODUCCIÓN",codigo:"S012",desc:"Inicio o parada"},
+  {proceso:"PRODUCCIÓN",codigo:"S013",desc:"Cambio de Programa (Producto)"},
+  {proceso:"PRODUCCIÓN",codigo:"S014",desc:"Sin Programa"},
+  {proceso:"PRODUCCIÓN",codigo:"S015",desc:"Pruebas y Desarrollos"},
+  {proceso:"PRODUCCIÓN",codigo:"S016",desc:"Muestras para Ensayos"}
+];
+
+var CAUSALES_PARO=[
+  {proceso:"MANTENIMIENTO",codigo:"M001",desc:"Falla de motor principal extrusora"},
+  {proceso:"MANTENIMIENTO",codigo:"M002",desc:"Falla sistema de transmisión y reducción - Caja reductora"},
+  {proceso:"MANTENIMIENTO",codigo:"M003",desc:"Falla de control de extrusora"},
+  {proceso:"MANTENIMIENTO",codigo:"M004",desc:"Falla variador motor principal"},
+  {proceso:"MANTENIMIENTO",codigo:"M005",desc:"Falla de sist. de alimentación"},
+  {proceso:"MANTENIMIENTO",codigo:"M006",desc:"Falla motor del alimentador"},
+  {proceso:"MANTENIMIENTO",codigo:"M007",desc:"Falla variador del alimentador"},
+  {proceso:"MANTENIMIENTO",codigo:"M008",desc:"Falla tornillo sin fin de alimentador"},
+  {proceso:"MANTENIMIENTO",codigo:"M009",desc:"Falla de sistema de desgasificación"},
+  {proceso:"MANTENIMIENTO",codigo:"M010",desc:"Falla bomba de vacio desgasificador"},
+  {proceso:"MANTENIMIENTO",codigo:"M011",desc:"Falla unidad de plastificación"},
+  {proceso:"MANTENIMIENTO",codigo:"M012",desc:"Falla sistema de calent barril"},
+  {proceso:"MANTENIMIENTO",codigo:"M013",desc:"Falla sistema de enfri-barril"},
+  {proceso:"MANTENIMIENTO",codigo:"M014",desc:"Falla sistem de enfri-tornillo"},
+  {proceso:"MANTENIMIENTO",codigo:"M015",desc:"Falla del tornillo extrusor (Husillos)"},
+  {proceso:"MANTENIMIENTO",codigo:"M016",desc:"Falla sistema de calent-cabezal"},
+  {proceso:"MANTENIMIENTO",codigo:"M017",desc:"Falla de cabezal o moldes"},
+  {proceso:"MANTENIMIENTO",codigo:"M018",desc:"Falla de calibrador"},
+  {proceso:"MANTENIMIENTO",codigo:"M019",desc:"Falla de tanque de calibración"},
+  {proceso:"MANTENIMIENTO",codigo:"M020",desc:"Falla tanque de enfriamiento"},
+  {proceso:"MANTENIMIENTO",codigo:"M021",desc:"Falla bomb vacío tque de calibración"},
+  {proceso:"MANTENIMIENTO",codigo:"M022",desc:"Falla de bomba de aspersión"},
+  {proceso:"MANTENIMIENTO",codigo:"M023",desc:"Falla de bomba de descarga"},
+  {proceso:"MANTENIMIENTO",codigo:"M024",desc:"Falla sist control nivel y temp de tanque"},
+  {proceso:"MANTENIMIENTO",codigo:"M025",desc:"Falla sellos de goma salida tanque"},
+  {proceso:"MANTENIMIENTO",codigo:"M026",desc:"Falla de marcadora"},
+  {proceso:"MANTENIMIENTO",codigo:"M027",desc:"Falla de puller"},
+  {proceso:"MANTENIMIENTO",codigo:"M028",desc:"Falla de corrugador"},
+  {proceso:"MANTENIMIENTO",codigo:"M029",desc:"Falla de molde"},
+  {proceso:"MANTENIMIENTO",codigo:"M030",desc:"Falla de sistema de corte"},
+  {proceso:"MANTENIMIENTO",codigo:"M031",desc:"Falla sistema de acampanado"},
+  {proceso:"MANTENIMIENTO",codigo:"M032",desc:"Falla aliment de la acamp"},
+  {proceso:"MANTENIMIENTO",codigo:"M033",desc:"Falla de horno de acampanadora"},
+  {proceso:"MANTENIMIENTO",codigo:"M034",desc:"Falla rotación de tubos acampanadora"},
+  {proceso:"MANTENIMIENTO",codigo:"M035",desc:"Falla transporte de tubo acampanadora"},
+  {proceso:"MANTENIMIENTO",codigo:"M036",desc:"Falla de amarradora"},
+  {proceso:"MANTENIMIENTO",codigo:"M037",desc:"Falla de elevador de tubos (LIN 13 Y LIN14)"},
+  {proceso:"MANTENIMIENTO",codigo:"M038",desc:"Falla de banda trasportadora (LIN 13 Y LIN14)"},
+  {proceso:"MANTENIMIENTO",codigo:"M039",desc:"Falla de sistema de bombeo a agua principal"},
+  {proceso:"MANTENIMIENTO",codigo:"M040",desc:"Falla de sist. de enfriamiento del chiller"},
+  {proceso:"MANTENIMIENTO",codigo:"M041",desc:"Falla sist. de aire comprimido"},
+  {proceso:"MANTENIMIENTO",codigo:"M042",desc:"Calidad de agua"},
+  {proceso:"MANTENIMIENTO",codigo:"M043",desc:"Gerenciamiento Mantenimiento"},
+  {proceso:"MANTENIMIENTO",codigo:"M044",desc:"Mtto programado"},
+  {proceso:"MANTENIMIENTO",codigo:"M045",desc:"Diseño del equipo o herramiental"},
+  {proceso:"MANTENIMIENTO",codigo:"M046",desc:"Reinstalación de equipos o mejoras"},
+  {proceso:"MANTENIMIENTO",codigo:"M047",desc:"Falla Eléctrica Externa"},
+  {proceso:"MANTENIMIENTO",codigo:"M048",desc:"Otros Externos - Parada por Emergencia"},
+  {proceso:"MANTENIMIENTO",codigo:"M049",desc:"Falla en Suminist. y Repuestos"},
+  {proceso:"MANTENIMIENTO",codigo:"M050",desc:"Falla o falta de montacargas"},
+  {proceso:"MEZCLAS",codigo:"ME01",desc:"Calidad de recuperado"},
+  {proceso:"MEZCLAS",codigo:"ME02",desc:"Calidad de compuesto"},
+  {proceso:"MEZCLAS",codigo:"ME03",desc:"Contaminación del compuesto"},
+  {proceso:"MEZCLAS",codigo:"ME04",desc:"Contaminación del recuperado"},
+  {proceso:"MEZCLAS",codigo:"ME05",desc:"Insuficiencia de Materia Prima - Falta de Material"},
+  {proceso:"MEZCLAS",codigo:"ME06",desc:"Contaminación de materias primas"},
+  {proceso:"MEZCLAS",codigo:"ME07",desc:"Calidad Materia Prima Virgen"},
+  {proceso:"PRODUCCIÓN",codigo:"E001",desc:"Gerenciamiento Producción"},
+  {proceso:"PRODUCCIÓN",codigo:"E002",desc:"Insuficiencia de Personal/Plan"},
+  {proceso:"PRODUCCIÓN",codigo:"E003",desc:"Errores o descuidos humanos"},
+  {proceso:"PRODUCCIÓN",codigo:"E004",desc:"No se aplica método"},
+  {proceso:"PRODUCCIÓN",codigo:"E005",desc:"Errores en data"},
+  {proceso:"PRODUCCIÓN",codigo:"E006",desc:"Gerenciamiento Control. Calidad"},
+  {proceso:"PRODUCCIÓN",codigo:"E007",desc:"Rechazo por marcaje"},
+  {proceso:"PRODUCCIÓN",codigo:"E008",desc:"Rechazo por dimensiones"},
+  {proceso:"PRODUCCIÓN",codigo:"E009",desc:"Rechazo por aspecto"},
+  {proceso:"PRODUCCIÓN",codigo:"E010",desc:"Rechazo por ensayo"},
+  {proceso:"PRODUCCIÓN",codigo:"E011",desc:"Rechazo por empaque"},
+  {proceso:"PRODUCCIÓN",codigo:"E012",desc:"Inicio o parada"},
+  {proceso:"PRODUCCIÓN",codigo:"E013",desc:"Cambio de Programa (Producto)"},
+  {proceso:"PRODUCCIÓN",codigo:"E014",desc:"Sin Programa"},
+  {proceso:"PRODUCCIÓN",codigo:"E015",desc:"Pruebas y Desarrollos"},
+  {proceso:"PRODUCCIÓN",codigo:"E016",desc:"Muestras para Ensayos"}
+];
+
+function buildSelectCausales(selectId, infoId, tipo){
+  var lista = tipo==='scrap' ? CAUSALES_SCRAP : CAUSALES_PARO;
+  var sel = document.getElementById(selectId);
+  if(!sel) return;
+  // Agrupar por proceso
+  var grupos = {};
+  lista.forEach(function(c){ if(!grupos[c.proceso]) grupos[c.proceso]=[]; grupos[c.proceso].push(c); });
+  var html = '<option value="">— Seleccionar causal —</option>';
+  Object.keys(grupos).forEach(function(g){
+    html += '<optgroup label="'+g+'">';
+    grupos[g].forEach(function(c){
+      html += '<option value="'+c.codigo+'|'+c.proceso+'|'+c.desc.replace(/"/g,"'")+'">'+c.codigo+' — '+c.desc+'</option>';
+    });
+    html += '</optgroup>';
+  });
+  sel.innerHTML = html;
+  sel.onchange = function(){ showCausalInfo(this.value, infoId, tipo); };
+}
+
+function showCausalInfo(val, infoId, tipo){
+  var div = document.getElementById(infoId);
+  if(!div) return;
+  if(!val){ div.style.display='none'; return; }
+  var p = val.split('|');
+  var isScrap = tipo==='scrap';
+  var bg    = isScrap ? 'var(--rd2)' : 'var(--nr2,#FEF3C7)';
+  var brd   = isScrap ? '#e8a8a8'   : '#FCD34D';
+  var codColor = isScrap ? 'var(--rd)' : 'var(--nr,#B45309)';
+  div.style.cssText = 'background:'+bg+';border:0.5px solid '+brd+';border-radius:8px;padding:10px 14px;display:flex;gap:14px;align-items:flex-start;margin-top:8px;';
+  div.innerHTML =
+    '<div style="display:flex;flex-direction:column;gap:2px;min-width:60px">'+
+      '<span style="font-size:10px;color:var(--gr3);text-transform:uppercase;letter-spacing:.05em">Código</span>'+
+      '<span style="font-size:17px;font-weight:700;color:'+codColor+'">'+p[0]+'</span>'+
+    '</div>'+
+    '<div style="width:0.5px;background:'+brd+';align-self:stretch;"></div>'+
+    '<div style="display:flex;flex-direction:column;gap:2px;">'+
+      '<span style="font-size:10px;color:var(--gr3);text-transform:uppercase;letter-spacing:.05em">Área</span>'+
+      '<span style="font-size:12px;font-weight:600;color:'+codColor+'">'+p[1]+'</span>'+
+    '</div>'+
+    '<div style="width:0.5px;background:'+brd+';align-self:stretch;"></div>'+
+    '<div style="display:flex;flex-direction:column;gap:2px;flex:1">'+
+      '<span style="font-size:10px;color:var(--gr3);text-transform:uppercase;letter-spacing:.05em">Descripción</span>'+
+      '<span style="font-size:13px;font-weight:500;color:var(--tx,#1e293b)">'+p[2]+'</span>'+
+    '</div>';
+  div.style.display='flex';
+}
+
+function getCausalValores(selectId){
+  var sel = document.getElementById(selectId);
+  if(!sel || !sel.value) return {codigo:'',proceso:'',desc:''};
+  var p = sel.value.split('|');
+  return {codigo:p[0]||'', proceso:p[1]||'', desc:p[2]||''};
+}
+
 let rolActual='', nombreActual='', lineaActual={}, turnoActual={};
 let esCorrugada = false;
 let esCoextrusor = false;
@@ -2341,6 +2561,9 @@ function abrirModalTM(){
   document.getElementById('tm-fin').value='';
   document.getElementById('tm-motivo').value='';
   document.getElementById('tm-duracion').textContent='—';
+  buildSelectCausales('tm-causalParo','tm-causalParo-info','paro');
+  var infoDiv=document.getElementById('tm-causalParo-info');
+  if(infoDiv) infoDiv.style.display='none';
   document.getElementById('modal-tm').style.display='flex';
 }
 function cerrarModalTM(){
@@ -2364,8 +2587,9 @@ function calcDuracionTM(){
 async function guardarTiempoMuerto(){
   var ini=document.getElementById('tm-inicio').value;
   var motivo=document.getElementById('tm-motivo').value.trim();
+  var causal=getCausalValores('tm-causalParo');
   if(!ini){notify('Ingresa la hora de inicio','err');return;}
-  if(!motivo){notify('Ingresa el motivo del paro','err');return;}
+  if(!causal.codigo){notify('Selecciona el causal de paro','err');return;}
   var fin=document.getElementById('tm-fin').value;
   var durMin=calcDuracionTM();
   loader(true,'Registrando tiempo muerto...');
@@ -2376,7 +2600,8 @@ async function guardarTiempoMuerto(){
       fecha:turnoActual.fecha,
       horaInicio:ini, horaFin:fin||'',
       duracionMin:durMin,
-      motivo:motivo,
+      motivo: causal.codigo+' — '+causal.desc+(motivo?' | '+motivo:''),
+      codigoCausal:causal.codigo, procesoCausal:causal.proceso, descCausal:causal.desc,
       estado:fin?'Cerrado':'Activo'
     });
     loader(false);
@@ -2442,6 +2667,8 @@ function iniciarRegistro(){
   cargarAcumuladoOrden();
   setTimeout(renderSPCCharts, 200);
   actualizarVisibilidadLado2();
+  // Inicializar selector de causal scrap
+  buildSelectCausales('reg-causalScrap','reg-causalScrap-info','scrap');
   // Check rotulado
   document.getElementById('reg-rotuladoOk').addEventListener('change',function(){
     document.getElementById('rotulado-txt').textContent=this.checked?'✓ Rotulado VERIFICADO':'Rotulado NO verificado';
@@ -2567,7 +2794,9 @@ async function guardarHora(){
       codigoMezcla:val('reg-codMezcla'),mezcla:val('reg-mezcla'),
       cantidadKgMezcla:flt('reg-kgMezcla'),nroTubos:parseInt(val('reg-nroTubos'))||0,
       pesoTotal:flt('reg-pesoTotal'),reprocesoKg:flt('reg-reproceso'),
-      motivoReproceso:val('reg-motivoRep'),
+      motivoReproceso:(function(){var c=getCausalValores('reg-causalScrap');return c.codigo?c.codigo+' — '+c.desc+(val('reg-motivoRep')?' | '+val('reg-motivoRep'):''):val('reg-motivoRep');})(),
+      codigoCausalScrap:(getCausalValores('reg-causalScrap')||{}).codigo||'',
+      procesoCausalScrap:(getCausalValores('reg-causalScrap')||{}).proceso||'',
       devolucionKg:flt('reg-devolucion'),motivoDevolucion:val('reg-motivoDev'),
       rotuladoOk:document.getElementById('reg-rotuladoOk').checked,
       pesoPromedio:flt('reg-pesoPromedio'),sobrePeso:flt('reg-sobrePeso'),
@@ -2723,6 +2952,7 @@ function iniciarRegistroCorr(){
   _acumuladoToken++;
   _tubosAcumuladosOrden=0;
   cargarAcumuladoOrden();
+  buildSelectCausales('corr-causalScrap','corr-causalScrap-info','scrap');
 }
 
 function limpiarEspesoresCorr(){
@@ -4356,6 +4586,7 @@ async function abrirCrearTM(){
   document.getElementById('crear-tm-turno-id').value='';
   document.getElementById('crear-tm-turno-info').style.display='none';
   document.getElementById('crear-tm-sin-turno').style.display='none';
+  buildSelectCausales('crear-tm-causal','crear-tm-causal-info','paro');
   document.getElementById('modal-crear-tm').style.display='flex';
 }
 
@@ -4401,9 +4632,10 @@ async function guardarCrearTM(){
   var lineaId=document.getElementById('crear-tm-linea').value;
   var ini=document.getElementById('crear-tm-inicio').value;
   var motivo=document.getElementById('crear-tm-motivo').value.trim();
+  var causal=getCausalValores('crear-tm-causal');
   if(!lineaId){notify('Selecciona una línea','err');return;}
   if(!ini){notify('Ingresa la hora de inicio','err');return;}
-  if(!motivo){notify('Ingresa el motivo','err');return;}
+  if(!causal.codigo){notify('Selecciona el causal de paro','err');return;}
 
   var fechaVal=document.getElementById('crear-tm-fecha').value;
   var p=fechaVal.split('-');
@@ -4424,13 +4656,15 @@ async function guardarCrearTM(){
       fecha:fechaFmt, turno:turno,
       horaInicio:ini, horaFin:fin||'',
       duracionMin:parseFloat(dur)||0,
-      motivo:motivo, estado:estado
+      motivo: causal.codigo+' — '+causal.desc+(motivo?' | '+motivo:''),
+      codigoCausal:causal.codigo, procesoCausal:causal.proceso, descCausal:causal.desc,
+      estado:estado
     });
     loader(false);
     if(r.ok){
       cerrarCrearTM();
       notify('Tiempo muerto registrado ✓','ok');
-      cargarTiemposMuertos(); // Refrescar lista
+      cargarTiemposMuertos();
     } else notify(r.msg||'Error','err');
   }catch(e){loader(false);notify('Error: '+e.message,'err');}
 }
@@ -4513,6 +4747,18 @@ function abrirEditTM(idx){
   document.getElementById('edit-tm-duracion').value=t.DuracionMin||'';
   document.getElementById('edit-tm-motivo').value=t.Motivo||'';
   document.getElementById('edit-tm-estado').value=t.Estado||'Cerrado';
+  // Inicializar y restaurar causal
+  buildSelectCausales('edit-tm-causal','edit-tm-causal-info','paro');
+  if(t.CodigoCausal){
+    var selEdit=document.getElementById('edit-tm-causal');
+    if(selEdit){
+      var valCausal=t.CodigoCausal+'|'+(t.ProcesoCausal||'')+' |'+(t.DescCausal||'');
+      Array.from(selEdit.options).forEach(function(o){
+        if(o.value.startsWith(t.CodigoCausal+'|')) selEdit.value=o.value;
+      });
+      showCausalInfo(selEdit.value,'edit-tm-causal-info','paro');
+    }
+  }
   document.getElementById('modal-edit-tm').style.display='flex';
   // Calcular duración automática al cambiar horas
   ['edit-tm-inicio','edit-tm-fin'].forEach(function(id){
@@ -4547,19 +4793,24 @@ async function guardarEditTM(){
   var dur=document.getElementById('edit-tm-duracion').value;
   var motivo=document.getElementById('edit-tm-motivo').value;
   var estado=document.getElementById('edit-tm-estado').value;
+  var causal=getCausalValores('edit-tm-causal');
+  var motivoFinal=causal.codigo ? causal.codigo+' — '+causal.desc+(motivo?' | '+motivo:'') : motivo;
   loader(true,'Guardando...');
   try{
     var r=await api({action:'editarTiempoMuerto',
       tiempoMuertoId:tmId, fecha:fechaFmt, turno:turno,
       horaInicio:inicio, horaFin:fin,
-      duracionMin:parseFloat(dur)||0, motivo:motivo, estado:estado
+      duracionMin:parseFloat(dur)||0,
+      motivo:motivoFinal,
+      codigoCausal:causal.codigo, procesoCausal:causal.proceso, descCausal:causal.desc,
+      estado:estado
     });
     loader(false);
     if(r.ok){
       _tmDatos[idx]={..._tmDatos[idx],
         Fecha:fechaFmt, Turno:turno,
         HoraInicio:inicio, HoraFin:fin,
-        DuracionMin:parseFloat(dur)||0, Motivo:motivo, Estado:estado};
+        DuracionMin:parseFloat(dur)||0, Motivo:motivoFinal, Estado:estado};
       renderTablaTM();
       cerrarEditTM();
       notify('Tiempo muerto actualizado ✓','ok');
