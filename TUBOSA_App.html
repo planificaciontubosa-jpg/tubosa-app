@@ -2838,11 +2838,10 @@ function restorePesajeInputs(){
     var pesoEl = document.getElementById('p-peso-'+pos);
     var cargaEl = document.getElementById('p-carga-'+pos);
     var obsEl = document.getElementById('p-obs-'+pos);
-    var btnEl = document.getElementById('p-btn-'+pos);
-    if(pesoEl){ pesoEl.value = p.pesoKg||''; pesoEl.setAttribute('readonly','true'); pesoEl.classList.add('auto'); }
-    if(cargaEl){ cargaEl.value = p.cargaLinea||''; cargaEl.setAttribute('readonly','true'); cargaEl.classList.add('auto'); }
-    if(obsEl){ obsEl.value = p.obs||''; obsEl.setAttribute('readonly','true'); obsEl.classList.add('auto'); }
-    if(btnEl){ btnEl.textContent='✓'; btnEl.style.background='var(--vd)'; btnEl.disabled=true; }
+    if(pesoEl) pesoEl.value = p.pesoKg||'';
+    if(cargaEl) cargaEl.value = p.cargaLinea||'';
+    if(obsEl) obsEl.value = p.obs||'';
+    bloquearFilaPesaje(pos, true);
   });
 }
 
@@ -2859,16 +2858,7 @@ async function guardarPosicionPesaje(pos){
     loader(false);
     if(r.ok){
       pesajesGuardados[pos]={pesoKg:pesoKg,cargaLinea:cargaLinea,obs:val('p-obs-'+pos)};
-      // Bloquear la fila
-      var row=document.getElementById('pesaje-row-'+pos);
-      if(row){
-        ['p-peso-'+pos,'p-carga-'+pos,'p-obs-'+pos].forEach(function(id){
-          var el=document.getElementById(id);
-          if(el){el.setAttribute('readonly','true');el.classList.add('auto');}
-        });
-        var btn=document.getElementById('p-btn-'+pos);
-        if(btn){btn.textContent='✓';btn.style.background='var(--vd)';btn.disabled=true;}
-      }
+      bloquearFilaPesaje(pos, true);
       notify('Posición '+pos+' guardada ✓','ok');
     }else notify(r.msg||'Error','err');
   }catch(e){loader(false);notify('Error: '+e.message,'err');}
@@ -2886,15 +2876,35 @@ async function guardarPosicionPesajeCorr(pos){
     });
     loader(false);
     if(r.ok){
-      ['p-peso-'+pos,'p-carga-'+pos,'p-obs-'+pos].forEach(function(id){
-        var el=document.getElementById(id);
-        if(el){el.setAttribute('readonly','true');el.classList.add('auto');}
-      });
-      var btn=document.getElementById('p-btn-'+pos);
-      if(btn){btn.textContent='✓';btn.style.background='var(--vd)';btn.disabled=true;}
+      bloquearFilaPesaje(pos, true);
       notify('Posición '+pos+' guardada ✓','ok');
     }else notify(r.msg||'Error','err');
   }catch(e){loader(false);notify('Error: '+e.message,'err');}
+}
+
+function bloquearFilaPesaje(pos, bloquear){
+  ['p-peso-'+pos,'p-carga-'+pos,'p-obs-'+pos].forEach(function(id){
+    var el=document.getElementById(id);
+    if(!el) return;
+    if(bloquear){ el.setAttribute('readonly','true'); el.classList.add('auto'); }
+    else { el.removeAttribute('readonly'); el.classList.remove('auto'); el.focus(); }
+  });
+  var btn=document.getElementById('p-btn-'+pos);
+  if(btn){
+    if(bloquear){
+      btn.innerHTML='✏️';
+      btn.title='Editar posición '+pos;
+      btn.style.background='var(--az)';
+      btn.style.color='#fff';
+      btn.disabled=false;
+      btn.onclick=function(){ bloquearFilaPesaje(pos,false); btn.innerHTML='💾'; btn.title='Guardar'; btn.style.background='var(--nr)'; btn.onclick=function(){guardarPosicionPesaje(pos);}; };
+    } else {
+      btn.innerHTML='💾';
+      btn.title='Guardar posición '+pos;
+      btn.style.background='var(--nr)';
+      btn.disabled=false;
+    }
+  }
 }
 
 // Contador unidades
