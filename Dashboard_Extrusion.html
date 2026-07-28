@@ -97,7 +97,7 @@ body{font-family:'Outfit',sans-serif;background:#f1f5f9;}
       <input type="date" id="filter-inicio" class="form-control" style="border-color:#d0e4f7;font-size:.8rem;">
       <span class="input-group-text" style="padding:0 6px;background:#f0f6ff;border-color:#d0e4f7;font-size:.75rem;">a</span>
       <input type="date" id="filter-fin"    class="form-control" style="border-color:#d0e4f7;font-size:.8rem;">
-      <button onclick="applyRange()" class="btn" style="background:#1a5a96;color:#fff;border-color:#1a5a96;" title="Aplicar"><i class="bi bi-search"></i></button>
+      <button onclick="applyRange(true)" class="btn" style="background:#1a5a96;color:#fff;border-color:#1a5a96;" title="Aplicar"><i class="bi bi-search"></i></button>
     </div>
     <div style="font-size:.82rem;font-weight:700;color:rgba(255,255,255,.85);"><i class="bi bi-clock me-1"></i><span id="live-clock"></span></div>
     <div style="font-size:.65rem;opacity:.55;" id="last-update-lbl"></div>
@@ -108,6 +108,8 @@ body{font-family:'Outfit',sans-serif;background:#f1f5f9;}
 <div class="container-fluid px-3 py-3">
   <!-- Rango activo label -->
   <div id="rango-label" class="mb-2" style="font-size:.78rem;font-weight:700;color:#475569;"></div>
+  <!-- Alerta de paros en curso -->
+  <div id="alerta-paros" style="display:none" class="mb-2"></div>
 
   <div class="dash-section-card mb-3">
     <ul class="nav nav-tabs nav-tabs-custom mb-4" role="tablist">
@@ -322,6 +324,7 @@ let _activeQuick='hoy';
 
 // ── Helpers ──────────────────────────────────────────────────
 const fmt=(v,d=1)=>{const n=parseFloat(v);return isNaN(n)?'—':n.toFixed(d).replace('.',',');};
+const fmtDur=m=>{const x=parseInt(m)||0;if(x<60)return x+'m';const h=Math.floor(x/60),r=x%60;return r?h+'h '+r+'m':h+'h';};
 const toISO=dmy=>{if(!dmy)return '';if(/^\d{4}/.test(dmy))return dmy;const p=dmy.split('/');return p[2]+'-'+p[1].padStart(2,'0')+'-'+p[0].padStart(2,'0');};
 const toDMY=iso=>{if(!iso)return '';const p=iso.split('-');return p[2]+'/'+p[1]+'/'+p[0];};
 const today=()=>new Date().toISOString().split('T')[0];
@@ -349,14 +352,14 @@ function setQuick(tipo){
   }
   document.getElementById('filter-inicio').value=ini;
   document.getElementById('filter-fin').value=fin;
-  loadDashboard();
+  loadDashboard(true);
 }
 
-function applyRange(){
+function applyRange(forzar){
   // Al usar rango manual, desactivar quick buttons
   ['hoy','ayer','semana','mes'].forEach(t=>document.getElementById('qb-'+t).classList.remove('active'));
   _activeQuick='manual';
-  loadDashboard();
+  loadDashboard(forzar);
 }
 
 // ── JSONP ─────────────────────────────────────────────────────
@@ -375,7 +378,10 @@ function api(params){
 // ══════════════════════════════════════════════════════════════
 //  LOAD DASHBOARD
 // ══════════════════════════════════════════════════════════════
-async function loadDashboard(){
+async function loadDashboard(forzar){
+  // No reconstruir la grilla si el usuario tiene un modal abierto:
+  // el auto-refresh no debe interrumpir la lectura del detalle.
+  if(!forzar && document.querySelector('.modal.show')) return;
   const spinner = document.getElementById('ext-spinner');
   if(spinner) spinner.style.display='block';
   const ini=document.getElementById('filter-inicio').value||today();
@@ -395,6 +401,7 @@ async function loadDashboard(){
     } else {
       params={action:'getDashboard', fecha:toDMY(fin), fecha_inicio:ini, fecha_fin:fin};
     }
+    if(forzar) params.nocache = 1;
     console.log('[EXT] Enviando:', JSON.stringify(params));
     const r=await api(params);
     console.log('[EXT] ok:', r.ok, '| porLinea:', r.porLinea?.length, '| kpis.lineasActivas:', r.kpis?.lineasActivas);
@@ -465,6 +472,29 @@ function renderDashboard(r, rangoStr){
   document.getElementById('kpi-kg').textContent=totalKg>=1000?fmt(totalKg/1000,1)+' Ton':Math.round(totalKg)+' kg';
   document.getElementById('kpi-tm').textContent=fmt(tmH,1)+'h';
 
+  // ── Alerta de paros en curso ────────────────────────────────
+  const alertaEl = document.getElementById('alerta-paros');
+  if(alertaEl){
+    const paros = r.parosAbiertos || [];
+    if(paros.length){
+      const chips = paros.map(function(p){
+        return '<span style="background:#fff;border:1px solid #fecaca;border-radius:14px;'+
+               'padding:3px 11px;font-size:.72rem;font-weight:700;color:#b91c1c;display:inline-block;margin:2px 3px 2px 0">'+
+               (p.linea||'—')+' · '+fmtDur(p.minutosCorriendo)+
+               (p.codigoCausal?' · '+p.codigoCausal:'')+'</span>';
+      }).join('');
+      alertaEl.innerHTML =
+        '<div style="background:#fef2f2;border-left:4px solid #f43f5e;border-radius:8px;padding:10px 14px">'+
+          '<div style="font-size:.82rem;font-weight:800;color:#b91c1c;margin-bottom:4px">'+
+            '⚠ '+paros.length+' línea'+(paros.length>1?'s':'')+' con tiempo muerto en curso</div>'+
+          '<div>'+chips+'</div>'+
+        '</div>';
+      alertaEl.style.display='block';
+    } else {
+      alertaEl.style.display='none';
+    }
+  }
+
   const grid=document.getElementById('ext-grid');
   grid.innerHTML='';
 
@@ -532,8 +562,10 @@ function renderDashboard(r, rangoStr){
   // ── Una tarjeta por línea ─────────────────────────────────
   lineas.forEach((l,idx)=>{
     const kgh=parseFloat(l.kghPromedio)||0;
-    const isOp=String(l.estado||'').trim()==='Abierto'||kgh>0;
-    const border=isOp?'#10b981':'#f43f5e';
+    // Un paro sin cerrar manda sobre cualquier otro estado
+    const enParo = !!l.paroEnCurso;
+    const isOp = !enParo && (String(l.estado||'').trim()==='Abierto'||kgh>0);
+    const border = enParo ? '#f43f5e' : (isOp ? '#10b981' : '#94a3b8');
     const oeeC=parseFloat(l.oeeLinea)>=80?'#10b981':parseFloat(l.oeeLinea)>=60?'#f59e0b':'#f43f5e';
     const now=new Date();
     const col=document.createElement('div');
@@ -543,7 +575,8 @@ function renderDashboard(r, rangoStr){
         <div class="card-header-custom">${l.linea||'LIN??'}</div>
         <div class="px-2 pt-1 pb-1">
           <div class="text-center mb-1">
-            <span class="status-badge ${isOp?'status-operativa':'status-parada'}">${isOp?'OPERATIVA':'SIN TURNO'}</span>
+            <span class="status-badge ${enParo?'status-parada':(isOp?'status-operativa':'status-parada')}">${enParo?'🔴 EN PARO':(isOp?'OPERATIVA':'SIN TURNO')}</span>
+            ${enParo?`<div style="font-size:.58rem;color:#f43f5e;font-weight:800;line-height:1.1;margin-top:1px;">${fmtDur(l.paroMinutos)} · desde ${l.paroDesde||'—'}</div>`:''}
             <div style="font-size:.56rem;color:#64748b;font-weight:700;line-height:1.1;margin-top:1px;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;max-width:100%;padding:0 4px;">${l.producto||'—'}</div>
           </div>
           <div class="text-center mb-1">
@@ -705,7 +738,7 @@ function expandChart(type){
 // ── INIT ──────────────────────────────────────────────────────
 document.addEventListener('DOMContentLoaded', function(){
   setQuick('hoy');
-  setInterval(loadDashboard, 60000);
+  setInterval(function(){ loadDashboard(false); }, 60000);
 });
 </script>
 </body>
