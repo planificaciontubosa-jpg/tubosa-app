@@ -2407,6 +2407,11 @@ async function selLinea(l){
   esCoextrusor=parseInt(l.ID)===LINEA_COEXTRUSOR;
   // Guardar número de cabezales para la línea
   lineaActual._cabezales = parseInt(l.Cabezales)||1;
+  // Limpiar el estado de la línea anterior: sin esto, al pasar de una
+  // línea a otra se arrastraban las horas y los pesajes ya cargados.
+  horasGuardadas = {};
+  pesajesGuardados = {};
+  horaActual = 1;
   const turnoActivo = turnosActivosMap[l.ID];
   if(turnoActivo){
     mostrarModalRetomar(turnoActivo);
@@ -2803,14 +2808,37 @@ function renderTabs(elId, corrugada, tipo){
   }).join('');
 }
 
+// ══════════════════════════════════════════════════════════════
+//  PESAJE — IDs ÚNICOS POR VISTA
+//  Las tres vistas de registro (normal, corrugada, coextrusor)
+//  conviven en el DOM. Antes las tres generaban los mismos IDs
+//  (p-peso-1, p-carga-1...), así que getElementById siempre
+//  devolvía el de la vista normal aunque estuviera oculta:
+//  el pesaje de LIN10 y LIN20 se guardaba y se leía en los
+//  campos equivocados. Ahora cada vista tiene su propio prefijo.
+// ══════════════════════════════════════════════════════════════
+var PESAJE_PREFIJOS = {
+  'pesaje-tbody':       'p-',
+  'pesaje-tbody-corr':  'pc-',
+  'pesaje-tbody-coext': 'px-'
+};
+var _pesajePrefijo = 'p-';   // prefijo de la vista activa
+
+/** Construye el id real del campo de pesaje para la vista activa */
+function pid(campo, pos){ return _pesajePrefijo + campo + '-' + pos; }
+
 function renderPesaje(tbodyId,nPos){
-  document.getElementById(tbodyId).innerHTML=Array.from({length:nPos},(_,i)=>`
-    <tr id="pesaje-row-${i+1}">
+  var px = PESAJE_PREFIJOS[tbodyId] || 'p-';
+  _pesajePrefijo = px;
+  var cont = document.getElementById(tbodyId);
+  if(!cont) return;
+  cont.innerHTML=Array.from({length:nPos},(_,i)=>`
+    <tr id="${px}row-${i+1}">
       <td style="text-align:center;font-weight:700;color:var(--nr)">${i+1}</td>
-      <td><input type="number" id="p-peso-${i+1}" placeholder="0.000" step="0.001"></td>
-      <td><input type="number" id="p-carga-${i+1}" placeholder="0.0"></td>
-      <td><input type="text" id="p-obs-${i+1}" placeholder="Obs."></td>
-      <td><button class="btn btn-nr btn-sm" onclick="guardarPosicionPesaje(${i+1})" id="p-btn-${i+1}" style="padding:4px 10px;font-size:11px">💾</button></td>
+      <td><input type="number" id="${px}peso-${i+1}" placeholder="0.000" step="0.001"></td>
+      <td><input type="number" id="${px}carga-${i+1}" placeholder="0.0"></td>
+      <td><input type="text" id="${px}obs-${i+1}" placeholder="Obs."></td>
+      <td><button class="btn btn-nr btn-sm" onclick="guardarPosicionPesaje(${i+1})" id="${px}btn-${i+1}" style="padding:4px 10px;font-size:11px">💾</button></td>
     </tr>`).join('');
 }
 
@@ -2943,9 +2971,9 @@ var pesajesGuardados = {};
 function restorePesajeInputs(){
   Object.entries(pesajesGuardados).forEach(function(entry){
     var pos = entry[0], p = entry[1];
-    var pesoEl = document.getElementById('p-peso-'+pos);
-    var cargaEl = document.getElementById('p-carga-'+pos);
-    var obsEl = document.getElementById('p-obs-'+pos);
+    var pesoEl = document.getElementById(pid('peso',pos));
+    var cargaEl = document.getElementById(pid('carga',pos));
+    var obsEl = document.getElementById(pid('obs',pos));
     if(pesoEl) pesoEl.value = p.pesoKg||'';
     if(cargaEl) cargaEl.value = p.cargaLinea||'';
     if(obsEl) obsEl.value = p.obs||'';
@@ -2954,50 +2982,36 @@ function restorePesajeInputs(){
 }
 
 async function guardarPosicionPesaje(pos){
-  var pesoKg=flt('p-peso-'+pos);
-  var cargaLinea=flt('p-carga-'+pos);
+  var pesoKg=flt(pid('peso',pos));
+  var cargaLinea=flt(pid('carga',pos));
   if(!pesoKg && !cargaLinea){notify('Ingresa al menos el peso o la carga','err');return;}
   loader(true,'Guardando posición '+pos+'...');
   try{
     var r=await api({action:'guardarPesaje',turnoId:turnoActual.id,
       fecha:turnoActual.fecha||'',turno:turnoActual.turno||'',linea:lineaActual.NombreLinea||'',orden:turnoActual.ordenFab||'',
-      pesajes:[{posicion:pos,pesoKg:pesoKg,cargaLinea:cargaLinea,obs:val('p-obs-'+pos)}]
+      pesajes:[{posicion:pos,pesoKg:pesoKg,cargaLinea:cargaLinea,obs:val(pid('obs',pos))}]
     });
     loader(false);
     if(r.ok){
-      pesajesGuardados[pos]={pesoKg:pesoKg,cargaLinea:cargaLinea,obs:val('p-obs-'+pos)};
+      pesajesGuardados[pos]={pesoKg:pesoKg,cargaLinea:cargaLinea,obs:val(pid('obs',pos))};
       bloquearFilaPesaje(pos, true);
       notify('Posición '+pos+' guardada ✓','ok');
     }else notify(r.msg||'Error','err');
   }catch(e){loader(false);notify('Error: '+e.message,'err');}
 }
 
-async function guardarPosicionPesajeCorr(pos){
-  var pesoKg=flt('p-peso-'+pos);
-  var cargaLinea=flt('p-carga-'+pos);
-  if(!pesoKg && !cargaLinea){notify('Ingresa al menos el peso o la carga','err');return;}
-  loader(true,'Guardando posición '+pos+'...');
-  try{
-    var r=await api({action:'guardarPesaje',turnoId:turnoActual.id,
-      fecha:turnoActual.fecha||'',turno:turnoActual.turno||'',linea:lineaActual.NombreLinea||'',orden:turnoActual.ordenFab||'',
-      pesajes:[{posicion:pos,pesoKg:pesoKg,cargaLinea:cargaLinea,obs:val('p-obs-'+pos)}]
-    });
-    loader(false);
-    if(r.ok){
-      bloquearFilaPesaje(pos, true);
-      notify('Posición '+pos+' guardada ✓','ok');
-    }else notify(r.msg||'Error','err');
-  }catch(e){loader(false);notify('Error: '+e.message,'err');}
-}
+// guardarPosicionPesajeCorr se eliminó: renderPesaje genera siempre
+// guardarPosicionPesaje, que ahora resuelve los IDs con pid() y
+// funciona igual en las vistas normal, corrugada y coextrusor.
 
 function bloquearFilaPesaje(pos, bloquear){
-  ['p-peso-'+pos,'p-carga-'+pos,'p-obs-'+pos].forEach(function(id){
+  [pid('peso',pos),pid('carga',pos),pid('obs',pos)].forEach(function(id){
     var el=document.getElementById(id);
     if(!el) return;
     if(bloquear){ el.setAttribute('readonly','true'); el.classList.add('auto'); }
     else { el.removeAttribute('readonly'); el.classList.remove('auto'); el.focus(); }
   });
-  var btn=document.getElementById('p-btn-'+pos);
+  var btn=document.getElementById(pid('btn',pos));
   if(btn){
     if(bloquear){
       btn.innerHTML='✏️';
@@ -3192,8 +3206,8 @@ async function guardarHoraCorr(){
  */
 async function guardarPesaje(){
   const pesajes=Array.from({length:6},(_,i)=>({
-    posicion:i+1, pesoKg:flt(`p-peso-${i+1}`),
-    cargaLinea:flt(`p-carga-${i+1}`), obs:val(`p-obs-${i+1}`)
+    posicion:i+1, pesoKg:flt(pid('peso',i+1)),
+    cargaLinea:flt(pid('carga',i+1)), obs:val(pid('obs',i+1))
   })).filter(p=>p.pesoKg>0||p.cargaLinea>0);
   if(!pesajes.length){notify('Ingresa al menos un pesaje','err');return;}
   loader(true,'Guardando pesaje...');
@@ -3216,8 +3230,8 @@ async function guardarPesaje(){
 
 async function guardarPesajeCorr(){
   const pesajes=Array.from({length:3},(_,i)=>({
-    posicion:i+1,pesoKg:flt(`p-peso-${i+1}`),
-    cargaLinea:flt(`p-carga-${i+1}`),obs:val(`p-obs-${i+1}`)
+    posicion:i+1,pesoKg:flt(pid('peso',i+1)),
+    cargaLinea:flt(pid('carga',i+1)),obs:val(pid('obs',i+1))
   })).filter(p=>p.pesoKg>0||p.cargaLinea>0);
   if(!pesajes.length){notify('Ingresa al menos un pesaje','err');return;}
   loader(true);
