@@ -1198,6 +1198,7 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:#EEF2F7;color:var(--
           </div>
           <div class="campo"><label>Rotulado</label><input type="text" id="dig-rotulado" placeholder="Descripción rotulado"></div>
         </div>
+        <div id="dig-tipo-aviso" style="display:none;margin-bottom:10px"></div>
         <div class="fila fila-4" id="dig-orden-info" style="display:none">
           <div class="campo"><label>Código SAP</label><input type="text" id="dig-codigoSAP" readonly class="auto"></div>
           <div class="campo"><label>Producto</label><input type="text" id="dig-producto" readonly class="auto"></div>
@@ -1214,6 +1215,19 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:#EEF2F7;color:var(--
         </div>
         <div class="sec-t">Paso 2 — Ingresa las horas registradas</div>
         <div id="dig-horas-container"></div>
+
+        <!-- Tiempos muertos del turno digitalizado -->
+        <div style="border:1px solid var(--rd);border-radius:var(--rad2);padding:14px;margin-top:12px">
+          <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;margin-bottom:10px">
+            <div style="font-size:12px;font-weight:700;color:var(--rd);text-transform:uppercase">⏱ Tiempos Muertos del Turno</div>
+            <button class="btn btn-rd btn-sm" onclick="dig_addTM()">+ Agregar paro</button>
+          </div>
+          <div id="dig-tm-lista"></div>
+          <div id="dig-tm-vacio" style="font-size:12px;color:var(--gr3);text-align:center;padding:8px">
+            Sin paros registrados. Si el turno tuvo tiempo muerto, agrégalo aquí para que quede cargado a la orden.
+          </div>
+        </div>
+
         <button class="btn btn-vd" onclick="dig_guardarTodo()" style="margin-top:12px;width:100%;justify-content:center">💾 Guardar Todo el Turno</button>
         <button class="btn btn-gr btn-sm" onclick="dig_reset()" style="margin-top:8px">← Nuevo turno</button>
       </div>
@@ -4758,7 +4772,35 @@ async function abrirDigitacionTurno(){
   dig_reset();
 }
 
-function dig_onLinea(){}
+// Flags del tipo de línea que se está digitalizando: determinan
+// qué bloques de tendencias y cuántas posiciones de pesaje mostrar.
+var _digEsCorrugada = false, _digEsCoext = false, _digCabezales = 1;
+
+function dig_onLinea(){
+  var id = parseInt(val('dig-linea'))||0;
+  var lo = (window._lineasCache||[]).find(function(l){return parseInt(l.ID)===id;}) || {};
+  _digEsCorrugada = (lo.Tipo==='Corrugada') || LINEAS_CORRUGADAS.indexOf(id)>=0;
+  _digEsCoext     = (id === LINEA_COEXTRUSOR);
+  _digCabezales   = parseInt(lo.Cabezales)||1;
+
+  var aviso = document.getElementById('dig-tipo-aviso');
+  if(aviso){
+    if(_digEsCorrugada){
+      aviso.innerHTML = '<div style="background:var(--vd2);border-left:3px solid var(--vd);border-radius:var(--rad);padding:8px 12px;font-size:12px;color:var(--vd);font-weight:600">'+
+        'Línea corrugada: se usarán tendencias de corrugada (4 posiciones) y pesaje de 3 posiciones.</div>';
+      aviso.style.display='block';
+    } else if(_digEsCoext){
+      aviso.innerHTML = '<div style="background:#EDE7F6;border-left:3px solid #533AB7;border-radius:var(--rad);padding:8px 12px;font-size:12px;color:#533AB7;font-weight:600">'+
+        'Línea coextrusora: se registran las mezclas de EXT80 (relleno) y EXT65 (capa).</div>';
+      aviso.style.display='block';
+    } else {
+      aviso.innerHTML = _digCabezales===1
+        ? '<div style="background:var(--az3);border-left:3px solid var(--az);border-radius:var(--rad);padding:8px 12px;font-size:12px;color:var(--az);font-weight:600">Línea de cabezal sencillo: solo se pide Lado 1.</div>'
+        : '';
+      aviso.style.display = aviso.innerHTML ? 'block' : 'none';
+    }
+  }
+}
 
 function dig_onOrden(v){
   var todas=window._todasOrdenes||maestroOrdenes;
@@ -4841,44 +4883,75 @@ function renderDigHoras(){
             '<div class="campo"><label>Sobre Peso %</label><input type="number" id="dh-sobrePeso-'+h+'" placeholder="0.00" step="0.01"></div>'+
             '<div class="campo"><label>Longitud m</label><input type="number" id="dh-longitud-'+h+'" placeholder="0.0" step="0.1"></div>'+
           '</div>'+
+          '<div class="fila fila-2">'+
+            '<div class="campo"><label>Causal de Scrap</label>'+
+              '<select id="dh-causalScrap-'+h+'" style="width:100%"></select>'+
+              '<div id="dh-causalScrap-'+h+'-info" style="display:none"></div>'+
+            '</div>'+
+            '<div class="campo"><label>Observación scrap</label><input type="text" id="dh-motivoRep-'+h+'" placeholder="Detalle (opcional)"></div>'+
+          '</div>'+
           '<div class="campo"><label>Observaciones</label><input type="text" id="dh-obs-'+h+'" placeholder=""></div>'+
         '</div>'+
-        // Bloque 3 Tendencias
-        '<div style="background:var(--gr);border-radius:var(--rad2);padding:10px;border-left:3px solid var(--az2)">'+
-          '<div style="font-size:11px;font-weight:700;color:var(--az2);margin-bottom:8px;text-transform:uppercase">📈 Tendencias</div>'+
-          '<div class="fila fila-2">'+
-            '<div>'+
-              '<div class="sec-t">Lado 1</div>'+
-              '<div class="fila fila-2">'+
-                '<div class="campo"><label>Espesor (mm)</label><input type="number" id="dh-espL1-'+h+'" placeholder="0.00" step="0.01"></div>'+
-                '<div class="campo"><label>Descalibre %</label><input type="number" id="dh-descL1-'+h+'" placeholder="0.0" step="0.1"></div>'+
+        // Bloque 3 Tendencias — depende del tipo de línea
+        (_digEsCorrugada
+          // ── Corrugada: 4 posiciones × (externo / interno / valle) ──
+          ? '<div style="background:var(--vd2);border-radius:var(--rad2);padding:10px;border-left:3px solid var(--vd)">'+
+              '<div style="font-size:11px;font-weight:700;color:var(--vd);margin-bottom:8px;text-transform:uppercase">📈 Tendencias Corrugada</div>'+
+              '<table class="pt" style="font-size:11px"><thead><tr>'+
+                '<th>Posición</th><th>Externo (mm)</th><th>Interno (mm)</th><th>Valle (mm)</th>'+
+              '</tr></thead><tbody>'+
+              ['arr','aba','izq','der'].map(function(pz,pi){
+                var nom=['Arriba','Abajo','Izquierda','Derecha'][pi];
+                return '<tr>'+
+                  '<td style="font-weight:700;color:var(--vd)">'+nom+'</td>'+
+                  '<td><input type="number" id="dh-tc-'+pz+'-ext-'+h+'" placeholder="0.00" step="0.01" style="width:100%;border:1px solid var(--gr2);border-radius:4px;padding:4px 6px;font-size:12px"></td>'+
+                  '<td><input type="number" id="dh-tc-'+pz+'-int-'+h+'" placeholder="0.00" step="0.01" style="width:100%;border:1px solid var(--gr2);border-radius:4px;padding:4px 6px;font-size:12px"></td>'+
+                  '<td><input type="number" id="dh-tc-'+pz+'-val-'+h+'" placeholder="0.00" step="0.01" style="width:100%;border:1px solid var(--gr2);border-radius:4px;padding:4px 6px;font-size:12px"></td>'+
+                '</tr>';
+              }).join('')+
+              '</tbody></table>'+
+              '<div style="font-size:10px;color:var(--gr3);margin-top:6px">Los promedios se calculan automáticamente al guardar.</div>'+
+            '</div>'
+          // ── Normal / coextrusora: Lado 1 y (si aplica) Lado 2 ──
+          : '<div style="background:var(--gr);border-radius:var(--rad2);padding:10px;border-left:3px solid var(--az2)">'+
+              '<div style="font-size:11px;font-weight:700;color:var(--az2);margin-bottom:8px;text-transform:uppercase">📈 Tendencias</div>'+
+              '<div class="fila '+(_digCabezales===2?'fila-2':'')+'">'+
+                '<div>'+
+                  '<div class="sec-t">'+(_digCabezales===2?'Lado 1':'Medición')+'</div>'+
+                  '<div class="fila fila-2">'+
+                    '<div class="campo"><label>Espesor (mm)</label><input type="number" id="dh-espL1-'+h+'" placeholder="0.00" step="0.01"></div>'+
+                    '<div class="campo"><label>Descalibre %</label><input type="number" id="dh-descL1-'+h+'" placeholder="0.0" step="0.1"></div>'+
+                  '</div>'+
+                  '<div class="fila fila-2">'+
+                    '<div class="campo"><label>Diám. Ext. mm</label><input type="number" id="dh-diamL1-'+h+'" placeholder="0.0" step="0.01"></div>'+
+                    '<div class="campo"><label>Ovalización</label><input type="number" id="dh-ovalL1-'+h+'" placeholder="0.0" step="0.01"></div>'+
+                  '</div>'+
+                '</div>'+
+                (_digCabezales===2
+                  ? '<div>'+
+                      '<div class="sec-t">Lado 2</div>'+
+                      '<div class="fila fila-2">'+
+                        '<div class="campo"><label>Espesor (mm)</label><input type="number" id="dh-espL2-'+h+'" placeholder="0.00" step="0.01"></div>'+
+                        '<div class="campo"><label>Descalibre %</label><input type="number" id="dh-descL2-'+h+'" placeholder="0.0" step="0.1"></div>'+
+                      '</div>'+
+                      '<div class="fila fila-2">'+
+                        '<div class="campo"><label>Diám. Ext. mm</label><input type="number" id="dh-diamL2-'+h+'" placeholder="0.0" step="0.01"></div>'+
+                        '<div class="campo"><label>Ovalización</label><input type="number" id="dh-ovalL2-'+h+'" placeholder="0.0" step="0.01"></div>'+
+                      '</div>'+
+                    '</div>'
+                  : '')+
               '</div>'+
-              '<div class="fila fila-2">'+
-                '<div class="campo"><label>Diám. Ext. mm</label><input type="number" id="dh-diamL1-'+h+'" placeholder="0.0" step="0.01"></div>'+
-                '<div class="campo"><label>Ovalización</label><input type="number" id="dh-ovalL1-'+h+'" placeholder="0.0" step="0.01"></div>'+
-              '</div>'+
-            '</div>'+
-            '<div>'+
-              '<div class="sec-t">Lado 2</div>'+
-              '<div class="fila fila-2">'+
-                '<div class="campo"><label>Espesor (mm)</label><input type="number" id="dh-espL2-'+h+'" placeholder="0.00" step="0.01"></div>'+
-                '<div class="campo"><label>Descalibre %</label><input type="number" id="dh-descL2-'+h+'" placeholder="0.0" step="0.1"></div>'+
-              '</div>'+
-              '<div class="fila fila-2">'+
-                '<div class="campo"><label>Diám. Ext. mm</label><input type="number" id="dh-diamL2-'+h+'" placeholder="0.0" step="0.01"></div>'+
-                '<div class="campo"><label>Ovalización</label><input type="number" id="dh-ovalL2-'+h+'" placeholder="0.0" step="0.01"></div>'+
-              '</div>'+
-            '</div>'+
-          '</div>'+
-        '</div>'+
+            '</div>')+
       '</div>'+
     '</details>';
   }).join('') +
   // Pesaje del turno completo
   '<div style="border:1px solid var(--nr);border-radius:var(--rad2);padding:14px;margin-top:12px">'+
-    '<div style="font-size:12px;font-weight:700;color:var(--nr);text-transform:uppercase;margin-bottom:10px">⚖ Pesaje y Rendimiento — Turno Completo</div>'+
+    '<div style="font-size:12px;font-weight:700;color:var(--nr);text-transform:uppercase;margin-bottom:10px">⚖ Pesaje y Rendimiento — Turno Completo'+
+      (_digEsCorrugada?' (3 posiciones)':'')+'</div>'+
     '<table class="pt"><thead><tr><th>Posición</th><th>Peso (kg)</th><th>Carga Línea (kg/h)</th><th>Observación</th></tr></thead>'+
-    '<tbody>'+Array.from({length:6},function(_,i){
+    // Las corrugadas solo tienen 3 posiciones de pesaje
+    '<tbody>'+Array.from({length:(_digEsCorrugada?3:6)},function(_,i){
       var p=i+1;
       return '<tr>'+
         '<td style="text-align:center;font-weight:700;color:var(--nr)">'+p+'</td>'+
@@ -4889,6 +4962,105 @@ function renderDigHoras(){
     }).join('')+
     '</tbody></table>'+
   '</div>';
+
+  // Poblar los selectores de causal de scrap de las 8 horas
+  for(var hh=1; hh<=8; hh++){
+    buildSelectCausales('dh-causalScrap-'+hh, 'dh-causalScrap-'+hh+'-info', 'scrap');
+  }
+}
+
+// ══════════════════════════════════════════════════════════════
+//  TIEMPOS MUERTOS EN LA DIGITALIZACIÓN
+//  Se capturan aquí para que queden atados al turno y a la orden
+//  que se está digitalizando, con su causal de paro.
+// ══════════════════════════════════════════════════════════════
+var _digTMs = [];      // paros pendientes de guardar
+var _digTMSeq = 0;     // id local para poder eliminarlos
+
+function dig_addTM(){
+  _digTMSeq++;
+  _digTMs.push({uid:_digTMSeq, inicio:'', fin:'', dur:0});
+  dig_renderTMs();
+}
+
+function dig_delTM(uid){
+  // Guardar lo digitado antes de re-renderizar
+  dig_leerTMs();
+  _digTMs = _digTMs.filter(function(x){ return x.uid !== uid; });
+  dig_renderTMs();
+}
+
+/** Lee del DOM los valores digitados a la memoria */
+function dig_leerTMs(){
+  _digTMs.forEach(function(tm){
+    var i=document.getElementById('dtm-ini-'+tm.uid);
+    var f=document.getElementById('dtm-fin-'+tm.uid);
+    var o=document.getElementById('dtm-obs-'+tm.uid);
+    if(i) tm.inicio=i.value;
+    if(f) tm.fin=f.value;
+    if(o) tm.obs=o.value;
+    var s=document.getElementById('dtm-causal-'+tm.uid);
+    if(s) tm.causalVal=s.value;
+    tm.dur=dig_calcDurTM(tm.inicio, tm.fin);
+  });
+}
+
+function dig_calcDurTM(ini,fin){
+  if(!ini||!fin) return 0;
+  var a=ini.split(':'), b=fin.split(':');
+  if(a.length<2||b.length<2) return 0;
+  var m=(parseInt(b[0])*60+parseInt(b[1]))-(parseInt(a[0])*60+parseInt(a[1]));
+  if(m<0) m+=1440;   // el paro cruzó la medianoche
+  return m;
+}
+
+function dig_onCambioTM(uid){
+  dig_leerTMs();
+  var tm=_digTMs.find(function(x){return x.uid===uid;});
+  var el=document.getElementById('dtm-dur-'+uid);
+  if(el && tm) el.textContent = tm.dur>0 ? fmtDuracion(tm.dur) : '—';
+}
+
+function dig_renderTMs(){
+  var cont=document.getElementById('dig-tm-lista');
+  var vacio=document.getElementById('dig-tm-vacio');
+  if(!cont) return;
+  if(!_digTMs.length){
+    cont.innerHTML='';
+    if(vacio) vacio.style.display='block';
+    return;
+  }
+  if(vacio) vacio.style.display='none';
+  cont.innerHTML=_digTMs.map(function(tm){
+    return '<div style="background:var(--rd2);border-radius:var(--rad);padding:10px;margin-bottom:8px">'+
+      '<div class="fila fila-3">'+
+        '<div class="campo"><label>Hora inicio</label>'+
+          '<input type="time" id="dtm-ini-'+tm.uid+'" value="'+(tm.inicio||'')+'" onchange="dig_onCambioTM('+tm.uid+')"></div>'+
+        '<div class="campo"><label>Hora fin</label>'+
+          '<input type="time" id="dtm-fin-'+tm.uid+'" value="'+(tm.fin||'')+'" onchange="dig_onCambioTM('+tm.uid+')"></div>'+
+        '<div class="campo"><label>Duración</label>'+
+          '<div id="dtm-dur-'+tm.uid+'" style="padding:8px 0;font-weight:800;color:var(--rd)">'+(tm.dur>0?fmtDuracion(tm.dur):'—')+'</div></div>'+
+      '</div>'+
+      '<div class="campo"><label>Causal de paro</label>'+
+        '<select id="dtm-causal-'+tm.uid+'" style="width:100%"></select>'+
+        '<div id="dtm-causal-'+tm.uid+'-info" style="display:none"></div>'+
+      '</div>'+
+      '<div class="fila fila-2">'+
+        '<div class="campo"><label>Observación</label>'+
+          '<input type="text" id="dtm-obs-'+tm.uid+'" value="'+(tm.obs||'')+'" placeholder="Detalle (opcional)"></div>'+
+        '<div class="campo"><label>&nbsp;</label>'+
+          '<button class="btn btn-gr btn-sm" onclick="dig_delTM('+tm.uid+')">🗑 Quitar</button></div>'+
+      '</div>'+
+    '</div>';
+  }).join('');
+  // Poblar los selectores y restaurar la selección previa
+  _digTMs.forEach(function(tm){
+    buildSelectCausales('dtm-causal-'+tm.uid, 'dtm-causal-'+tm.uid+'-info', 'paro');
+    if(tm.causalVal){
+      var s=document.getElementById('dtm-causal-'+tm.uid);
+      if(s){ s.value=tm.causalVal; showCausalInfo(tm.causalVal,'dtm-causal-'+tm.uid+'-info','paro'); }
+    }
+  });
 }
 
 function dig_buscarMezcla(input, h){
@@ -4911,12 +5083,26 @@ async function dig_guardarTodo(){
         nroTubos:tubos, pesoTotal:flt('dh-pesoTotal-'+h),
         reprocesoKg:flt('dh-reproceso-'+h), pesoPromedio:flt('dh-pesoProm-'+h),
         sobrePeso:flt('dh-sobrePeso-'+h), longitud:flt('dh-longitud-'+h),
-        observaciones:val('dh-obs-'+h), rotuladoOk:false, motivoReproceso:'',
-        // Tendencias
+        observaciones:val('dh-obs-'+h), rotuladoOk:false,
+        // Causal de scrap: se guarda igual que en el registro en vivo
+        motivoReproceso:(function(){
+          var cz=getCausalValores('dh-causalScrap-'+h);
+          var obs=val('dh-motivoRep-'+h);
+          return cz.codigo ? cz.codigo+' — '+cz.desc+(obs?' | '+obs:'') : obs;
+        })(),
+        causalScrap:getCausalValores('dh-causalScrap-'+h),
+        // Tendencias de línea normal / coextrusora
         espL1:val('dh-espL1-'+h), descL1:val('dh-descL1-'+h),
         diamL1:val('dh-diamL1-'+h), ovalL1:val('dh-ovalL1-'+h),
         espL2:val('dh-espL2-'+h), descL2:val('dh-descL2-'+h),
-        diamL2:val('dh-diamL2-'+h), ovalL2:val('dh-ovalL2-'+h)
+        diamL2:val('dh-diamL2-'+h), ovalL2:val('dh-ovalL2-'+h),
+        // Tendencias de corrugada (4 posiciones × 3 mediciones)
+        tc:{
+          arrExt:flt('dh-tc-arr-ext-'+h), arrInt:flt('dh-tc-arr-int-'+h), arrVal:flt('dh-tc-arr-val-'+h),
+          abaExt:flt('dh-tc-aba-ext-'+h), abaInt:flt('dh-tc-aba-int-'+h), abaVal:flt('dh-tc-aba-val-'+h),
+          izqExt:flt('dh-tc-izq-ext-'+h), izqInt:flt('dh-tc-izq-int-'+h), izqVal:flt('dh-tc-izq-val-'+h),
+          derExt:flt('dh-tc-der-ext-'+h), derInt:flt('dh-tc-der-int-'+h), derVal:flt('dh-tc-der-val-'+h)
+        }
       });
     }
   }
@@ -4946,8 +5132,9 @@ async function dig_guardarTodo(){
         observaciones:h.observaciones, rotuladoOk:false, motivoReproceso:''
       });
       if(!r.ok){ errores++; continue; }
-      // Guardar tendencias si hay datos
-      if(h.espL1||h.espL2){
+      // Guardar tendencias — normal/coext van por hora; la corrugada
+      // se guarda una sola vez por turno (más abajo, fuera del loop).
+      if(!_digEsCorrugada && (h.espL1||h.espL2)){
         await api({action:'guardarTendencia', horaId:r.horaId, turnoId:_digTurnoId, hora:h.hora,
           fecha:_digFechaFmt, turno:_digTurnoVal,
           linea:_digLineaNombre, orden:_digOrdenVal,
@@ -4958,15 +5145,71 @@ async function dig_guardarTodo(){
         });
       }
     }
-    // Guardar pesajes
+
+    // ── Tendencias de corrugada: un registro por turno ──────────
+    // Se toma la primera hora que tenga mediciones y se calculan
+    // los promedios por tipo de medición, igual que en el registro
+    // en vivo (guardarTendCorr).
+    if(_digEsCorrugada){
+      var _hc = horas.find(function(x){
+        var t=x.tc||{};
+        return t.arrExt||t.abaExt||t.izqExt||t.derExt;
+      });
+      if(_hc){
+        var t=_hc.tc;
+        function _prom(a,b,c2,d){
+          var v=[a,b,c2,d].filter(function(x){return x>0;});
+          return v.length ? v.reduce(function(s,x){return s+x;},0)/v.length : 0;
+        }
+        await api({action:'guardarTendCorrugada', turnoId:_digTurnoId,
+          fecha:_digFechaFmt, turno:_digTurnoVal,
+          linea:_digLineaNombre, orden:_digOrdenVal,
+          arribaExterno:t.arrExt, arribaInterno:t.arrInt, arribaValle:t.arrVal,
+          abajoExterno:t.abaExt, abajoInterno:t.abaInt, abajoValle:t.abaVal,
+          izqExterno:t.izqExt, izqInterno:t.izqInt, izqValle:t.izqVal,
+          derExterno:t.derExt, derInterno:t.derInt, derValle:t.derVal,
+          promExterno:_prom(t.arrExt,t.abaExt,t.izqExt,t.derExt),
+          promInterno:_prom(t.arrInt,t.abaInt,t.izqInt,t.derInt),
+          promValle:_prom(t.arrVal,t.abaVal,t.izqVal,t.derVal)
+        });
+      }
+    }
+
+    // Guardar pesajes — la corrugada solo tiene 3 posiciones
     var pesajes=[];
-    for(var p=1;p<=6;p++){
+    var _nPos = _digEsCorrugada ? 3 : 6;
+    for(var p=1;p<=_nPos;p++){
       var pesoKg=flt('dh-p-peso-'+p);
       var cargaLinea=flt('dh-p-carga-'+p);
       if(pesoKg>0||cargaLinea>0){
         pesajes.push({posicion:p, pesoKg:pesoKg, cargaLinea:cargaLinea, obs:val('dh-p-obs-'+p)});
       }
     }
+    // ── Guardar tiempos muertos del turno ──────────────────────
+    dig_leerTMs();
+    var _tmOk=0, _tmErr=0;
+    for(var ti=0; ti<_digTMs.length; ti++){
+      var tm=_digTMs[ti];
+      if(!tm.inicio) continue;   // sin hora de inicio no se guarda
+      var cz = tm.causalVal ? (function(v){var p=v.split('|');
+                 return {codigo:p[0]||'',proceso:p[1]||'',desc:p[2]||''};})(tm.causalVal)
+               : {codigo:'',proceso:'',desc:''};
+      try{
+        var rtm = await api({action:'crearTiempoMuerto',
+          lineaId:val('dig-linea'), lineaNombre:_digLineaNombre,
+          turnoId:_digTurnoId,
+          fecha:_digFechaFmt, turno:_digTurnoVal,
+          horaInicio:tm.inicio, horaFin:tm.fin||'',
+          duracionMin:tm.dur||0,
+          motivo: cz.codigo ? cz.codigo+' — '+cz.desc+(tm.obs?' | '+tm.obs:'') : (tm.obs||''),
+          codigoCausal:cz.codigo, procesoCausal:cz.proceso, descCausal:cz.desc,
+          // Si no tiene hora de fin queda Activo, igual que en el registro en vivo
+          estado: tm.fin ? 'Cerrado' : 'Activo'
+        });
+        if(rtm && rtm.ok) _tmOk++; else _tmErr++;
+      }catch(e){ _tmErr++; }
+    }
+
     if(pesajes.length) await api({action:'guardarPesaje', turnoId:_digTurnoId,
       fecha:_digFechaFmt, turno:_digTurnoVal,
       linea:_digLineaNombre, orden:_digOrdenVal,
@@ -4975,7 +5218,9 @@ async function dig_guardarTodo(){
     await api({action:'cerrarTurno', turnoId:_digTurnoId});
     loader(false);
     if(errores===0){
-      notify('Turno digitalizado y cerrado ✓ ('+horas.length+' horas)','ok',5000);
+      notify('Turno digitalizado y cerrado ✓ ('+horas.length+' horas'+
+             (_tmOk>0?', '+_tmOk+' paro'+(_tmOk>1?'s':''):'')+')','ok',5000);
+      if(_tmErr>0) notify(_tmErr+' tiempo(s) muerto(s) no se pudieron guardar','err',5000);
       // Ofrecer el PDF también en la digitalización, igual que en el
       // cierre normal: el turno quedó registrado y puede necesitarse
       // el soporte impreso para el archivo del SIG.
@@ -4999,6 +5244,12 @@ async function dig_guardarTodo(){
 
 function dig_reset(){
   _digTurnoId=null;
+  // Limpiar los paros capturados y los flags de tipo de línea
+  _digTMs=[]; _digTMSeq=0;
+  _digEsCorrugada=false; _digEsCoext=false; _digCabezales=1;
+  var _lst=document.getElementById('dig-tm-lista'); if(_lst) _lst.innerHTML='';
+  var _vac=document.getElementById('dig-tm-vacio'); if(_vac) _vac.style.display='block';
+  var _av=document.getElementById('dig-tipo-aviso'); if(_av) _av.style.display='none';
   document.getElementById('dig-paso1').style.display='block';
   document.getElementById('dig-paso2').style.display='none';
   document.getElementById('dig-orden-info').style.display='none';
