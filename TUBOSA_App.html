@@ -2153,7 +2153,14 @@ async function crearUsuario(){
     loader(false);
     if(res.ok){notify(res.msg,'ok');setVal('nu-nombre','');setVal('nu-pin','');cargarUsuarios();}
     else notify(res.msg||'Error','err');
-  }catch(e){loader(false);notify('Error: '+e.message,'err');}
+  }catch(e){
+    loader(false);
+    console.error('[DIG] Error durante el guardado:', e);
+    // El turno queda abierto a propósito: así no se pierde lo ya
+    // guardado y se puede reintentar sin volver a crear la cabecera.
+    notify('Error guardando: '+e.message+
+           ' — el turno sigue abierto, corrige y vuelve a guardar','err',8000);
+  }
 }
 async function desactivarUsuario(id,nombre){
   if(!confirm('¿Desactivar usuario '+nombre+'?'))return;
@@ -5129,9 +5136,16 @@ async function dig_guardarTodo(){
         devolucionKg:h.devolucionKg, motivoDevolucion:h.motivoDevolucion,
         nroTubos:h.nroTubos, pesoTotal:h.pesoTotal, reprocesoKg:h.reprocesoKg,
         pesoPromedio:h.pesoPromedio, sobrePeso:h.sobrePeso, longitud:h.longitud,
-        observaciones:h.observaciones, rotuladoOk:false, motivoReproceso:''
+        observaciones:h.observaciones, rotuladoOk:false,
+        // Se envía el causal ya armado en la recolección (antes se
+        // mandaba vacío y el motivo del scrap se perdía).
+        motivoReproceso:h.motivoReproceso||''
       });
-      if(!r.ok){ errores++; continue; }
+      if(!r.ok){
+        errores++;
+        console.error('[DIG] Falló la hora '+h.hora+':', r && r.msg ? r.msg : r);
+        continue;
+      }
       // Guardar tendencias — normal/coext van por hora; la corrugada
       // se guarda una sola vez por turno (más abajo, fuera del loop).
       if(!_digEsCorrugada && (h.espL1||h.espL2)){
@@ -5152,11 +5166,11 @@ async function dig_guardarTodo(){
     // en vivo (guardarTendCorr).
     if(_digEsCorrugada){
       var _hc = horas.find(function(x){
-        var t=x.tc||{};
-        return t.arrExt||t.abaExt||t.izqExt||t.derExt;
+        var tt=x.tc||{};
+        return tt.arrExt||tt.abaExt||tt.izqExt||tt.derExt;
       });
       if(_hc){
-        var t=_hc.tc;
+        var _tc=_hc.tc;
         function _prom(a,b,c2,d){
           var v=[a,b,c2,d].filter(function(x){return x>0;});
           return v.length ? v.reduce(function(s,x){return s+x;},0)/v.length : 0;
@@ -5164,13 +5178,13 @@ async function dig_guardarTodo(){
         await api({action:'guardarTendCorrugada', turnoId:_digTurnoId,
           fecha:_digFechaFmt, turno:_digTurnoVal,
           linea:_digLineaNombre, orden:_digOrdenVal,
-          arribaExterno:t.arrExt, arribaInterno:t.arrInt, arribaValle:t.arrVal,
-          abajoExterno:t.abaExt, abajoInterno:t.abaInt, abajoValle:t.abaVal,
-          izqExterno:t.izqExt, izqInterno:t.izqInt, izqValle:t.izqVal,
-          derExterno:t.derExt, derInterno:t.derInt, derValle:t.derVal,
-          promExterno:_prom(t.arrExt,t.abaExt,t.izqExt,t.derExt),
-          promInterno:_prom(t.arrInt,t.abaInt,t.izqInt,t.derInt),
-          promValle:_prom(t.arrVal,t.abaVal,t.izqVal,t.derVal)
+          arribaExterno:_tc.arrExt, arribaInterno:_tc.arrInt, arribaValle:_tc.arrVal,
+          abajoExterno:_tc.abaExt, abajoInterno:_tc.abaInt, abajoValle:_tc.abaVal,
+          izqExterno:_tc.izqExt, izqInterno:_tc.izqInt, izqValle:_tc.izqVal,
+          derExterno:_tc.derExt, derInterno:_tc.derInt, derValle:_tc.derVal,
+          promExterno:_prom(_tc.arrExt,_tc.abaExt,_tc.izqExt,_tc.derExt),
+          promInterno:_prom(_tc.arrInt,_tc.abaInt,_tc.izqInt,_tc.derInt),
+          promValle:_prom(_tc.arrVal,_tc.abaVal,_tc.izqVal,_tc.derVal)
         });
       }
     }
@@ -5214,9 +5228,19 @@ async function dig_guardarTodo(){
       fecha:_digFechaFmt, turno:_digTurnoVal,
       linea:_digLineaNombre, orden:_digOrdenVal,
       pesajes:pesajes});
-    // Cerrar turno
-    await api({action:'cerrarTurno', turnoId:_digTurnoId});
+    // Cerrar turno — solo si todas las horas se guardaron bien.
+    // Si hubo errores el turno queda abierto para poder reintentar.
+    var _cerrado = false;
+    if(errores===0){
+      var _rc = await api({action:'cerrarTurno', turnoId:_digTurnoId});
+      _cerrado = !!(_rc && _rc.ok);
+      if(!_cerrado) console.error('[DIG] No se pudo cerrar el turno:', _rc);
+    }
     loader(false);
+    if(errores===0 && !_cerrado){
+      notify('Los datos se guardaron, pero el turno no pudo cerrarse. '+
+             'Ciérralo desde Informes → Registro de Turnos.','err',8000);
+    }
     if(errores===0){
       notify('Turno digitalizado y cerrado ✓ ('+horas.length+' horas'+
              (_tmOk>0?', '+_tmOk+' paro'+(_tmOk>1?'s':''):'')+')','ok',5000);
