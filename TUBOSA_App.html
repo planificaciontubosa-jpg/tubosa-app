@@ -2936,10 +2936,19 @@ function limpiarForm(){
   document.getElementById('rotulado-txt').style.color='var(--gr3)';
 }
 
+// Evita que un doble clic en Guardar dispare dos inserciones antes de
+// que horasGuardadas alcance a registrar el horaId de la primera.
+var _guardandoHora = false;
+
 async function guardarHora(){
+  if(_guardandoHora){ notify('Guardado en curso, espera un momento','info'); return; }
+  _guardandoHora = true;
   loader(true,(modoEdicion?'Actualizando':'Guardando')+' hora '+horaActual+'...');
   try{
-    var horaIdExistente = modoEdicion && horasGuardadas[horaActual] ? horasGuardadas[horaActual].horaId : null;
+    // Si la hora YA tiene un horaId se actualiza siempre, sin importar
+    // si se entró por el modo edición. Antes se exigía modoEdicion y por
+    // eso una hora ya guardada podía volver a insertarse y duplicarse.
+    var horaIdExistente = horasGuardadas[horaActual] ? horasGuardadas[horaActual].horaId : null;
     const hd={
       action: horaIdExistente ? 'actualizarHora' : 'guardarHora',
       horaId: horaIdExistente,
@@ -2984,6 +2993,7 @@ async function guardarHora(){
     notify((horaIdExistente?'Hora '+horaActual+' actualizada ✓':'Hora '+horaActual+' guardada ✓'),'ok');
     if(!horaIdExistente && horaActual<8) selHora(horaActual+1, false);
   }catch(e){loader(false);notify('Error: '+e.message,'err');}
+  finally{ _guardandoHora=false; }
 }
 
 // Posiciones de pesaje guardadas en esta sesión
@@ -3185,9 +3195,12 @@ function calcSobrePesoCorr(){
 }
 
 async function guardarHoraCorr(){
+  if(_guardandoHora){ notify('Guardado en curso, espera un momento','info'); return; }
+  _guardandoHora = true;
   loader(true,(modoEdicionCorr?'Actualizando':'Guardando')+' hora '+horaActual+'...');
   try{
-    var horaIdExistente = modoEdicionCorr && horasGuardadas[horaActual] ? horasGuardadas[horaActual].horaId : null;
+    // Ver nota en guardarHora: se actualiza siempre que exista horaId
+    var horaIdExistente = horasGuardadas[horaActual] ? horasGuardadas[horaActual].horaId : null;
     const hd={
       action: horaIdExistente ? 'actualizarHora' : 'guardarHora',
       horaId: horaIdExistente,
@@ -3218,6 +3231,7 @@ async function guardarHoraCorr(){
     notify((horaIdExistente?'Hora '+horaActual+' actualizada ✓':'Hora '+horaActual+' guardada ✓'),'ok');
     if(!horaIdExistente && horaActual<8) selHoraCorr(horaActual+1, false);
   }catch(e){loader(false);notify('Error: '+e.message,'err');}
+  finally{ _guardandoHora=false; }
 }
 
 /**
@@ -6346,9 +6360,12 @@ function actualizarContadorCoext(){
 }
 
 async function guardarHoraCoext(){
+  if(_guardandoHora){ notify('Guardado en curso, espera un momento','info'); return; }
+  _guardandoHora = true;
   loader(true,(modoEdicionCoext?'Actualizando':'Guardando')+' hora '+horaActual+'...');
   try{
-    var horaIdExistente = modoEdicionCoext && horasGuardadas[horaActual] ? horasGuardadas[horaActual].horaId : null;
+    // Ver nota en guardarHora: se actualiza siempre que exista horaId
+    var horaIdExistente = horasGuardadas[horaActual] ? horasGuardadas[horaActual].horaId : null;
     var hd = {
       action: horaIdExistente ? 'actualizarHoraCoext' : 'guardarHoraCoext',
       horaId: horaIdExistente,
@@ -6413,6 +6430,7 @@ async function guardarHoraCoext(){
     notify((horaIdExistente?'Hora '+horaActual+' actualizada ✓':'Hora '+horaActual+' guardada ✓'),'ok');
     if(!horaIdExistente && horaActual < 8) selHoraCoext(horaActual+1, false);
   }catch(e){ loader(false); notify('Error: '+e.message,'err'); }
+  finally{ _guardandoHora=false; }
 }
 
 // ── CONTROL DE ACAMPANADO ─────────────────────────────────────
