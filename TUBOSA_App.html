@@ -48,17 +48,64 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:#EEF2F7;color:var(--
 .btn-sm{padding:6px 12px;font-size:12px}
 .btn-group{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:20px}
 /* LOGIN */
-.login-wrap{min-height:100vh;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,#1F3864 0%,#2E5BA8 100%)}
-.login-box{background:var(--wh);border-radius:16px;padding:36px 32px;width:320px;box-shadow:0 20px 60px rgba(0,0,0,.25);text-align:center}
-.login-logo{font-size:28px;font-weight:800;color:var(--az);letter-spacing:-1px;margin-bottom:4px}
-.login-sub{font-size:12px;color:var(--gr3);margin-bottom:28px}
+/* ── LOGIN ────────────────────────────────────────────────── */
+.login-fondo{position:fixed;inset:0;background:linear-gradient(140deg,#0F2544 0%,#1F3864 45%,#2E5BA8 100%);overflow:hidden;z-index:0}
+.login-blob{position:absolute;border-radius:50%;filter:blur(70px);opacity:.28}
+.login-blob-1{width:420px;height:420px;background:#4A90D9;top:-130px;right:-110px;animation:flota 14s ease-in-out infinite}
+.login-blob-2{width:340px;height:340px;background:#1E6B3C;bottom:-120px;left:-90px;animation:flota 18s ease-in-out infinite reverse}
+@keyframes flota{0%,100%{transform:translate(0,0) scale(1)}50%{transform:translate(24px,-28px) scale(1.08)}}
+
+.login-wrap{position:relative;z-index:1;min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px}
+.login-box{background:rgba(255,255,255,.97);backdrop-filter:blur(8px);border-radius:20px;padding:34px 30px 26px;width:370px;max-width:100%;
+  box-shadow:0 24px 70px rgba(0,0,0,.35),0 0 0 1px rgba(255,255,255,.15);text-align:center;
+  animation:entra .45s cubic-bezier(.2,.9,.3,1.1)}
+@keyframes entra{from{opacity:0;transform:translateY(18px) scale(.97)}to{opacity:1;transform:none}}
+
+.login-marca{margin-bottom:24px}
+.login-icono{display:flex;justify-content:center;margin-bottom:10px}
+.login-logo{font-size:30px;font-weight:800;color:var(--az);letter-spacing:-1px;line-height:1}
+.login-sub{font-size:11.5px;color:var(--gr3);margin-top:5px;letter-spacing:.02em}
+
+.login-campos{text-align:left;display:flex;flex-direction:column;gap:14px}
+.login-campo label{display:block;font-size:11px;font-weight:700;color:var(--gr3);text-transform:uppercase;letter-spacing:.05em;margin-bottom:5px}
+.login-input-wrap{position:relative;display:flex;align-items:center}
+.login-input-ico{position:absolute;left:12px;font-size:14px;opacity:.5;pointer-events:none}
+.login-input-wrap input{width:100%;padding:12px 12px 12px 38px;font-size:15px;font-family:inherit;
+  border:1.5px solid var(--gr2);border-radius:10px;background:#FAFBFC;transition:border-color .18s,box-shadow .18s,background .18s}
+.login-input-wrap input:focus{outline:none;border-color:var(--az2);background:#fff;box-shadow:0 0 0 3px rgba(46,91,168,.13)}
+.login-input-wrap input::placeholder{color:#B8BFC7}
+.login-ojo{position:absolute;right:8px;background:none;border:none;font-size:15px;cursor:pointer;opacity:.45;padding:6px;border-radius:6px;transition:opacity .15s}
+.login-ojo:hover{opacity:.85;background:var(--gr)}
+
+.login-recordar{display:flex;align-items:center;gap:7px;font-size:12px;color:var(--gr3);cursor:pointer;user-select:none;margin-top:-2px}
+.login-recordar input{width:15px;height:15px;accent-color:var(--az2);cursor:pointer}
+
+.login-dots{display:flex;justify-content:center;gap:12px;margin:14px 0 4px}
+.login-dot{width:34px;height:34px;border-radius:50%;border:2px solid var(--az);display:flex;align-items:center;
+  justify-content:center;font-size:20px;color:var(--az);font-weight:700;transition:all .15s}
+
+.login-toggle-teclado{width:100%;background:none;border:none;color:var(--az2);font-size:11.5px;font-weight:600;
+  cursor:pointer;padding:9px;margin-top:8px;border-radius:8px;transition:background .15s}
+.login-toggle-teclado:hover{background:var(--az3)}
+
+.login-pie{margin-top:14px;padding-top:14px;border-top:1px solid var(--gr2)}
+.login-link{background:none;border:none;color:var(--gr3);font-size:11px;cursor:pointer;padding:4px;transition:color .15s}
+.login-link:hover{color:var(--az)}
+.login-version{margin-top:12px;font-size:9.5px;color:#B8BFC7;letter-spacing:.03em}
 .pin-display{font-size:32px;letter-spacing:12px;color:var(--az);min-height:44px;margin:16px 0;font-family:monospace}
 .pin-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:16px}
 .pin-btn{padding:14px;font-size:20px;font-weight:600;background:var(--gr);border:none;border-radius:var(--rad2);cursor:pointer;transition:all .1s}
 .pin-btn:active{background:var(--az3);transform:scale(.93)}
 .pin-del{background:var(--nr2);color:var(--nr)}
-.pin-ok{width:100%;padding:14px;font-size:16px;font-weight:700;background:var(--az);color:#fff;border:none;border-radius:var(--rad2);cursor:pointer;margin-top:10px}
-.pin-err{color:var(--rd);font-size:13px;margin-top:10px;min-height:20px}
+.pin-ok{width:100%;padding:13px;font-size:15px;font-weight:700;background:linear-gradient(135deg,var(--az) 0%,var(--az2) 100%);
+  color:#fff;border:none;border-radius:10px;cursor:pointer;margin-top:16px;letter-spacing:.02em;
+  box-shadow:0 4px 14px rgba(31,56,100,.3);transition:transform .12s,box-shadow .18s,opacity .18s}
+.pin-ok:hover{box-shadow:0 6px 20px rgba(31,56,100,.4);transform:translateY(-1px)}
+.pin-ok:active{transform:translateY(0)}
+.pin-ok:disabled{opacity:.6;cursor:not-allowed;transform:none}
+.pin-err{color:var(--rd);font-size:12.5px;margin-top:12px;min-height:18px;font-weight:600}
+.pin-err.visible{background:var(--rd2);border-radius:8px;padding:8px 12px;animation:sacude .32s}
+@keyframes sacude{0%,100%{transform:translateX(0)}25%{transform:translateX(-6px)}75%{transform:translateX(6px)}}
 .url-box{background:#EEF2F7;border-radius:var(--rad2);padding:12px;margin-top:12px;text-align:left}
 .url-box label{font-size:11px;font-weight:700;color:var(--az);display:block;margin-bottom:6px}
 .url-box input{width:100%;padding:7px 9px;border:1px solid var(--gr2);border-radius:var(--rad2);font-size:11px;font-family:monospace}
@@ -167,34 +214,99 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:#EEF2F7;color:var(--
 <div class="notif" id="notif"></div>
 
 <!-- LOGIN -->
-<div id="v-login" style="display:block;position:fixed;inset:0;z-index:9999;background:linear-gradient(135deg,#1F3864 0%,#2E5BA8 100%);overflow-y:auto">
+<div id="v-login" style="display:block;position:fixed;inset:0;z-index:9999;overflow-y:auto">
+  <!-- Fondo con degradado y textura sutil -->
+  <div class="login-fondo">
+    <div class="login-blob login-blob-1"></div>
+    <div class="login-blob login-blob-2"></div>
+  </div>
+
   <div class="login-wrap">
     <div class="login-box">
-      <div class="login-logo">TUBOSA</div>
-      <div class="login-sub">Control de Líneas de Producción</div>
-      <div style="display:flex;justify-content:center;gap:14px;margin:20px 0;min-height:50px;align-items:center">
-        <div id="pd0" style="width:36px;height:36px;border-radius:50%;border:2px solid var(--az);display:flex;align-items:center;justify-content:center;font-size:22px;color:var(--az);font-weight:700;transition:all .15s">_</div>
-        <div id="pd1" style="width:36px;height:36px;border-radius:50%;border:2px solid var(--az);display:flex;align-items:center;justify-content:center;font-size:22px;color:var(--az);font-weight:700;transition:all .15s">_</div>
-        <div id="pd2" style="width:36px;height:36px;border-radius:50%;border:2px solid var(--az);display:flex;align-items:center;justify-content:center;font-size:22px;color:var(--az);font-weight:700;transition:all .15s">_</div>
-        <div id="pd3" style="width:36px;height:36px;border-radius:50%;border:2px solid var(--az);display:flex;align-items:center;justify-content:center;font-size:22px;color:var(--az);font-weight:700;transition:all .15s">_</div>
+
+      <!-- Marca -->
+      <div class="login-marca">
+        <div class="login-icono">
+          <svg viewBox="0 0 48 48" width="42" height="42" aria-hidden="true">
+            <defs>
+              <linearGradient id="lgTubo" x1="0" y1="0" x2="1" y2="1">
+                <stop offset="0%" stop-color="#4A90D9"/>
+                <stop offset="100%" stop-color="#1F3864"/>
+              </linearGradient>
+            </defs>
+            <ellipse cx="24" cy="12" rx="16" ry="6" fill="url(#lgTubo)"/>
+            <path d="M8 12 L8 36 A16 6 0 0 0 40 36 L40 12" fill="url(#lgTubo)" opacity=".85"/>
+            <ellipse cx="24" cy="12" rx="9" ry="3.2" fill="#0F2544"/>
+          </svg>
+        </div>
+        <div class="login-logo">TUBOSA</div>
+        <div class="login-sub">Control de Líneas de Producción</div>
       </div>
+
+      <!-- Formulario -->
+      <div class="login-campos">
+        <div class="login-campo">
+          <label for="lg-usuario">Usuario</label>
+          <div class="login-input-wrap">
+            <span class="login-input-ico">👤</span>
+            <input type="text" id="lg-usuario" autocomplete="username"
+                   placeholder="Tu nombre de usuario" spellcheck="false"
+                   onkeydown="lg_enter(event,'lg-clave')">
+          </div>
+        </div>
+
+        <div class="login-campo">
+          <label for="lg-clave">Contraseña</label>
+          <div class="login-input-wrap">
+            <span class="login-input-ico">🔒</span>
+            <input type="password" id="lg-clave" autocomplete="current-password"
+                   placeholder="••••" inputmode="numeric"
+                   oninput="lg_syncDots()" onkeydown="lg_enter(event)">
+            <button type="button" class="login-ojo" id="lg-ojo"
+                    onclick="lg_toggleClave()" aria-label="Mostrar contraseña">👁</button>
+          </div>
+        </div>
+
+        <label class="login-recordar">
+          <input type="checkbox" id="lg-recordar"> <span>Recordar mi usuario</span>
+        </label>
+      </div>
+
       <div class="pin-err" id="pin-err"></div>
-      <div class="pin-grid" id="pin-grid">
-        <button class="pin-btn" onclick="pp('1')">1</button>
-        <button class="pin-btn" onclick="pp('2')">2</button>
-        <button class="pin-btn" onclick="pp('3')">3</button>
-        <button class="pin-btn" onclick="pp('4')">4</button>
-        <button class="pin-btn" onclick="pp('5')">5</button>
-        <button class="pin-btn" onclick="pp('6')">6</button>
-        <button class="pin-btn" onclick="pp('7')">7</button>
-        <button class="pin-btn" onclick="pp('8')">8</button>
-        <button class="pin-btn" onclick="pp('9')">9</button>
-        <button class="pin-btn" onclick="pp('0')">0</button>
-        <button class="pin-btn pin-del" onclick="pd()">⌫</button>
+
+      <button class="pin-ok" onclick="loginOk()" id="lg-btn">
+        <span id="lg-btn-txt">Ingresar</span>
+      </button>
+
+      <!-- Teclado numérico opcional, para tablets en planta -->
+      <button type="button" class="login-toggle-teclado" onclick="lg_toggleTeclado()">
+        <span id="lg-teclado-lbl">⌨ Usar teclado numérico</span>
+      </button>
+
+      <div id="lg-teclado" style="display:none">
+        <div class="login-dots">
+          <div id="pd0" class="login-dot">_</div>
+          <div id="pd1" class="login-dot">_</div>
+          <div id="pd2" class="login-dot">_</div>
+          <div id="pd3" class="login-dot">_</div>
+        </div>
+        <div class="pin-grid" id="pin-grid">
+          <button class="pin-btn" onclick="pp('1')">1</button>
+          <button class="pin-btn" onclick="pp('2')">2</button>
+          <button class="pin-btn" onclick="pp('3')">3</button>
+          <button class="pin-btn" onclick="pp('4')">4</button>
+          <button class="pin-btn" onclick="pp('5')">5</button>
+          <button class="pin-btn" onclick="pp('6')">6</button>
+          <button class="pin-btn" onclick="pp('7')">7</button>
+          <button class="pin-btn" onclick="pp('8')">8</button>
+          <button class="pin-btn" onclick="pp('9')">9</button>
+          <button class="pin-btn" onclick="pp('0')">0</button>
+          <button class="pin-btn pin-del" onclick="pd()">⌫</button>
+        </div>
       </div>
-      <button class="pin-ok" onclick="loginOk()">INGRESAR →</button>
-      <div style="margin-top:14px">
-        <button onclick="toggleUrl()" style="background:none;border:none;color:var(--az);font-size:11px;cursor:pointer;text-decoration:underline">⚙ Configurar URL del servidor</button>
+
+      <div class="login-pie">
+        <button onclick="toggleUrl()" class="login-link">⚙ Configurar servidor</button>
         <div id="url-box" class="url-box" style="display:none">
           <label>URL de Google Apps Script:</label>
           <input type="text" id="url-input" placeholder="https://script.google.com/macros/s/...">
@@ -205,6 +317,8 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:#EEF2F7;color:var(--
           <div class="url-result" id="url-result"></div>
         </div>
       </div>
+
+      <div class="login-version">TUBOSA S.A. · Sistema Integrado de Gestión</div>
     </div>
   </div>
 </div>
@@ -248,7 +362,19 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:#EEF2F7;color:var(--
           <div class="campo"><label>Rol</label>
             <select id="nu-rol"><option value="operario">Operario</option><option value="coordinador">Coordinador</option><option value="supervisor">Supervisor</option><option value="jefe">Jefe</option><option value="gerente">Gerente</option><option value="marcadora">Marcadora</option><option value="admin">Administrador</option></select>
           </div>
-          <div class="campo"><label>PIN (4 dígitos)</label><input type="text" id="nu-pin" placeholder="XXXX" maxlength="4"></div>
+          <div class="campo"><label>Contraseña</label><input type="text" id="nu-pin" placeholder="XXXX" maxlength="12"></div>
+        </div>
+        <div class="fila fila-2">
+          <div class="campo">
+            <label>Usuario <span style="font-weight:400;text-transform:none;color:var(--gr3)">(opcional)</span></label>
+            <input type="text" id="nu-usuario" placeholder="ej: jperez" spellcheck="false">
+          </div>
+          <div class="campo" style="display:flex;align-items:flex-end">
+            <div style="font-size:11px;color:var(--gr3);line-height:1.4;padding-bottom:8px">
+              Si lo dejas vacío, la persona entra escribiendo su nombre.
+              Asignar usuario permite que dos personas tengan la misma contraseña.
+            </div>
+          </div>
         </div>
         <button class="btn btn-vd btn-sm" onclick="crearUsuario()">+ Crear Usuario</button>
       </div>
@@ -2053,31 +2179,134 @@ async function probarURL(){
 
 // ── LOGIN ─────────────────────────────────────────────────────
 var pinActual='';
-function pp(d){if(pinActual.length>=4)return;pinActual+=d;upPin();}
-function pd(){pinActual=pinActual.slice(0,-1);upPin();}
+// ══════════════════════════════════════════════════════════════
+//  LOGIN — usuario + contraseña, con teclado numérico opcional
+// ══════════════════════════════════════════════════════════════
+
+/** Teclado numérico: agrega un dígito y lo refleja en el campo */
+function pp(d){
+  if(pinActual.length>=8) return;
+  pinActual+=d;
+  var inp=document.getElementById('lg-clave');
+  if(inp) inp.value=pinActual;
+  upPin();
+}
+function pd(){
+  pinActual=pinActual.slice(0,-1);
+  var inp=document.getElementById('lg-clave');
+  if(inp) inp.value=pinActual;
+  upPin();
+}
+
+/** El campo de texto es la fuente de verdad; sincroniza los puntos */
+function lg_syncDots(){
+  var inp=document.getElementById('lg-clave');
+  pinActual = inp ? inp.value : '';
+  upPin();
+}
+
+function lg_toggleClave(){
+  var inp=document.getElementById('lg-clave');
+  var ojo=document.getElementById('lg-ojo');
+  if(!inp) return;
+  var oculto = inp.type==='password';
+  inp.type = oculto ? 'text' : 'password';
+  if(ojo){
+    ojo.textContent = oculto ? '🙈' : '👁';
+    ojo.setAttribute('aria-label', oculto ? 'Ocultar contraseña' : 'Mostrar contraseña');
+  }
+}
+
+function lg_toggleTeclado(){
+  var t=document.getElementById('lg-teclado');
+  var l=document.getElementById('lg-teclado-lbl');
+  if(!t) return;
+  var abierto = t.style.display!=='none';
+  t.style.display = abierto ? 'none' : 'block';
+  if(l) l.textContent = abierto ? '⌨ Usar teclado numérico' : '✕ Ocultar teclado';
+  if(!abierto) upPin();
+}
+
+/** Enter salta al siguiente campo o envía el formulario */
+function lg_enter(ev, siguienteId){
+  if(ev.key!=='Enter') return;
+  ev.preventDefault();
+  if(siguienteId){
+    var s=document.getElementById(siguienteId);
+    if(s){ s.focus(); return; }
+  }
+  loginOk();
+}
+
+function lg_error(msg){
+  var err=document.getElementById('pin-err');
+  if(!err) return;
+  err.textContent = msg || '';
+  err.classList.toggle('visible', !!msg);
+}
 function upPin(){
-  var digits=['pd0','pd1','pd2','pd3'];
+  // Los puntos son un indicador visual del teclado numérico:
+  // muestran hasta 4 y el resto como "+n".
   for(var i=0;i<4;i++){
-    var el=document.getElementById(digits[i]);
-    if(!el)continue;
+    var el=document.getElementById('pd'+i);
+    if(!el) continue;
     if(i<pinActual.length){
       el.innerHTML='&#9679;';
-      el.setAttribute('style','width:36px;height:36px;border-radius:50%;border:2px solid #1F3864;display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:700;background:#1F3864;color:#fff;transition:all .15s');
+      el.style.background='var(--az)';
+      el.style.color='#fff';
     }else{
       el.innerHTML='_';
-      el.setAttribute('style','width:36px;height:36px;border-radius:50%;border:2px solid #1F3864;display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:700;background:transparent;color:#1F3864;transition:all .15s');
+      el.style.background='transparent';
+      el.style.color='var(--az)';
     }
   }
-  var err=document.getElementById('pin-err');
-  if(err)err.innerHTML='';
+  if(pinActual.length>4){
+    var ult=document.getElementById('pd3');
+    if(ult) ult.innerHTML='+'+(pinActual.length-3);
+  }
+  lg_error('');
 }
+var _loginEnCurso = false;
+
 async function loginOk(){
-  if(pinActual.length<4){document.getElementById('pin-err').textContent='Ingresa 4 dígitos';return;}
-  if(!API_URL){document.getElementById('pin-err').textContent='⚠ Configura la URL';document.getElementById('url-box').style.display='block';return;}
+  if(_loginEnCurso) return;
+
+  var inpClave = document.getElementById('lg-clave');
+  var clave = inpClave ? inpClave.value.trim() : pinActual;
+  var inpUser = document.getElementById('lg-usuario');
+  var usuario = inpUser ? inpUser.value.trim() : '';
+
+  if(!clave){
+    lg_error('Ingresa tu contraseña');
+    if(inpClave) inpClave.focus();
+    return;
+  }
+  if(!API_URL){
+    lg_error('⚠ Configura la URL del servidor');
+    document.getElementById('url-box').style.display='block';
+    return;
+  }
+
+  _loginEnCurso = true;
+  var btn=document.getElementById('lg-btn');
+  var btnTxt=document.getElementById('lg-btn-txt');
+  if(btn) btn.disabled=true;
+  if(btnTxt) btnTxt.textContent='Verificando...';
+  lg_error('');
   loader(true,'Verificando...');
   try{
-    const res=await api({action:'login',pin:pinActual});
+    const res=await api({action:'login', pin:clave, usuario:usuario});
     loader(false);
+    _loginEnCurso=false;
+    if(btn) btn.disabled=false;
+    if(btnTxt) btnTxt.textContent='Ingresar';
+
+    // Recordar el usuario si lo pidió (nunca la contraseña)
+    try{
+      var rec=document.getElementById('lg-recordar');
+      if(rec && rec.checked && usuario) localStorage.setItem('tubosa_usuario', usuario);
+      else if(rec && !rec.checked) localStorage.removeItem('tubosa_usuario');
+    }catch(e){}
     if(res.ok){
       rolActual=res.rol; nombreActual=res.nombre||'';
       document.getElementById('v-login').style.display='none';
@@ -2112,8 +2341,22 @@ async function loginOk(){
         irA('lineas','Líneas de Producción','Selecciona una línea');
         if(rolActual==='admin') cargarUsuarios();
       }
-    }else{document.getElementById('pin-err').textContent='❌ PIN incorrecto';pinActual='';upPin();}
-  }catch(e){loader(false);document.getElementById('pin-err').textContent='❌ '+e.message;document.getElementById('url-box').style.display='block';}
+    }else{
+      lg_error('❌ '+(res.msg||'Credenciales incorrectas'));
+      pinActual='';
+      if(inpClave){ inpClave.value=''; inpClave.focus(); }
+      upPin();
+      // Si el PIN lo comparten varios usuarios, pedir el nombre
+      if(res.requiereUsuario && inpUser) inpUser.focus();
+    }
+  }catch(e){
+    loader(false);
+    _loginEnCurso=false;
+    if(btn) btn.disabled=false;
+    if(btnTxt) btnTxt.textContent='Ingresar';
+    lg_error('❌ '+e.message);
+    document.getElementById('url-box').style.display='block';
+  }
 }
 function irInicio(){
   if(rolActual==='gerente') cargarDashboard();
@@ -2124,6 +2367,13 @@ function irInicio(){
 function logout(){detenerAutoRefresh();pinActual='';rolActual='';document.getElementById('v-login').style.display='block';document.getElementById('topbar').style.display='none';document.querySelectorAll('.vista').forEach(v=>v.classList.remove('activa'));upPin();}
 
 // ── USUARIOS ─────────────────────────────────────────────────
+/** Etiqueta legible del rol para la lista de usuarios */
+function lg_rolLabel(rol){
+  var m={admin:'⚙ Administrador',coordinador:'📋 Coordinador',supervisor:'👁 Supervisor',
+         jefe:'🏭 Jefe',gerente:'📈 Gerente',operario:'👷 Operario',marcadora:'🖊 Marcadora'};
+  return m[String(rol||'').trim()] || rol || '—';
+}
+
 async function cargarUsuarios(){
   try{
     const res=await api({action:'getUsuarios'});
@@ -2135,7 +2385,7 @@ async function cargarUsuarios(){
       <div class="user-card">
         <div class="user-info">
           <div class="user-nombre">${u.Nombre}</div>
-          <div class="user-detalle">${u.Rol==='admin'?'⚙ Administrador':'👷 Operario'} · PIN: ${'●'.repeat(u.PIN?.length||4)}</div>
+          <div class="user-detalle">${lg_rolLabel(u.Rol)}${u.Usuario?' · 👤 '+u.Usuario:''} · 🔒 ${'●'.repeat(String(u.PIN||'').length||4)}</div>
         </div>
         <div class="user-actions">
           <button class="btn btn-rd btn-sm" onclick="desactivarUsuario('${u.ID}','${u.Nombre}')">Desactivar</button>
@@ -2144,22 +2394,23 @@ async function cargarUsuarios(){
   }catch(e){}
 }
 async function crearUsuario(){
-  const nombre=val('nu-nombre'),rol=val('nu-rol'),pin=val('nu-pin');
-  if(!nombre||!pin){notify('Completa nombre y PIN','err');return;}
-  if(pin.length!==4||isNaN(pin)){notify('El PIN debe ser de 4 dígitos numéricos','err');return;}
+  const nombre=val('nu-nombre'), rol=val('nu-rol'), pin=val('nu-pin');
+  const usuario=val('nu-usuario');
+  if(!nombre||!pin){notify('Completa nombre y contraseña','err');return;}
+  if(pin.length<4){notify('La contraseña debe tener al menos 4 caracteres','err');return;}
+  if(usuario && /\s/.test(usuario)){notify('El usuario no debe llevar espacios','err');return;}
   loader(true,'Creando usuario...');
   try{
-    const res=await api({action:'crearUsuario',nombre,rol,pin});
+    const res=await api({action:'crearUsuario',nombre,rol,pin,usuario});
     loader(false);
-    if(res.ok){notify(res.msg,'ok');setVal('nu-nombre','');setVal('nu-pin','');cargarUsuarios();}
-    else notify(res.msg||'Error','err');
+    if(res.ok){
+      notify(res.msg,'ok');
+      setVal('nu-nombre',''); setVal('nu-pin',''); setVal('nu-usuario','');
+      cargarUsuarios();
+    } else notify(res.msg||'Error','err');
   }catch(e){
     loader(false);
-    console.error('[DIG] Error durante el guardado:', e);
-    // El turno queda abierto a propósito: así no se pierde lo ya
-    // guardado y se puede reintentar sin volver a crear la cabecera.
-    notify('Error guardando: '+e.message+
-           ' — el turno sigue abierto, corrige y vuelve a guardar','err',8000);
+    notify('Error creando el usuario: '+e.message,'err');
   }
 }
 async function desactivarUsuario(id,nombre){
@@ -7166,6 +7417,21 @@ function generarPDFMarcadora(){
 
 // Pre-poblar selectores de causales al cargar la página
 document.addEventListener('DOMContentLoaded', function(){
+  // Restaurar el usuario recordado y poner el foco donde corresponde
+  try{
+    var guardado = localStorage.getItem('tubosa_usuario');
+    var iu = document.getElementById('lg-usuario');
+    var ic = document.getElementById('lg-clave');
+    var rc = document.getElementById('lg-recordar');
+    if(guardado && iu){
+      iu.value = guardado;
+      if(rc) rc.checked = true;
+      if(ic) ic.focus();          // ya sabemos quién es: directo a la clave
+    } else if(iu){
+      iu.focus();
+    }
+  }catch(e){}
+
   ['reg-causalScrap','corr-causalScrap'].forEach(function(id){
     buildSelectCausales(id, id+'-info', 'scrap');
   });
